@@ -43,6 +43,7 @@ uiModules.get('kibana')
         searchSource: '=?',
         infiniteScroll: '=?',
         filter: '=?',
+        onRowClick: '=?',
         filters: '=?',
         minimumVisibleRows: '=?',
         onAddColumn: '=?',

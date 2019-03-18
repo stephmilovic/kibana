@@ -24,11 +24,23 @@ import { panelsReducer } from './panels';
 
 import { viewReducer } from './view';
 
+import { DashboardState } from '../selectors';
 import { metadataReducer } from './metadata';
 
-export const dashboard = combineReducers({
+const dashboarAppReducers = combineReducers({
   embeddables: embeddablesReducer,
   metadata: metadataReducer,
   panels: panelsReducer,
   view: viewReducer,
 });
+
+export const dashboard = (
+  state: DashboardState,
+  action: { type: string; payload: DashboardState }
+) => {
+  if (action.type === 'RESET') {
+    state = _.cloneDeep(action.payload);
+  }
+
+  return dashboarAppReducers(state, action);
+};

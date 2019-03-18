@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { EmbeddableMetadata, Filters, Query, RefreshConfig, TimeRange } from 'ui/embeddable';
+import { Filters, Query, RefreshConfig, TimeRange } from 'ui/embeddable';
 import { DashboardViewMode } from '../dashboard_view_mode';
 
 export interface ViewState {
@@ -55,7 +55,10 @@ export interface PanelState {
 }
 
 export interface EmbeddableReduxState {
-  readonly metadata?: EmbeddableMetadata;
+  readonly editUrl?: string;
+  readonly indexPatterns?: object[];
+  readonly type?: string;
+  readonly title?: string;
   readonly error?: string | object;
   readonly initialized: boolean;
   readonly stagedFilter?: object;

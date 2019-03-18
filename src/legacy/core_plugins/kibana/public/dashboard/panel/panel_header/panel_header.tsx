@@ -20,14 +20,15 @@
 import { InjectedIntl, injectI18n } from '@kbn/i18n/react';
 import classNames from 'classnames';
 import React from 'react';
-import { Embeddable } from 'ui/embeddable';
+import { DashboardContainer, DashboardEmbeddable } from '../../embeddables/dashboard_container';
 import { PanelId } from '../../selectors';
 import { PanelOptionsMenuContainer } from './panel_options_menu_container';
 
 export interface PanelHeaderProps {
   title?: string;
   panelId: PanelId;
-  embeddable?: Embeddable;
+  embeddable: DashboardEmbeddable;
+  container: DashboardContainer;
   isViewOnlyMode: boolean;
   hidePanelTitles: boolean;
 }
@@ -42,6 +43,7 @@ function PanelHeaderUi({
   embeddable,
   isViewOnlyMode,
   hidePanelTitles,
+  container,
   intl,
 }: PanelHeaderUiProps) {
   const classes = classNames('dshPanel__header', {
@@ -51,7 +53,11 @@ function PanelHeaderUi({
   if (isViewOnlyMode && (!title || hidePanelTitles)) {
     return (
       <div className={classes}>
-        <PanelOptionsMenuContainer panelId={panelId} embeddable={embeddable} />
+        <PanelOptionsMenuContainer
+          panelId={panelId}
+          embeddable={embeddable}
+          container={container}
+        />
       </div>
     );
   }
@@ -78,7 +84,7 @@ function PanelHeaderUi({
         {hidePanelTitles ? '' : title}
       </div>
 
-      <PanelOptionsMenuContainer panelId={panelId} embeddable={embeddable} />
+      <PanelOptionsMenuContainer panelId={panelId} embeddable={embeddable} container={container} />
     </div>
   );
 }

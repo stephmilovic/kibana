@@ -17,7 +17,13 @@
  * under the License.
  */
 
+import { createAction } from 'redux-actions';
+import { DashboardState } from '../selectors';
 export * from './view';
 export * from './panels';
 export * from './embeddables';
 export * from './metadata';
+
+export const RESET_ACTION_KEY: string = 'RESET';
+
+export const resetState = createAction<DashboardState>(RESET_ACTION_KEY);

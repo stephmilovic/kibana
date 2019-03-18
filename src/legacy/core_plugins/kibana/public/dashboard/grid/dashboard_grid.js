@@ -236,6 +236,7 @@ class DashboardGridUi extends React.Component {
             embeddableFactory={this.embeddableFactoryMap[panel.type]}
             onPanelFocused={this.onPanelFocused}
             onPanelBlurred={this.onPanelBlurred}
+            container={this.props.container}
           />
         </div>
       );
@@ -270,6 +271,7 @@ DashboardGridUi.propTypes = {
   onPanelsUpdated: PropTypes.func.isRequired,
   maximizedPanelId: PropTypes.string,
   useMargins: PropTypes.bool.isRequired,
+  container: PropTypes.object,
 };
 
 export const DashboardGrid = injectI18n(DashboardGridUi);

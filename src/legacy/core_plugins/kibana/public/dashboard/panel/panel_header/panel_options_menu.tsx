@@ -26,58 +26,80 @@ import {
   EuiContextMenuPanelDescriptor,
   EuiPopover,
 } from '@elastic/eui';
+import { DashboardContainer } from '../../embeddables/dashboard_container';
 
 export interface PanelOptionsMenuProps {
   toggleContextMenu: () => void;
   isPopoverOpen: boolean;
   closeContextMenu: () => void;
-  panels: EuiContextMenuPanelDescriptor[];
+  getPanels: () => Promise<EuiContextMenuPanelDescriptor[]>;
   isViewMode: boolean;
+  container: DashboardContainer;
 }
 
 interface PanelOptionsMenuUiProps extends PanelOptionsMenuProps {
   intl: InjectedIntl;
 }
 
-function PanelOptionsMenuUi({
-  toggleContextMenu,
-  isPopoverOpen,
-  closeContextMenu,
-  panels,
-  isViewMode,
-  intl,
-}: PanelOptionsMenuUiProps) {
-  const button = (
-    <EuiButtonIcon
-      iconType={isViewMode ? 'boxesHorizontal' : 'gear'}
-      color="text"
-      className="dshPanel_optionsMenuButton"
-      aria-label={intl.formatMessage({
-        id: 'kbn.dashboard.panel.optionsMenu.panelOptionsButtonAriaLabel',
-        defaultMessage: 'Panel options',
-      })}
-      data-test-subj="dashboardPanelToggleMenuIcon"
-      onClick={toggleContextMenu}
-    />
-  );
+interface State {
+  panels: EuiContextMenuPanelDescriptor[];
+}
 
-  return (
-    <EuiPopover
-      id="dashboardPanelContextMenu"
-      className="dshPanel_optionsMenuPopover"
-      button={button}
-      isOpen={isPopoverOpen}
-      closePopover={closeContextMenu}
-      panelPaddingSize="none"
-      anchorPosition="downRight"
-      data-test-subj={
-        isPopoverOpen ? 'dashboardPanelContextMenuOpen' : 'dashboardPanelContextMenuClosed'
-      }
-      withTitle
-    >
-      <EuiContextMenu initialPanelId="mainMenu" panels={panels} />
-    </EuiPopover>
-  );
+class PanelOptionsMenuUi extends React.Component<PanelOptionsMenuUiProps, State> {
+  constructor(props: PanelOptionsMenuUiProps) {
+    super(props);
+    this.state = {
+      panels: [],
+    };
+  }
+
+  public async componentDidMount() {
+    // const panels = await this.props.getPanels();
+    // this.setState({ panels });
+  }
+
+  public async componentDidUpdate(prevProps: PanelOptionsMenuProps) {
+    if (this.props.isPopoverOpen && !prevProps.isPopoverOpen) {
+      this.setState({ panels: [] });
+      const panels = await this.props.getPanels();
+      this.setState({ panels });
+    }
+  }
+
+  public render() {
+    const { toggleContextMenu, isPopoverOpen, closeContextMenu, isViewMode, intl } = this.props;
+    const button = (
+      <EuiButtonIcon
+        iconType={isViewMode ? 'boxesHorizontal' : 'gear'}
+        color="text"
+        className="dshPanel_optionsMenuButton"
+        aria-label={intl.formatMessage({
+          id: 'kbn.dashboard.panel.optionsMenu.panelOptionsButtonAriaLabel',
+          defaultMessage: 'Panel options',
+        })}
+        data-test-subj="dashboardPanelToggleMenuIcon"
+        onClick={toggleContextMenu}
+      />
+    );
+
+    return (
+      <EuiPopover
+        id="dashboardPanelContextMenu"
+        className="dshPanel_optionsMenuPopover"
+        button={button}
+        isOpen={isPopoverOpen}
+        closePopover={closeContextMenu}
+        panelPaddingSize="none"
+        anchorPosition="downRight"
+        data-test-subj={
+          isPopoverOpen ? 'dashboardPanelContextMenuOpen' : 'dashboardPanelContextMenuClosed'
+        }
+        withTitle
+      >
+        <EuiContextMenu initialPanelId="mainMenu" panels={this.state.panels} />
+      </EuiPopover>
+    );
+  }
 }
 
 export const PanelOptionsMenu = injectI18n(PanelOptionsMenuUi);

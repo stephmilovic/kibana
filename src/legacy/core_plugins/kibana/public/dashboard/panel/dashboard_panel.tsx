@@ -22,14 +22,15 @@ import { InjectedIntl, injectI18n } from '@kbn/i18n/react';
 import classNames from 'classnames';
 import _ from 'lodash';
 import React from 'react';
-import {
-  ContainerState,
-  Embeddable,
-  EmbeddableFactory,
-  EmbeddableMetadata,
-  EmbeddableState,
-} from 'ui/embeddable';
+import { EmbeddableFactory } from 'ui/embeddable';
+import { ErrorEmbeddable } from 'ui/embeddable/embeddables/error_embeddable';
 import { EmbeddableErrorAction } from '../actions';
+import {
+  DashboardContainer,
+  DashboardEmbeddable,
+  DashboardEmbeddableInput,
+  DashboardEmbeddableOutput,
+} from '../embeddables/dashboard_container';
 import { PanelId, PanelState } from '../selectors';
 import { PanelError } from './panel_error';
 import { PanelHeader } from './panel_header';
@@ -40,16 +41,17 @@ export interface DashboardPanelProps {
   onPanelBlurred?: (panelIndex: PanelId) => {};
   error?: string | object;
   destroy: () => void;
-  containerState: ContainerState;
-  embeddableFactory: EmbeddableFactory;
+  containerState: DashboardEmbeddableInput;
+  embeddableFactory: EmbeddableFactory<any, any>;
   lastReloadRequestTime?: number;
-  embeddableStateChanged: (embeddableStateChanges: EmbeddableState) => void;
-  embeddableIsInitialized: (embeddableIsInitializing: EmbeddableMetadata) => void;
+  embeddableStateChanged: (embeddableStateChanges: DashboardEmbeddableOutput) => void;
   embeddableError: (errorMessage: EmbeddableErrorAction) => void;
+  embeddableIsInitialized: (data: any) => void;
   embeddableIsInitializing: () => void;
   initialized: boolean;
   panel: PanelState;
   className?: string;
+  container: DashboardContainer;
 }
 
 export interface DashboardPanelUiProps extends DashboardPanelProps {
@@ -63,7 +65,8 @@ interface State {
 class DashboardPanelUi extends React.Component<DashboardPanelUiProps, State> {
   [panel: string]: any;
   public mounted: boolean;
-  public embeddable!: Embeddable;
+  public embeddable!: DashboardEmbeddable | ErrorEmbeddable;
+
   constructor(props: DashboardPanelUiProps) {
     super(props);
     this.state = {
@@ -86,19 +89,22 @@ class DashboardPanelUi extends React.Component<DashboardPanelUiProps, State> {
       embeddableIsInitializing,
       panel,
       embeddableStateChanged,
-      embeddableIsInitialized,
       embeddableError,
     } = this.props;
 
     if (!initialized) {
       embeddableIsInitializing();
       embeddableFactory
-        .create(panel, embeddableStateChanged)
-        .then((embeddable: Embeddable) => {
+        .create(panel, this.props.containerState)
+        .then((embeddable: DashboardEmbeddable | ErrorEmbeddable) => {
           if (this.mounted) {
             this.embeddable = embeddable;
-            embeddableIsInitialized(embeddable.metadata);
-            this.embeddable.render(this.panelElement, this.props.containerState);
+            this.embeddable.setContainer(this.props.container);
+            this.embeddable.onOutputChanged(embeddableStateChanged);
+            this.props.embeddableIsInitialized(embeddable.getOutput());
+            this.embeddable.render(this.panelElement);
+
+            embeddableStateChanged(embeddable.getOutput());
           } else {
             embeddable.destroy();
           }
@@ -151,7 +157,7 @@ class DashboardPanelUi extends React.Component<DashboardPanelUiProps, State> {
 
   public shouldComponentUpdate(nextProps: DashboardPanelUiProps) {
     if (this.embeddable && !_.isEqual(nextProps.containerState, this.props.containerState)) {
-      this.embeddable.onContainerStateChanged(nextProps.containerState);
+      this.embeddable.onInputChanged(nextProps.containerState);
     }
 
     if (this.embeddable && nextProps.lastReloadRequestTime !== this.props.lastReloadRequestTime) {
@@ -187,7 +193,11 @@ class DashboardPanelUi extends React.Component<DashboardPanelUiProps, State> {
         onBlur={this.onBlur}
         paddingSize="none"
       >
-        <PanelHeader panelId={panel.panelIndex} embeddable={this.embeddable} />
+        <PanelHeader
+          panelId={panel.panelIndex}
+          embeddable={this.embeddable}
+          container={this.props.container}
+        />
 
         {this.renderContent()}
       </EuiPanel>

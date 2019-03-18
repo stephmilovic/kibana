@@ -21,7 +21,7 @@ import { EuiIcon } from '@elastic/eui';
 import { i18n } from '@kbn/i18n';
 import React from 'react';
 
-import { ContextMenuAction } from 'ui/embeddable';
+import { Container, ContextMenuAction, Embeddable } from 'ui/embeddable';
 import { DashboardViewMode } from '../../../dashboard_view_mode';
 
 /**
@@ -30,7 +30,10 @@ import { DashboardViewMode } from '../../../dashboard_view_mode';
  * @return {ContextMenuAction}
  */
 export function getRemovePanelAction(onDeletePanel: () => void) {
-  return new ContextMenuAction(
+  return new ContextMenuAction<
+    Embeddable<any, any>,
+    Container<any, { view: { viewMode: DashboardViewMode } }, any>
+  >(
     {
       displayName: i18n.translate('kbn.dashboard.panel.removePanel.displayName', {
         defaultMessage: 'Delete from dashboard',
@@ -40,8 +43,8 @@ export function getRemovePanelAction(onDeletePanel: () => void) {
     },
     {
       icon: <EuiIcon type="trash" />,
-      isVisible: ({ containerState }) =>
-        containerState.viewMode === DashboardViewMode.EDIT && !containerState.isPanelExpanded,
+      isVisible: ({ container }) => container.getOutput().view.viewMode === DashboardViewMode.EDIT, // &&
+      //  !container.getOutput().expandedPanelId === embeddable.id,
       onClick: onDeletePanel,
     }
   );

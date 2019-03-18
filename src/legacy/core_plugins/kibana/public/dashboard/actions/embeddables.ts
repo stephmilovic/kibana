@@ -23,8 +23,8 @@ import { getEmbeddableCustomization, getPanel } from '../../selectors';
 import { PanelId, PanelState } from '../selectors';
 import { updatePanel } from './panels';
 
-import { EmbeddableMetadata, EmbeddableState } from 'ui/embeddable';
 import { KibanaAction, KibanaThunk } from '../../selectors/types';
+import { DashboardEmbeddable, DashboardEmbeddableOutput } from '../embeddables/dashboard_container';
 
 export enum EmbeddableActionTypeKeys {
   EMBEDDABLE_IS_INITIALIZING = 'EMBEDDABLE_IS_INITIALIZING',
@@ -40,7 +40,7 @@ export interface EmbeddableIsInitializingAction
 
 export interface EmbeddableIsInitializedActionPayload {
   panelId: PanelId;
-  metadata: EmbeddableMetadata;
+  metadata: any;
 }
 
 export interface EmbeddableIsInitializedAction
@@ -101,9 +101,9 @@ export const requestReload = createAction(EmbeddableActionTypeKeys.REQUEST_RELOA
  * @param changeData.panelId - the id of the panel whose state has changed.
  * @param changeData.embeddableState - the new state of the embeddable.
  */
-export function embeddableStateChanged(changeData: {
+export function embeddableStateChanged<O extends DashboardEmbeddableOutput>(changeData: {
   panelId: PanelId;
-  embeddableState: EmbeddableState;
+  embeddableState: O;
 }): KibanaThunk {
   const { panelId, embeddableState } = changeData;
   return (dispatch, getState) => {
@@ -116,10 +116,6 @@ export function embeddableStateChanged(changeData: {
         embeddableConfig: _.cloneDeep(embeddableState.customization),
       };
       dispatch(updatePanel(newPanelState));
-    }
-
-    if (embeddableState.stagedFilter) {
-      dispatch(setStagedFilter({ stagedFilter: embeddableState.stagedFilter, panelId }));
     }
   };
 }

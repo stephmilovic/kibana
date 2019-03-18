@@ -22,29 +22,31 @@ import thunk from 'redux-thunk';
 
 import { QueryLanguageType } from 'ui/embeddable/types';
 import { DashboardViewMode } from './dashboard/dashboard_view_mode';
+import { DashboardState } from './dashboard/selectors';
 import { reducers } from './reducers';
 
 const enhancers = [applyMiddleware(thunk)];
 
-export const store = createStore(
-  reducers,
-  {
-    dashboard: {
-      embeddables: {},
-      metadata: {
-        title: 'New Dashboard',
-      },
-      panels: {},
-      view: {
-        filters: [],
-        hidePanelTitles: false,
-        isFullScreenMode: false,
-        query: { language: QueryLanguageType.LUCENE, query: '' },
-        timeRange: { from: 'now-15m', to: 'now' },
-        useMargins: true,
-        viewMode: DashboardViewMode.VIEW,
-      },
+export function CreateStore(state: { dashboard: DashboardState }) {
+  return createStore(reducers, state, compose(...enhancers));
+}
+
+export const store = CreateStore({
+  dashboard: {
+    embeddables: {},
+    metadata: {
+      title: 'New Dashboard',
+    },
+    panels: {},
+    view: {
+      filters: [],
+      hidePanelTitles: false,
+      isFullScreenMode: false,
+      query: { language: QueryLanguageType.LUCENE, query: '' },
+      timeRange: { from: 'now-15m', to: 'now' },
+      useMargins: true,
+      viewMode: DashboardViewMode.VIEW,
+      refreshConfig: { isPaused: false, interval: 0 },
     },
   },
-  compose(...enhancers)
-);
+});

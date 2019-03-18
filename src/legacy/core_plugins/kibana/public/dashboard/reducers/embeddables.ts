@@ -37,7 +37,8 @@ const embeddableIsInitializing = (
   [panelId]: {
     error: undefined,
     initialized: false,
-    metadata: {},
+    title: undefined,
+    editUrl: undefined,
     stagedFilter: undefined,
     lastReloadRequestTime: 0,
   },
@@ -51,7 +52,7 @@ const embeddableIsInitialized = (
   [panelId]: {
     ...embeddables[panelId],
     initialized: true,
-    metadata: { ...metadata },
+    ...metadata,
   },
 });
 

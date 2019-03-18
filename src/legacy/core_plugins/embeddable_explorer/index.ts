@@ -17,13 +17,31 @@
  * under the License.
  */
 
-// @ts-ignore: implicit any for JS file
-import { uiRegistry } from '../registry/_registry';
+import { Legacy } from 'kibana';
+// @ts-ignore
+import { injectVars } from '../kibana/inject_vars';
+import { Plugin as EmbeddableExplorer } from './plugin';
+import { createShim } from './shim';
 
-/**
- * Registry of functions (EmbeddableFactoryProviders) which return an EmbeddableFactory.
- */
-export const EmbeddableFactoriesRegistryProvider = uiRegistry({
-  index: ['name'],
-  name: 'embeddableFactories',
-});
+export type CoreShim = object;
+
+// tslint:disable-next-line
+export default function(kibana: any) {
+  return new kibana.Plugin({
+    require: ['kibana'],
+    uiExports: {
+      app: {
+        title: 'Embeddable Explorer',
+        order: 1,
+        main: 'plugins/embeddable_explorer',
+      },
+    },
+    init(server: Legacy.Server) {
+      const embeddableExplorer = new EmbeddableExplorer(server);
+      embeddableExplorer.start(createShim());
+
+      // @ts-ignore
+      server.injectUiAppVars('embeddable_explorer', () => injectVars(server));
+    },
+  });
+}

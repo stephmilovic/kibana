@@ -37,6 +37,8 @@ import { SavedObjectRegistryProvider } from 'ui/saved_objects/saved_object_regis
 import { DashboardListing, EMPTY_FILTER } from './listing/dashboard_listing';
 import { uiModules } from 'ui/modules';
 
+export { DASHBOARD_CONTAINER_TYPE, DashboardContainer, DashboardContainerFactory } from './embeddables';
+
 const app = uiModules.get('app/dashboard', [
   'ngRoute',
   'react',

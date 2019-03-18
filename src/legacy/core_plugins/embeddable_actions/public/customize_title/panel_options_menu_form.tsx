@@ -26,7 +26,6 @@ export interface PanelOptionsMenuFormProps {
   title?: string;
   onReset: () => void;
   onUpdatePanelTitle: (newPanelTitle: string) => void;
-  onClose: () => void;
 }
 
 interface PanelOptionsMenuFormUiProps extends PanelOptionsMenuFormProps {
@@ -37,17 +36,10 @@ function PanelOptionsMenuFormUi({
   title,
   onReset,
   onUpdatePanelTitle,
-  onClose,
   intl,
 }: PanelOptionsMenuFormUiProps) {
   function onInputChange(event: ChangeEvent<HTMLInputElement>) {
     onUpdatePanelTitle(event.target.value);
-  }
-
-  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.keyCode === keyCodes.ENTER) {
-      onClose();
-    }
   }
 
   return (
@@ -65,7 +57,6 @@ function PanelOptionsMenuFormUi({
           type="text"
           value={title}
           onChange={onInputChange}
-          onKeyDown={onKeyDown}
           aria-label={intl.formatMessage({
             id: 'kbn.dashboard.panel.optionsMenuForm.panelTitleInputAriaLabel',
             defaultMessage: 'Changes to this input are applied immediately. Press enter to exit.',

@@ -24,6 +24,7 @@ import { DashboardViewMode } from '../../dashboard_view_mode';
 import { PanelHeader } from './panel_header';
 
 import { CoreKibanaState } from '../../../selectors';
+import { DashboardContainer, DashboardEmbeddable } from '../../embeddables/dashboard_container';
 import {
   getEmbeddableTitle,
   getFullScreenMode,
@@ -36,7 +37,8 @@ import {
 
 export interface PanelHeaderContainerOwnProps {
   panelId: PanelId;
-  embeddable?: Embeddable;
+  embeddable?: DashboardEmbeddable;
+  container: DashboardContainer;
 }
 
 interface PanelHeaderContainerStateProps {

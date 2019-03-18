@@ -31,6 +31,7 @@ export function DashboardViewport({
   useMargins,
   isFullScreenMode,
   onExitFullScreenMode,
+  container,
 }) {
   return (
     <div
@@ -44,6 +45,7 @@ export function DashboardViewport({
       <DashboardGrid
         getEmbeddableFactory={getEmbeddableFactory}
         maximizedPanelId={maximizedPanelId}
+        container={container}
       />
     </div>
   );

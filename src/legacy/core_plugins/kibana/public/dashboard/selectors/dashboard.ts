@@ -18,16 +18,9 @@
  */
 
 import _ from 'lodash';
-import {
-  ContainerState,
-  EmbeddableMetadata,
-  Filters,
-  Query,
-  RefreshConfig,
-  TimeRange,
-} from 'ui/embeddable';
-import { EmbeddableCustomization } from 'ui/embeddable/types';
+import { Filters, Query, RefreshConfig, TimeRange } from 'ui/embeddable';
 import { DashboardViewMode } from '../dashboard_view_mode';
+import { DashboardEmbeddableInput } from '../embeddables/dashboard_container';
 import {
   DashboardMetadata,
   DashboardState,
@@ -47,13 +40,13 @@ export const getPanelType = (dashboard: DashboardState, panelId: PanelId): strin
   getPanel(dashboard, panelId).type;
 
 export const getEmbeddables = (dashboard: DashboardState): EmbeddablesMap => dashboard.embeddables;
+export const getEmbeddableMetadata = (dashboard: DashboardState, panelId: PanelId): any =>
+  getEmbeddable(dashboard, panelId);
 
 // TODO: rename panel.embeddableConfig to embeddableCustomization. Because it's on the panel that's stored on a
 // dashboard, renaming this will require a migration step.
-export const getEmbeddableCustomization = (
-  dashboard: DashboardState,
-  panelId: PanelId
-): EmbeddableCustomization => getPanel(dashboard, panelId).embeddableConfig;
+export const getEmbeddableCustomization = (dashboard: DashboardState, panelId: PanelId): any =>
+  getPanel(dashboard, panelId).embeddableConfig;
 
 export const getEmbeddable = (dashboard: DashboardState, panelId: PanelId): EmbeddableReduxState =>
   dashboard.embeddables[panelId];
@@ -68,9 +61,7 @@ export const getEmbeddableTitle = (
   panelId: PanelId
 ): string | undefined => {
   const embeddable = getEmbeddable(dashboard, panelId);
-  return embeddable && embeddable.initialized && embeddable.metadata
-    ? embeddable.metadata.title
-    : '';
+  return embeddable && embeddable.initialized ? embeddable.title : '';
 };
 
 export const getEmbeddableInitialized = (dashboard: DashboardState, panelId: PanelId): boolean =>
@@ -81,19 +72,12 @@ export const getEmbeddableStagedFilter = (
   panelId: PanelId
 ): object | undefined => getEmbeddable(dashboard, panelId).stagedFilter;
 
-export const getEmbeddableMetadata = (
-  dashboard: DashboardState,
-  panelId: PanelId
-): EmbeddableMetadata | undefined => getEmbeddable(dashboard, panelId).metadata;
-
 export const getEmbeddableEditUrl = (
   dashboard: DashboardState,
   panelId: PanelId
 ): string | undefined => {
   const embeddable = getEmbeddable(dashboard, panelId);
-  return embeddable && embeddable.initialized && embeddable.metadata
-    ? embeddable.metadata.editUrl
-    : '';
+  return embeddable && embeddable.initialized ? embeddable.editUrl : '';
 };
 
 export const getVisibleContextMenuPanelId = (dashboard: DashboardState): PanelId | undefined =>
@@ -129,8 +113,15 @@ export const getTitle = (dashboard: DashboardState): string => dashboard.metadat
 export const getDescription = (dashboard: DashboardState): string | undefined =>
   dashboard.metadata.description;
 
-export const getContainerState = (dashboard: DashboardState, panelId: PanelId): ContainerState => {
-  const time = getTimeRange(dashboard);
+export const getContainerState = (
+  dashboard: DashboardState,
+  panelId: PanelId
+): DashboardEmbeddableInput => {
+  const dashboardTime = getTimeRange(dashboard);
+  const customizations = getEmbeddableCustomization(dashboard, panelId);
+  const panelTime = customizations && customizations.timeRange;
+
+  const time = panelTime || dashboardTime;
   return {
     customTitle: getPanel(dashboard, panelId).title,
     embeddableCustomization: _.cloneDeep(getEmbeddableCustomization(dashboard, panelId) || {}),
@@ -143,7 +134,7 @@ export const getContainerState = (dashboard: DashboardState, panelId: PanelId): 
       to: time.to,
     },
     refreshConfig: getRefreshConfig(dashboard),
-    viewMode: getViewMode(dashboard),
+    viewMode: getViewMode(dashboard)
   };
 };
 
