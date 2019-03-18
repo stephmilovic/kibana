@@ -4,13 +4,13 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import chrome from 'ui/chrome';
 import { reduce } from 'lodash';
-import { ROUTES, WATCH_TYPES, ACTION_MODES } from '../../../common/constants';
 import { ExecuteDetails } from 'plugins/watcher/models/execute_details';
 import { Watch } from 'plugins/watcher/models/watch';
-import { WatchStatus } from 'plugins/watcher/models/watch_status';
 import { WatchHistoryItem } from 'plugins/watcher/models/watch_history_item';
+import { WatchStatus } from 'plugins/watcher/models/watch_status';
+import chrome from 'ui/chrome';
+import { ACTION_MODES, ROUTES, WATCH_TYPES } from '../../../common/constants';
 
 export class WatchService {
   constructor($http) {
@@ -24,10 +24,9 @@ export class WatchService {
   }
 
   loadWatch(id) {
-    return this.$http.get(`${this.basePath}/watch/${id}`)
-      .then(response => {
-        return Watch.fromUpstreamJson(response.data.watch);
-      });
+    return this.$http.get(`${this.basePath}/watch/${id}`).then(response => {
+      return Watch.fromUpstreamJson(response.data.watch);
+    });
   }
 
   /**
@@ -42,7 +41,8 @@ export class WatchService {
       url += `?startTime=${startTime}`;
     }
 
-    return this.$http.get(url)
+    return this.$http
+      .get(url)
       .then(response => response.data.watchHistoryItems)
       .then(watchHistoryItems => watchHistoryItems.map(WatchHistoryItem.fromUpstreamJson));
   }
@@ -50,10 +50,9 @@ export class WatchService {
   saveWatch(watchModel) {
     const url = `${this.basePath}/watch/${watchModel.id}`;
 
-    return this.$http.put(url, watchModel.upstreamJson)
-      .catch(e => {
-        throw e.data.message;
-      });
+    return this.$http.put(url, watchModel.upstreamJson).catch(e => {
+      throw e.data.message;
+    });
   }
 
   /**
@@ -61,10 +60,9 @@ export class WatchService {
    * @return Promise
    */
   deleteWatch(id) {
-    return this.$http.delete(`${this.basePath}/watch/${id}`)
-      .catch(e => {
-        throw e.data.message;
-      });
+    return this.$http.delete(`${this.basePath}/watch/${id}`).catch(e => {
+      throw e.data.message;
+    });
   }
 
   /**
@@ -73,7 +71,8 @@ export class WatchService {
    */
   deactivateWatch(id) {
     const url = `${this.basePath}/watch/${id}/deactivate`;
-    return this.$http.put(url)
+    return this.$http
+      .put(url)
       .then(response => {
         return WatchStatus.fromUpstreamJson(response.data.watchStatus);
       })
@@ -88,7 +87,8 @@ export class WatchService {
    */
   activateWatch(id) {
     const url = `${this.basePath}/watch/${id}/activate`;
-    return this.$http.put(url)
+    return this.$http
+      .put(url)
       .then(response => {
         return WatchStatus.fromUpstreamJson(response.data.watchStatus);
       })
@@ -104,7 +104,8 @@ export class WatchService {
    */
   acknowledgeWatchAction(watchId, actionId) {
     const url = `${this.basePath}/watch/${watchId}/action/${actionId}/acknowledge`;
-    return this.$http.put(url)
+    return this.$http
+      .put(url)
       .then(response => {
         return WatchStatus.fromUpstreamJson(response.data.watchStatus);
       })
@@ -119,10 +120,11 @@ export class WatchService {
    * @return Promise which returns a populated WatchHistoryItem on success
    */
   executeWatch(executeDetailsModel, watchModel) {
-    return this.$http.put(`${this.basePath}/watch/execute`, {
-      executeDetails: executeDetailsModel.upstreamJson,
-      watch: watchModel.upstreamJson
-    })
+    return this.$http
+      .put(`${this.basePath}/watch/execute`, {
+        executeDetails: executeDetailsModel.upstreamJson,
+        watch: watchModel.upstreamJson,
+      })
       .then(response => {
         return WatchHistoryItem.fromUpstreamJson(response.data.watchHistoryItem);
       })
@@ -137,29 +139,32 @@ export class WatchService {
    * @return Promise which returns a populated WatchHistoryItem on success
    */
   simulateWatchAction(watchModel, actionModel) {
-    const actionModes = reduce(watchModel.actions, (acc, action) => {
-      acc[action.id] = (action === actionModel) ?
-        ACTION_MODES.FORCE_EXECUTE :
-        ACTION_MODES.SKIP;
-      return acc;
-    }, {});
+    const actionModes = reduce(
+      watchModel.actions,
+      (acc, action) => {
+        acc[action.id] = action === actionModel ? ACTION_MODES.FORCE_EXECUTE : ACTION_MODES.SKIP;
+        return acc;
+      },
+      {}
+    );
 
     const executeDetails = new ExecuteDetails({
       triggeredTime: 'now',
       scheduledTime: 'now',
       ignoreCondition: true,
       actionModes,
-      recordExecution: false
+      recordExecution: false,
     });
 
     return this.executeWatch(executeDetails, watchModel);
   }
 
   visualizeWatch(watchModel, visualizeOptions) {
-    return this.$http.post(`${this.basePath}/watch/visualize`, {
-      watch: watchModel.upstreamJson,
-      options: visualizeOptions.upstreamJson
-    })
+    return this.$http
+      .post(`${this.basePath}/watch/visualize`, {
+        watch: watchModel.upstreamJson,
+        options: visualizeOptions.upstreamJson,
+      })
       .then(response => {
         return response.data;
       })
