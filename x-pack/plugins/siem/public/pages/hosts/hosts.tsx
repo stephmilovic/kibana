@@ -45,6 +45,12 @@ const HostsComponent = pure<HostsComponentProps>(({ filterQuery }) => (
     {({ auditbeatIndicesExist, indexPattern }) =>
       indicesExistOrDataTemporarilyUnavailable(auditbeatIndicesExist) ? (
         <>
+          {chrome.breadcrumbs.set([
+            {
+              href: '#/?hosts',
+              text: 'Hosts',
+            },
+          ])}
           <HostsKql indexPattern={indexPattern} type={hostsModel.HostsType.page} />
           <PageContent data-test-subj="pageContent" panelPaddingSize="none">
             <PageContentBody data-test-subj="pane1ScrollContainer">

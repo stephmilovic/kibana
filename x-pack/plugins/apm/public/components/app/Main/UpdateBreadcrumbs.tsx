@@ -20,7 +20,7 @@ interface Props {
   location: Location;
   breadcrumbs: Breadcrumb[];
 }
-
+// steph
 class UpdateBreadcrumbsComponent extends React.Component<Props> {
   public updateHeaderBreadcrumbs() {
     const query = toQuery(this.props.location.search);

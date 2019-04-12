@@ -13,10 +13,12 @@ import React from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { pure } from 'recompose';
 
-import { getBreadcrumbs as getHostDetailsBreadcrumbs } from '../../../pages/hosts/host_details';
-import { getBreadcrumbs as getIPDetailsBreadcrumbs } from '../../../pages/network/ip_details';
+import { getBreadcrumbs as getHostDetailsBreadcrumbs } from '../../../../pages/hosts/host_details';
+import { getBreadcrumbs as getIPDetailsBreadcrumbs } from '../../../../pages/network/ip_details';
 
-import { Navigation } from '.';
+import { HOSTS } from '../../../../pages/hosts/translations';
+import { NETWORK } from '../../../../pages/network/translations';
+import { getHostsUrl, getNetworkUrl, getOverviewUrl } from '../../../link_to';
 
 export interface BreadcrumbItem {
   text: string;
@@ -26,6 +28,27 @@ export interface BreadcrumbItem {
 export const getBreadcrumbsForRoute = (pathname: string): BreadcrumbItem[] | null => {
   const trailingPath = pathname.match(/([^\/]+$)/);
   if (trailingPath !== null) {
+    const pathSegment = trailingPath[1];
+    switch (pathSegment) {
+      case 'hosts': {
+        return [
+          {
+            text: HOSTS,
+            href: getHostsUrl(),
+          },
+        ];
+      }
+      case 'overview': {
+        return getOverviewUrl();
+      }
+      case 'network':
+        return [
+          {
+            text: NETWORK,
+            href: getNetworkUrl(),
+          },
+        ];
+    }
     if (pathname.match(/hosts\/.*?/)) {
       return getHostDetailsBreadcrumbs(trailingPath[0]);
     } else if (pathname.match(/network\/ip\/.*?/)) {

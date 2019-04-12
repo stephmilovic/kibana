@@ -15,7 +15,7 @@ import { HomePage } from './pages/home';
 interface RouterProps {
   history: History;
 }
-
+// steph
 export const PageRouter = pure<RouterProps>(({ history }) => (
   <Router history={history}>
     <Switch>

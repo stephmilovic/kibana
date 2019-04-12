@@ -13,13 +13,13 @@ jest.doMock('ui/chrome', () => ({
   getBasePath: () => '',
 }));
 
-import { encodeIpv6 } from '../../../lib/helpers';
-import { getBreadcrumbs as getHostDetailsBreadcrumbs } from '../../../pages/hosts/host_details';
-import { getBreadcrumbs as getIPDetailsBreadcrumbs } from '../../../pages/network/ip_details';
+import { encodeIpv6 } from '../../../../lib/helpers';
+import { getBreadcrumbs as getHostDetailsBreadcrumbs } from '../../../../pages/hosts/host_details';
+import { getBreadcrumbs as getIPDetailsBreadcrumbs } from '../../../../pages/network/ip_details';
 
-import { getBreadcrumbsForRoute, HeaderBreadcrumbs } from './breadcrumb';
+import { getBreadcrumbsForRoute, HeaderBreadcrumbs } from '.';
 
-describe('Navigation Breadcrumbs', () => {
+describe('TabNavigation Breadcrumbs', () => {
   const hostId = '1d63559c1a3f4c4e9d979c4b3d8b83ff';
   describe('#getBreadcrumbsforRoute', () => {
     const hostBreadcrumbs = getHostDetailsBreadcrumbs(hostId);
@@ -61,7 +61,7 @@ describe('Navigation Breadcrumbs', () => {
   });
 
   describe('HeaderBreadcrumbs', () => {
-    test('should render valid Navigation and no Breadcrumbs', () => {
+    test('should render valid TabNavigation and no Breadcrumbs', () => {
       const hostPathname = `/link-to/hosts`;
       const wrapper = mount(
         <MemoryRouter initialEntries={[hostPathname]}>
@@ -69,11 +69,11 @@ describe('Navigation Breadcrumbs', () => {
         </MemoryRouter>
       );
       wrapper.update();
-      expect(wrapper.find('Navigation').length).toEqual(1);
+      expect(wrapper.find('TabNavigation').length).toEqual(1);
       expect(wrapper.find('EuiBreadcrumbs').length).toEqual(0);
     });
 
-    test('should render valid Navigation and Breadcrumbs', () => {
+    test('should render valid TabNavigation and Breadcrumbs', () => {
       const hostPathname = `/link-to/hosts/${hostId}`;
       const wrapper = mount(
         <MemoryRouter initialEntries={[hostPathname]}>
@@ -81,7 +81,7 @@ describe('Navigation Breadcrumbs', () => {
         </MemoryRouter>
       );
       wrapper.update();
-      expect(wrapper.find('Navigation').length).toEqual(0);
+      expect(wrapper.find('TabNavigation').length).toEqual(0);
       expect(wrapper.find('EuiBreadcrumbs').length).toEqual(1);
     });
   });

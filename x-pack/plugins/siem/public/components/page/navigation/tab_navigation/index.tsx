@@ -3,13 +3,13 @@
  * or more contributor license agreements. Licensed under the Elastic License;
  * you may not use this file except in compliance with the Elastic License.
  */
-import { EuiTab, EuiTabs } from '@elastic/eui';
+import { EuiFlexItem, EuiTab, EuiTabs } from '@elastic/eui';
 import * as React from 'react';
 import styled from 'styled-components';
 
-import { getHostsUrl, getNetworkUrl, getOverviewUrl } from '../../link_to';
+import { getHostsUrl, getNetworkUrl, getOverviewUrl } from '../../../link_to';
 
-import * as i18n from './translations';
+import * as i18n from '../translations';
 
 interface NavTab {
   id: string;
@@ -39,18 +39,18 @@ const navTabs: NavTab[] = [
   },
 ];
 
-interface NavigationState {
+interface TabNavigationState {
   selectedTabId: string;
 }
 
-const NavigationContainer = styled.div`
+const TabNavigationContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
   margin-top: -8px;
 `;
 
-export class Navigation extends React.PureComponent<{}, NavigationState> {
+export class TabNavigation extends React.PureComponent<{}, TabNavigationState> {
   public readonly state = {
     selectedTabId: navTabs.reduce((res, tab) => {
       if (window.location.hash.includes(tab.id)) {
@@ -62,9 +62,11 @@ export class Navigation extends React.PureComponent<{}, NavigationState> {
 
   public render() {
     return (
-      <NavigationContainer>
-        <EuiTabs>{this.renderTabs()}</EuiTabs>
-      </NavigationContainer>
+      <EuiFlexItem grow={false}>
+        <TabNavigationContainer>
+          <EuiTabs>{this.renderTabs()}</EuiTabs>
+        </TabNavigationContainer>
+      </EuiFlexItem>
     );
   }
 

@@ -195,7 +195,7 @@ export function CommonPageProvider({ getService, getPageObjects }) {
           .then(async () => {
             if (appName === 'status_page') return;
             if (await testSubjects.exists('statusPageContainer')) {
-              throw new Error('Navigation ended up at the status page.');
+              throw new Error('TabNavigation ended up at the status page.');
             }
           });
       });

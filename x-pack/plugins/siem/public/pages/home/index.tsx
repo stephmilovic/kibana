@@ -25,7 +25,7 @@ import { AutoSizer } from '../../components/auto_sizer';
 import { DragDropContextWrapper } from '../../components/drag_and_drop/drag_drop_context_wrapper';
 import { Flyout, flyoutHeaderHeight } from '../../components/flyout';
 import { LinkToPage } from '../../components/link_to';
-import { HeaderBreadcrumbs } from '../../components/page/navigation/breadcrumb';
+import { TabNavigation } from '../../components/page/navigation/tab_navigation';
 import { RangeDatePicker } from '../../components/range_date_picker';
 import { StatefulTimeline } from '../../components/timeline';
 import { NotFoundPage } from '../404';
@@ -80,7 +80,7 @@ export const HomePage = pure(() => (
               <PageHeader data-test-subj="pageHeader">
                 <PageHeaderSection>
                   <FixEuiFlexGroup justifyContent="spaceBetween" alignItems="center" gutterSize="m">
-                    <HeaderBreadcrumbs />
+                    <TabNavigation />
                     <EuiFlexItem grow={false}>
                       <EuiFlexGroup alignItems="center" wrap={false} gutterSize="s">
                         <EuiFlexItem grow={false} data-test-subj="datePickerContainer">
@@ -97,8 +97,8 @@ export const HomePage = pure(() => (
               <Switch>
                 <Redirect from="/" exact={true} to="/overview" />
                 <Route path="/overview" component={Overview} />
-                <Route path="/hosts" component={HostsContainer} />
-                <Route path="/network" component={NetworkContainer} />
+                <Route path="/hosts" component={HostsContainer} breadcrumb={'Hosts'} />
+                <Route path="/network" component={NetworkContainer} breadcrumb={'Network'} />
                 <Route path="/link-to" component={LinkToPage} />
                 <Route component={NotFoundPage} />
               </Switch>

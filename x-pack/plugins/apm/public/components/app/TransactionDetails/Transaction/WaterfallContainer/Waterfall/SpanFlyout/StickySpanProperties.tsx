@@ -26,7 +26,7 @@ function formatType(type: string) {
       return i18n.translate(
         'xpack.apm.transactionDetails.spanFlyout.spanType.navigationTimingLabel',
         {
-          defaultMessage: 'Navigation timing'
+          defaultMessage: 'TabNavigation timing'
         }
       );
     default:
