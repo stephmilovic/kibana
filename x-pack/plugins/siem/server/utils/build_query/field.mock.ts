@@ -135,30 +135,7 @@ export const mockFields: FieldNode = {
               kind: 'Field',
               name: {
                 kind: 'Name',
-                value: 'endCursor',
-              },
-              arguments: [],
-              directives: [],
-              selectionSet: {
-                kind: 'SelectionSet',
-                selections: [
-                  {
-                    kind: 'Field',
-                    name: {
-                      kind: 'Name',
-                      value: 'value',
-                    },
-                    arguments: [],
-                    directives: [],
-                  },
-                ],
-              },
-            },
-            {
-              kind: 'Field',
-              name: {
-                kind: 'Name',
-                value: 'hasNextPage',
+                value: 'activePage',
               },
               arguments: [],
               directives: [],

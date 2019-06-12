@@ -16,6 +16,7 @@ import { getArgs, UncommonProcessTable } from '.';
 import { mockData } from './mock';
 jest.mock('react', () => {
   const r = jest.requireActual('react');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return { ...r, memo: (x: any) => x };
 });
 describe('UncommonProcess Table Component', () => {
@@ -90,8 +91,6 @@ describe('UncommonProcess Table Component', () => {
             loading={false}
             data={mockData.UncommonProcess.edges}
             totalCount={mockData.UncommonProcess.totalCount}
-            hasNextPage={getOr(false, 'hasNextPage', mockData.UncommonProcess.pageInfo)!}
-            nextCursor={getOr(null, 'endCursor.value', mockData.UncommonProcess.pageInfo)}
             loadMore={loadMore}
             type={hostsModel.HostsType.page}
           />
@@ -138,8 +137,6 @@ describe('UncommonProcess Table Component', () => {
             loading={false}
             data={mockData.UncommonProcess.edges}
             totalCount={mockData.UncommonProcess.totalCount}
-            hasNextPage={getOr(false, 'hasNextPage', mockData.UncommonProcess.pageInfo)!}
-            nextCursor={getOr(null, 'endCursor.value', mockData.UncommonProcess.pageInfo)}
             loadMore={loadMore}
             type={hostsModel.HostsType.page}
           />
@@ -185,8 +182,6 @@ describe('UncommonProcess Table Component', () => {
             loading={false}
             data={mockData.UncommonProcess.edges}
             totalCount={mockData.UncommonProcess.totalCount}
-            hasNextPage={getOr(false, 'hasNextPage', mockData.UncommonProcess.pageInfo)!}
-            nextCursor={getOr(null, 'endCursor.value', mockData.UncommonProcess.pageInfo)}
             loadMore={loadMore}
             type={hostsModel.HostsType.page}
           />

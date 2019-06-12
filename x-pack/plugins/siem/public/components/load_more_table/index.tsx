@@ -88,6 +88,7 @@ interface BasicTableProps<T, U = T, V = T, W = T, X = T, Y = T, Z = T, AA = T, A
   totalCount: number;
   updateActivePage: (activePage: number) => void;
   updateLimitPagination: (limit: number) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateProps?: { [key: string]: any };
 }
 
@@ -102,6 +103,7 @@ export interface Columns<T> {
   width?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const LoadMoreTable = memo<BasicTableProps<any>>(
   ({
     columns,
@@ -127,8 +129,11 @@ export const LoadMoreTable = memo<BasicTableProps<any>>(
     const [isEmptyTable, setEmptyTable] = useState(pageOfItems.length === 0);
     const [isPopoverOpen, setPopoverOpen] = useState(false);
     const pageCount = Math.ceil(totalCount / limit);
+    // console.log('updateProps', updateProps);
     const effectDeps = updateProps ? [limit, ...Object.values(updateProps)] : [limit];
+    // console.log('effectDeps', effectDeps);
     useEffect(() => {
+      // console.log('activePage', activePage);
       if (activePage !== 0) {
         setActivePage(0);
         updateActivePage(0);
@@ -144,6 +149,7 @@ export const LoadMoreTable = memo<BasicTableProps<any>>(
     };
 
     const goToPage = (newActivePage: number) => {
+      // console.log('goToPage', newActivePage);
       setActivePage(newActivePage);
       loadMore(newActivePage);
       updateActivePage(newActivePage);
@@ -291,8 +297,6 @@ const FooterAction = styled.div`
  *   So we do NOT need to wrap it around TestProvider
  */
 const BackgroundRefetch = styled.div`
-  background-color: ${props => getOr('#ffffff', 'theme.eui.euiColorLightShade', props)};
-  margin: -5px;
   height: calc(100% + 10px);
   opacity: 0.7;
   width: calc(100% + 10px);
