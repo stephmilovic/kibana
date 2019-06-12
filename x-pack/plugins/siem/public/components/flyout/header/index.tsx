@@ -13,20 +13,21 @@ import { ActionCreator } from 'typescript-fsa';
 import { History } from '../../../lib/history';
 import { Note } from '../../../lib/note';
 import {
-  appActions,
   appSelectors,
-  inputsActions,
   inputsModel,
   inputsSelectors,
   State,
-  timelineActions,
-  timelineModel,
   timelineSelectors,
 } from '../../../store';
 import { UpdateNote } from '../../notes/helpers';
-import { DEFAULT_TIMELINE_WIDTH } from '../../timeline/body';
 import { defaultHeaders } from '../../timeline/body/column_headers/default_headers';
 import { Properties } from '../../timeline/properties';
+import { appActions } from '../../../store/app';
+import { inputsActions } from '../../../store/inputs';
+import { timelineActions } from '../../../store/actions';
+import { TimelineModel } from '../../../store/timeline/model';
+import { DEFAULT_TIMELINE_WIDTH } from '../../timeline/body/helpers';
+import { InputsModelId } from '../../../store/inputs/constants';
 
 interface OwnProps {
   timelineId: string;
@@ -61,7 +62,7 @@ interface DispatchProps {
     }
   ) => void;
   createTimeline: ActionCreator<{ id: string; show?: boolean }>;
-  toggleLock: ActionCreator<{ linkToId: inputsModel.InputsModelId }>;
+  toggleLock: ActionCreator<{ linkToId: InputsModelId }>;
   updateDescription: ActionCreator<{ id: string; description: string }>;
   updateIsFavorite: ActionCreator<{ id: string; isFavorite: boolean }>;
   updateNote: UpdateNote;
@@ -117,7 +118,7 @@ const makeMapStateToProps = () => {
   const getNotesByIds = appSelectors.notesByIdsSelector();
   const getGlobalInput = inputsSelectors.globalSelector();
   const mapStateToProps = (state: State, { timelineId }: OwnProps) => {
-    const timeline: timelineModel.TimelineModel = getTimeline(state, timelineId);
+    const timeline: TimelineModel = getTimeline(state, timelineId);
     const globalInput: inputsModel.InputsRange = getGlobalInput(state);
     const {
       description = '',
@@ -171,7 +172,13 @@ const mapDispatchToProps = (dispatch: Dispatch, { timelineId }: OwnProps) => ({
     );
   },
   createTimeline: ({ id, show }: { id: string; show?: boolean }) => {
-    dispatch(timelineActions.createTimeline({ id, columns: defaultHeaders, show }));
+    dispatch(
+      timelineActions.createTimeline({
+        id,
+        columns: defaultHeaders,
+        show,
+      })
+    );
   },
   updateDescription: ({ id, description }: { id: string; description: string }) => {
     dispatch(timelineActions.updateDescription({ id, description }));
@@ -188,7 +195,7 @@ const mapDispatchToProps = (dispatch: Dispatch, { timelineId }: OwnProps) => ({
   updateTitle: ({ id, title }: { id: string; title: string }) => {
     dispatch(timelineActions.updateTitle({ id, title }));
   },
-  toggleLock: ({ linkToId }: { linkToId: inputsModel.InputsModelId }) => {
+  toggleLock: ({ linkToId }: { linkToId: InputsModelId }) => {
     dispatch(inputsActions.toggleTimelineLinkTo({ linkToId }));
   },
 });

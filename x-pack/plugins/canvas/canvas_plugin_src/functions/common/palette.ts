@@ -4,9 +4,10 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
 // @ts-ignore untyped local
 import { palettes } from '../../../common/lib/palettes';
-import { NullContextFunction } from '../types';
+import { getFunctionHelp } from '../../strings';
 
 interface Arguments {
   color: string[];
@@ -20,12 +21,14 @@ interface Return {
   gradient: boolean;
 }
 
-export function palette(): NullContextFunction<'palette', Arguments, Return> {
+export function palette(): ExpressionFunction<'palette', null, Arguments, Return> {
+  const { help, args: argHelp } = getFunctionHelp().palette;
+
   return {
     name: 'palette',
     aliases: [],
     type: 'palette',
-    help: 'Create a color palette',
+    help,
     context: {
       types: ['null'],
     },
@@ -34,18 +37,18 @@ export function palette(): NullContextFunction<'palette', Arguments, Return> {
         aliases: ['_'],
         multi: true,
         types: ['string'],
-        help: 'Palette colors, rgba, hex, or HTML color string. Pass this multiple times.',
+        help: argHelp.color,
       },
       gradient: {
         types: ['boolean'],
         default: false,
-        help: 'Prefer to make a gradient where supported and useful?',
+        help: argHelp.gradient,
         options: [true, false],
       },
       reverse: {
         types: ['boolean'],
         default: false,
-        help: 'Reverse the palette',
+        help: argHelp.reverse,
         options: [true, false],
       },
     },

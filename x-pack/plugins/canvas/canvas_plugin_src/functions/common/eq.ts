@@ -3,25 +3,31 @@
  * or more contributor license agreements. Licensed under the Elastic License;
  * you may not use this file except in compliance with the Elastic License.
  */
-import { Function } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { getFunctionHelp } from '../../strings';
 
 interface Arguments {
-  value: Return;
+  value: Context;
 }
 
-type Return = boolean | number | string | null;
+type Context = boolean | number | string | null;
 
-export function eq(): Function<'eq', Arguments, Return> {
+export function eq(): ExpressionFunction<'eq', Context, Arguments, boolean> {
+  const { help, args: argHelp } = getFunctionHelp().eq;
+
   return {
     name: 'eq',
     type: 'boolean',
-    help: 'Return if the context is equal to the argument',
+    help,
+    context: {
+      types: ['boolean', 'number', 'string', 'null'],
+    },
     args: {
       value: {
         aliases: ['_'],
         types: ['boolean', 'number', 'string', 'null'],
         required: true,
-        help: 'The value to compare the context to',
+        help: argHelp.value,
       },
     },
     fn: (context, args) => {

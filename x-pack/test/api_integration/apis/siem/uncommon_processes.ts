@@ -42,6 +42,7 @@ const uncommonProcessesTests: KbnTestProvider = ({ getService }) => {
             activePage: 0,
             limit: 1,
           },
+          defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
         },
       });
       expect(UncommonProcesses.edges.length).to.be(1);
@@ -65,6 +66,7 @@ const uncommonProcessesTests: KbnTestProvider = ({ getService }) => {
             activePage: 0,
             limit: 2,
           },
+          defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
         },
       });
       expect(UncommonProcesses.edges.length).to.be(2);
@@ -88,6 +90,7 @@ const uncommonProcessesTests: KbnTestProvider = ({ getService }) => {
             activePage: 0,
             limit: 1,
           },
+          defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
         },
       });
       expect(UncommonProcesses.totalCount).to.be(TOTAL_COUNT);
@@ -111,6 +114,7 @@ const uncommonProcessesTests: KbnTestProvider = ({ getService }) => {
             activePage: 0,
             limit: 1,
           },
+          defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
         },
       });
       const expected: GetUncommonProcessesQuery.Node = {

@@ -4,21 +4,13 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { getTelemetryOptIn } from './get_telemetry_opt_in';
-import { populateUICapabilities } from './populate_ui_capabilities';
+import { getTelemetryOptIn } from '../../../telemetry/server';
 
 export async function replaceInjectedVars(originalInjectedVars, request, server) {
   const xpackInfo = server.plugins.xpack_main.info;
 
-  const originalInjectedVarsWithUICapabilities = {
-    ...originalInjectedVars,
-    uiCapabilities: {
-      ...populateUICapabilities(server.plugins.xpack_main, originalInjectedVars.uiCapabilities),
-    }
-  };
-
   const withXpackInfo = async () => ({
-    ...originalInjectedVarsWithUICapabilities,
+    ...originalInjectedVars,
     telemetryOptedIn: await getTelemetryOptIn(request),
     xpackInitialInfo: xpackInfo.isAvailable() ? xpackInfo.toJSON() : undefined,
   });
@@ -30,12 +22,12 @@ export async function replaceInjectedVars(originalInjectedVars, request, server)
 
   // not enough license info to make decision one way or another
   if (!xpackInfo.isAvailable() || !xpackInfo.feature('security').getLicenseCheckResults()) {
-    return originalInjectedVarsWithUICapabilities;
+    return originalInjectedVars;
   }
 
   // request is not authenticated
   if (!await server.plugins.security.isAuthenticated(request)) {
-    return originalInjectedVarsWithUICapabilities;
+    return originalInjectedVars;
   }
 
   // plugin enabled, license is appropriate, request is authenticated

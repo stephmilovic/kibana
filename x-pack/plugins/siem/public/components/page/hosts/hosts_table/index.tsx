@@ -10,6 +10,7 @@ import { connect } from 'react-redux';
 import { ActionCreator } from 'typescript-fsa';
 import { StaticIndexPattern } from 'ui/index_patterns';
 
+import { hostsActions } from '../../../../store/actions';
 import {
   Direction,
   HostsEdges,
@@ -20,7 +21,7 @@ import {
   OsFields,
 } from '../../../../graphql/types';
 import { assertUnreachable } from '../../../../lib/helpers';
-import { hostsActions, hostsModel, hostsSelectors, State } from '../../../../store';
+import { hostsModel, hostsSelectors, State } from '../../../../store';
 import {
   Criteria,
   ItemsPerRow,
@@ -69,10 +70,6 @@ interface HostsTableDispatchProps {
 type HostsTableProps = OwnProps & HostsTableReduxProps & HostsTableDispatchProps;
 
 const rowItems: ItemsPerRow[] = [
-  {
-    text: i18n.ROWS_2,
-    numberOfRow: 2,
-  },
   {
     text: i18n.ROWS_5,
     numberOfRow: 5,
@@ -132,7 +129,6 @@ class HostsTableComponent extends React.PureComponent<HostsTableProps> {
         columns={this.memoizedColumns(type, indexPattern)}
         headerCount={totalCount}
         headerTitle={i18n.HOSTS}
-        headerTooltip={i18n.TOOLTIP}
         headerUnit={i18n.UNIT(totalCount)}
         itemsPerRow={rowItems}
         limit={limit}

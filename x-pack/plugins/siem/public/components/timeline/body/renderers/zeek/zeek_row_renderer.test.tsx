@@ -12,8 +12,7 @@ import * as React from 'react';
 import { mockBrowserFields } from '../../../../../containers/source/mock';
 import { Ecs } from '../../../../../graphql/types';
 import { mockTimelineData, TestProviders } from '../../../../../mock';
-
-import { zeekRowRenderer } from '.';
+import { zeekRowRenderer } from './zeek_row_renderer';
 
 describe('zeek_row_renderer', () => {
   let nonZeek: Ecs;
@@ -29,7 +28,7 @@ describe('zeek_row_renderer', () => {
       browserFields: mockBrowserFields,
       data: nonZeek,
       width: 100,
-      children: <span>some children</span>,
+      children: <span>{'some children'}</span>,
     });
 
     const wrapper = shallow(<span>{children}</span>);
@@ -49,7 +48,7 @@ describe('zeek_row_renderer', () => {
       browserFields: mockBrowserFields,
       data: nonZeek,
       width: 100,
-      children: <span>some children</span>,
+      children: <span>{'some children'}</span>,
     });
     const wrapper = mount(
       <TestProviders>
@@ -64,7 +63,7 @@ describe('zeek_row_renderer', () => {
       browserFields: mockBrowserFields,
       data: zeek,
       width: 100,
-      children: <span>some children </span>,
+      children: <span>{'some children '}</span>,
     });
     const wrapper = mount(
       <TestProviders>

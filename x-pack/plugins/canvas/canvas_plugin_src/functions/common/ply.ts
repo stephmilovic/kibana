@@ -5,7 +5,9 @@
  */
 
 import { groupBy, flatten, pick, map } from 'lodash';
-import { ContextFunction, Datatable, DatatableColumn } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { Datatable, DatatableColumn } from '../types';
+import { getFunctionHelp, getFunctionErrors } from '../../strings';
 
 interface Arguments {
   by: string[];
@@ -14,32 +16,29 @@ interface Arguments {
 
 type Return = Datatable | Promise<Datatable>;
 
-export function ply(): ContextFunction<'ply', Datatable, Arguments, Return> {
+export function ply(): ExpressionFunction<'ply', Datatable, Arguments, Return> {
+  const { help, args: argHelp } = getFunctionHelp().ply;
+  const errors = getFunctionErrors().ply;
+
   return {
     name: 'ply',
     type: 'datatable',
-    help:
-      'Subdivide a datatable and pass the resulting tables into an expression, then merge the output',
+    help,
     context: {
       types: ['datatable'],
     },
     args: {
       by: {
         types: ['string'],
-        help: 'The column to subdivide on',
+        help: argHelp.by,
         multi: true,
       },
       expression: {
         types: ['datatable'],
         resolve: false,
         multi: true,
-        aliases: ['fn', 'function'],
-        help:
-          'An expression to pass each resulting data table into. Tips: \n' +
-          ' Expressions must return a datatable. Use `as` to turn literals into datatables.\n' +
-          ' Multiple expressions must return the same number of rows.' +
-          ' If you need to return a differing row count, pipe into another instance of ply.\n' +
-          ' If multiple expressions return the same columns, the last one wins.',
+        aliases: ['exp', 'fn', 'function'],
+        help: argHelp.expression,
       },
       // In the future it may make sense to add things like shape, or tooltip values, but I think what we have is good for now
       // The way the function below is written you can add as many arbitrary named args as you want.
@@ -57,7 +56,7 @@ export function ply(): ContextFunction<'ply', Datatable, Arguments, Return> {
           const column = context.columns.find(col => col.name === by);
 
           if (!column) {
-            throw new Error(`Column not found: '${by}'`);
+            throw errors.columnNotFound(by);
           }
 
           return column;
@@ -129,13 +128,14 @@ function combineColumns(arrayOfColumnsArrays: DatatableColumn[][]) {
 // This handles merging the tables produced by multiple expressions run on a single member of the `by` split.
 // Thus all tables must be the same length, although their columns do not need to be the same, we will handle combining the columns
 function combineAcross(datatableArray: Datatable[]) {
+  const errors = getFunctionErrors().ply;
   const [referenceTable] = datatableArray;
   const targetRowLength = referenceTable.rows.length;
 
   // Sanity check
   datatableArray.forEach(datatable => {
     if (datatable.rows.length !== targetRowLength) {
-      throw new Error('All expressions must return the same number of rows');
+      throw errors.rowCountMismatch();
     }
   });
 

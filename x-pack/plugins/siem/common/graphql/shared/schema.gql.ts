@@ -17,7 +17,7 @@ export const sharedSchema = gql`
   }
 
   type CursorType {
-    value: String!
+    value: String
     tiebreaker: String
   }
 
@@ -62,13 +62,5 @@ export const sharedSchema = gql`
   type TimelinePageInfo {
     endCursor: CursorType
     hasNextPage: Boolean
-  }
-
-  enum IndexType {
-    ANY
-    FILEBEAT
-    AUDITBEAT
-    PACKETBEAT
-    WINLOGBEAT
   }
 `;

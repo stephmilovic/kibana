@@ -13,11 +13,12 @@ import { BrowserFields } from '../../../../containers/source';
 import { TimelineItem } from '../../../../graphql/types';
 import { Note } from '../../../../lib/note';
 import { AddNoteToEvent, UpdateNote } from '../../../notes/helpers';
-import { OnColumnResized, OnPinEvent, OnUnPinEvent } from '../../events';
+import { OnColumnResized, OnPinEvent, OnUnPinEvent, OnUpdateColumns } from '../../events';
 import { ColumnHeader } from '../column_headers/column_header';
-import { ColumnRenderer, RowRenderer } from '../renderers';
 
 import { StatefulEvent } from './stateful_event';
+import { ColumnRenderer } from '../renderers/column_renderer';
+import { RowRenderer } from '../renderers/row_renderer';
 
 const EventsContainer = styled.div<{
   minWidth: number;
@@ -37,8 +38,10 @@ interface Props {
   eventIdToNoteIds: Readonly<Record<string, string[]>>;
   getNotesByIds: (noteIds: string[]) => Note[];
   id: string;
+  isLoading: boolean;
   onColumnResized: OnColumnResized;
   onPinEvent: OnPinEvent;
+  onUpdateColumns: OnUpdateColumns;
   onUnPinEvent: OnUnPinEvent;
   minWidth: number;
   pinnedEventIds: Readonly<Record<string, boolean>>;
@@ -61,9 +64,11 @@ export class Events extends React.PureComponent<Props> {
       eventIdToNoteIds,
       getNotesByIds,
       id,
+      isLoading,
       minWidth,
       onColumnResized,
       onPinEvent,
+      onUpdateColumns,
       onUnPinEvent,
       pinnedEventIds,
       rowRenderers,
@@ -85,8 +90,10 @@ export class Events extends React.PureComponent<Props> {
                 event={event}
                 eventIdToNoteIds={eventIdToNoteIds}
                 getNotesByIds={getNotesByIds}
+                isLoading={isLoading}
                 onColumnResized={onColumnResized}
                 onPinEvent={onPinEvent}
+                onUpdateColumns={onUpdateColumns}
                 onUnPinEvent={onUnPinEvent}
                 pinnedEventIds={pinnedEventIds}
                 rowRenderers={rowRenderers}

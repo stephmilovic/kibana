@@ -4,7 +4,12 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { getRowItemDraggables, getRowItemOverflow, getRowItemDraggable } from './helpers';
+import {
+  getRowItemDraggables,
+  getRowItemOverflow,
+  getRowItemDraggable,
+  OverflowField,
+} from './helpers';
 import * as React from 'react';
 import { mount, shallow } from 'enzyme';
 import toJson from 'enzyme-to-json';
@@ -34,6 +39,22 @@ describe('Table Helpers', () => {
       });
       const wrapper = shallow(<TestProviders>{rowItem}</TestProviders>);
       expect(wrapper.html()).toBe(getEmptyValue());
+    });
+
+    test('it returns empty string value when rowItem is empty', () => {
+      const rowItem = getRowItemDraggable({
+        rowItem: '',
+        attrName: 'attrName',
+        idPrefix: 'idPrefix',
+        displayCount: 0,
+      });
+      const wrapper = mount(<TestProviders>{rowItem}</TestProviders>);
+      expect(
+        wrapper
+          .find('[data-test-subj="draggable-content"]')
+          .first()
+          .text()
+      ).toBe('(Empty String)');
     });
 
     test('it returns empty value when rowItem is null', () => {
@@ -85,6 +106,21 @@ describe('Table Helpers', () => {
       });
       const wrapper = shallow(<TestProviders>{rowItems}</TestProviders>);
       expect(wrapper.html()).toBe(getEmptyValue());
+    });
+
+    test('it returns empty string value when rowItem is empty', () => {
+      const rowItems = getRowItemDraggables({
+        rowItems: [''],
+        attrName: 'attrName',
+        idPrefix: 'idPrefix',
+      });
+      const wrapper = mount(<TestProviders>{rowItems}</TestProviders>);
+      expect(
+        wrapper
+          .find('[data-test-subj="draggable-content"]')
+          .first()
+          .text()
+      ).toBe('(Empty String)');
     });
 
     test('it returns empty value when rowItems is null', () => {
@@ -169,6 +205,26 @@ describe('Table Helpers', () => {
       expect(JSON.stringify(wrapper.find('EuiToolTip').prop('content'))).toContain(
         'defaultMessage'
       );
+    });
+  });
+
+  describe('OverflowField', () => {
+    test('it returns correctly against snapshot', () => {
+      const overflowString = 'This string is exactly fifty-one chars in length!!!';
+      const wrapper = shallow(<OverflowField value={overflowString} showToolTip={false} />);
+      expect(toJson(wrapper)).toMatchSnapshot();
+    });
+
+    test('it does not truncates as per custom overflowLength value', () => {
+      const overflowString = 'This string is short';
+      const wrapper = mount(<OverflowField value={overflowString} overflowLength={20} />);
+      expect(wrapper.text()).toBe('This string is short');
+    });
+
+    test('it truncates as per custom overflowLength value', () => {
+      const overflowString = 'This string is exactly fifty-one chars in length!!!';
+      const wrapper = mount(<OverflowField value={overflowString} overflowLength={20} />);
+      expect(wrapper.text()).toBe('This string is exact');
     });
   });
 });

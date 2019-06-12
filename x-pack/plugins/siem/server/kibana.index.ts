@@ -6,21 +6,21 @@
 
 import { i18n } from '@kbn/i18n';
 import { Server } from 'hapi';
-import JoiNamespace from 'joi';
 
 import { initServer } from './init_server';
 import { compose } from './lib/compose/kibana';
 import { createLogger } from './utils/logger';
+import {
+  noteSavedObjectType,
+  pinnedEventSavedObjectType,
+  timelineSavedObjectType,
+} from './saved_objects';
 
 const APP_ID = 'siem';
 
-export interface KbnServer extends Server {
-  usage: unknown;
-}
-
 export const amMocking = (): boolean => process.env.INGEST_MOCKS === 'true';
 
-export const initServerWithKibana = (kbnServer: KbnServer) => {
+export const initServerWithKibana = (kbnServer: Server) => {
   // bind is so "this" binds correctly to the logger since hapi server does not auto-bind its methods
   const logger = createLogger(kbnServer.log.bind(kbnServer));
   logger.info('Plugin initializing');
@@ -51,8 +51,7 @@ export const initServerWithKibana = (kbnServer: KbnServer) => {
       all: {
         api: ['siem'],
         savedObject: {
-          // Add your saveObject that user need to access
-          all: [],
+          all: [noteSavedObjectType, pinnedEventSavedObjectType, timelineSavedObjectType],
           read: ['config'],
         },
         ui: ['show'],
@@ -61,30 +60,15 @@ export const initServerWithKibana = (kbnServer: KbnServer) => {
         api: ['siem'],
         savedObject: {
           all: [],
-          read: ['config'],
+          read: [
+            'config',
+            noteSavedObjectType,
+            pinnedEventSavedObjectType,
+            timelineSavedObjectType,
+          ],
         },
         ui: ['show'],
       },
     },
   });
-};
-
-export const getConfigSchema = (Joi: typeof JoiNamespace) => {
-  const DefaultSourceConfigSchema = Joi.object({});
-
-  const AppRootConfigSchema = Joi.object({
-    enabled: Joi.boolean().default(true),
-    query: Joi.object({
-      partitionSize: Joi.number(),
-      partitionFactor: Joi.number(),
-    }).default(),
-    sources: Joi.object()
-      .keys({
-        default: DefaultSourceConfigSchema,
-      })
-      .pattern(/.*/, DefaultSourceConfigSchema)
-      .default(),
-  }).default();
-
-  return AppRootConfigSchema;
 };

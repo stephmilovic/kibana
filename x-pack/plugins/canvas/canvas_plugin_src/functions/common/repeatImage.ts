@@ -4,53 +4,56 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
 // @ts-ignore untyped local
 import { resolveWithMissingImage } from '../../../common/lib/resolve_dataurl';
 // @ts-ignore .png file
 import { elasticOutline } from '../../lib/elastic_outline';
-import { ContextFunction, Render } from '../types';
+import { Render } from '../types';
+import { getFunctionHelp } from '../../strings';
 
 interface Arguments {
   image: string | null;
   size: number;
-  max: number | null;
+  max: number;
   emptyImage: string | null;
 }
 
-export function repeatImage(): ContextFunction<
+export function repeatImage(): ExpressionFunction<
   'repeatImage',
   number,
   Arguments,
   Render<Arguments>
 > {
+  const { help, args: argHelp } = getFunctionHelp().repeatImage;
+
   return {
     name: 'repeatImage',
     aliases: [],
     type: 'render',
-    help: 'Configure a repeating image element',
+    help,
     context: {
       types: ['number'],
     },
     args: {
       image: {
         types: ['string', 'null'],
-        help: 'The image to repeat. Usually a dataURL or an asset',
+        help: argHelp.image,
         default: elasticOutline,
       },
       size: {
         types: ['number'],
         default: 100,
-        help:
-          'The maximum height or width of the image, in pixels. Eg, if you images is taller than it is wide, this will limit its height',
+        help: argHelp.size,
       },
       max: {
-        types: ['number', 'null'],
-        help: 'Maximum number of times the image may repeat',
+        types: ['number'],
+        help: argHelp.max,
         default: 1000,
       },
       emptyImage: {
         types: ['string', 'null'],
-        help: 'Fill the difference between the input and the `max=` parameter with this image',
+        help: argHelp.emptyImage,
         default: null,
       },
     },

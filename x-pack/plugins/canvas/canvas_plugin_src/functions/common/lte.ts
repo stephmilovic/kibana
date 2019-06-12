@@ -3,25 +3,31 @@
  * or more contributor license agreements. Licensed under the Elastic License;
  * you may not use this file except in compliance with the Elastic License.
  */
-import { ContextFunction } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { getFunctionHelp } from '../../strings';
 
-type Context = boolean | number | string | null;
+type Context = number | string;
 
 interface Arguments {
   value: Context;
 }
 
-export function lte(): ContextFunction<'lte', Context, Arguments, boolean> {
+export function lte(): ExpressionFunction<'lte', Context, Arguments, boolean> {
+  const { help, args: argHelp } = getFunctionHelp().lte;
+
   return {
     name: 'lte',
     type: 'boolean',
-    help: 'Return if the context is less than or equal to the argument',
+    context: {
+      types: ['number', 'string'],
+    },
+    help,
     args: {
       value: {
         aliases: ['_'],
-        types: ['boolean', 'number', 'string', 'null'],
+        types: ['number', 'string'],
         required: true,
-        help: 'The value to compare the context to',
+        help: argHelp.value,
       },
     },
     fn: (context, args) => {

@@ -3,31 +3,33 @@
  * or more contributor license agreements. Licensed under the Elastic License;
  * you may not use this file except in compliance with the Elastic License.
  */
-import { NullContextFunction } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { getFunctionHelp } from '../../strings';
 
-export type Shape =
-  | 'arrow'
-  | 'arrowMulti'
-  | 'bookmark'
-  | 'circle'
-  | 'cross'
-  | 'hexagon'
-  | 'kite'
-  | 'pentagon'
-  | 'rhombus'
-  | 'semicircle'
-  | 'speechBubble'
-  | 'square'
-  | 'star'
-  | 'tag'
-  | 'triangle'
-  | 'triangleRight';
+export enum Shape {
+  ARROW = 'arrow',
+  ARROW_MULTI = 'arrowMulti',
+  BOOKMARK = 'bookmark',
+  CIRCLE = 'circle',
+  CROSS = 'cross',
+  HEXAGON = 'hexagon',
+  KITE = 'kite',
+  PENTAGON = 'pentagon',
+  RHOMBUS = 'rhombus',
+  SEMICIRCLE = 'semicircle',
+  SPEECH_BUBBLE = 'speechBubble',
+  SQUARE = 'square',
+  STAR = 'star',
+  TAG = 'tag',
+  TRIANGLE = 'triangle',
+  TRIANGLE_RIGHT = 'triangleRight',
+}
 
 interface Arguments {
-  border: string | null;
-  borderWidth: number | null;
-  shape: Shape | null;
-  fill: string | null;
+  border: string;
+  borderWidth: number;
+  shape: Shape;
+  fill: string;
   maintainAspect: boolean;
 }
 
@@ -35,61 +37,44 @@ interface Return extends Arguments {
   type: 'shape';
 }
 
-const OPTIONS: Shape[] = [
-  'arrow',
-  'arrowMulti',
-  'bookmark',
-  'circle',
-  'cross',
-  'hexagon',
-  'kite',
-  'pentagon',
-  'rhombus',
-  'semicircle',
-  'speechBubble',
-  'square',
-  'star',
-  'tag',
-  'triangle',
-  'triangleRight',
-];
+export function shape(): ExpressionFunction<'shape', null, Arguments, Return> {
+  const { help, args: argHelp } = getFunctionHelp().shape;
 
-export function shape(): NullContextFunction<'shape', Arguments, Return> {
   return {
     name: 'shape',
     aliases: [],
     type: 'shape',
-    help: 'Create a shape',
+    help,
     context: {
       types: ['null'],
     },
     args: {
       border: {
-        types: ['string', 'null'],
+        types: ['string'],
         aliases: ['stroke'],
-        help: 'Valid CSS color string',
+        help: argHelp.border,
       },
       borderWidth: {
-        types: ['number', 'null'],
+        types: ['number'],
         aliases: ['strokeWidth'],
-        help: 'Thickness of the border',
-        default: '0',
+        help: argHelp.borderWidth,
+        default: 0,
       },
       shape: {
-        types: ['string', 'null'],
-        help: 'Pick a shape',
+        types: ['string'],
+        help: argHelp.shape,
         aliases: ['_'],
         default: 'square',
-        options: OPTIONS,
+        options: Object.values(Shape),
       },
       fill: {
-        types: ['string', 'null'],
-        help: 'Valid CSS color string',
+        types: ['string'],
+        help: argHelp.fill,
         default: 'black',
       },
       maintainAspect: {
         types: ['boolean'],
-        help: 'Select true to maintain aspect ratio',
+        help: argHelp.maintainAspect,
         default: false,
         options: [true, false],
       },

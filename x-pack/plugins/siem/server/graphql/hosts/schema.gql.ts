@@ -26,10 +26,26 @@ export const hostsSchema = gql`
     type: String
   }
 
+  type CloudInstance {
+    id: [String]
+  }
+
+  type CloudMachine {
+    type: [String]
+  }
+
+  type CloudFields {
+    instance: CloudInstance
+    machine: CloudMachine
+    provider: [String]
+    region: [String]
+  }
+
   type HostItem {
     _id: String
     lastSeen: Date
-    host: HostFields
+    host: HostEcsFields
+    cloud: CloudFields
   }
 
   type HostsEdges {
@@ -66,8 +82,14 @@ export const hostsSchema = gql`
       pagination: PaginationInput!
       sort: HostsSortField!
       filterQuery: String
+      defaultIndex: [String!]!
     ): HostsData!
-    HostDetails(id: String, hostName: String!, timerange: TimerangeInput!): HostItem!
-    HostFirstLastSeen(id: String, hostName: String!): FirstLastSeenHost!
+    HostOverview(
+      id: String
+      hostName: String!
+      timerange: TimerangeInput!
+      defaultIndex: [String!]!
+    ): HostItem!
+    HostFirstLastSeen(id: String, hostName: String!, defaultIndex: [String!]!): FirstLastSeenHost!
   }
 `;

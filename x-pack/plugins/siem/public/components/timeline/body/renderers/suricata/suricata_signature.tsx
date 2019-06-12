@@ -9,15 +9,18 @@ import * as React from 'react';
 import { pure } from 'recompose';
 import styled from 'styled-components';
 
-import { TokensFlexItem } from '..';
 import { DragEffects, DraggableWrapper } from '../../../../drag_and_drop/draggable_wrapper';
 import { escapeDataProviderId } from '../../../../drag_and_drop/helpers';
 import { ExternalLinkIcon } from '../../../../external_link_icon';
 import { GoogleLink } from '../../../../links';
 import { Provider } from '../../../../timeline/data_providers/provider';
 
-import { getBeginningTokens } from '.';
+import { TokensFlexItem } from '../helpers';
+import { getBeginningTokens } from './suricata_links';
+import { DefaultDraggable } from '../../../../draggables';
+import { IS_OPERATOR } from '../../../data_providers/data_provider';
 
+export const SURICATA_SIGNATURE_FIELD_NAME = 'suricata.eve.alert.signature';
 export const SURICATA_SIGNATURE_ID_FIELD_NAME = 'suricata.eve.alert.signature_id';
 
 const SignatureFlexItem = styled(EuiFlexItem)`
@@ -58,6 +61,7 @@ export const DraggableSignatureId = pure<{ id: string; signatureId: number }>(
           queryMatch: {
             field: SURICATA_SIGNATURE_ID_FIELD_NAME,
             value: signatureId,
+            operator: IS_OPERATOR,
           },
         }}
         render={(dataProvider, _, snapshot) =>
@@ -81,14 +85,25 @@ export const DraggableSignatureId = pure<{ id: string; signatureId: number }>(
   )
 );
 
-export const SuricataSignature = pure<{ id: string; signature: string; signatureId: number }>(
-  ({ id, signature, signatureId }) => {
-    const tokens = getBeginningTokens(signature);
-    return (
-      <EuiFlexGroup justifyContent="center" gutterSize="none" wrap={true}>
-        <DraggableSignatureId id={id} signatureId={signatureId} />
-        <Tokens tokens={tokens} />
-        <LinkFlexItem grow={false}>
+export const SuricataSignature = pure<{
+  contextId: string;
+  id: string;
+  signature: string;
+  signatureId: number;
+}>(({ contextId, id, signature, signatureId }) => {
+  const tokens = getBeginningTokens(signature);
+  return (
+    <EuiFlexGroup justifyContent="center" gutterSize="none" wrap={true}>
+      <DraggableSignatureId id={id} signatureId={signatureId} />
+      <Tokens tokens={tokens} />
+      <LinkFlexItem grow={false}>
+        <DefaultDraggable
+          data-test-subj="draggable-signature-link"
+          field={SURICATA_SIGNATURE_FIELD_NAME}
+          id={`${contextId}-${id}-${SURICATA_SIGNATURE_FIELD_NAME}`}
+          name={name}
+          value={signature}
+        >
           <div>
             <GoogleLink link={signature}>
               {signature
@@ -98,8 +113,8 @@ export const SuricataSignature = pure<{ id: string; signature: string; signature
             </GoogleLink>
             <ExternalLinkIcon />
           </div>
-        </LinkFlexItem>
-      </EuiFlexGroup>
-    );
-  }
-);
+        </DefaultDraggable>
+      </LinkFlexItem>
+    </EuiFlexGroup>
+  );
+});

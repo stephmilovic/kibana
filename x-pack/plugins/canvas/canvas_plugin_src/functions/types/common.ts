@@ -46,6 +46,7 @@ export interface Filter {
  * Represents a function called by the `case` Function.
  */
 export interface Case {
+  type: 'case';
   matches: any;
   result: any;
 }
@@ -82,23 +83,55 @@ export interface DatatableColumn {
  * A `Datatable` in Canvas is a unique structure that represents tabulated data.
  */
 export interface Datatable {
+  type: 'datatable';
   columns: DatatableColumn[];
   rows: DatatableRow[];
-  type: 'datatable';
 }
 
-export type Legend = 'nw' | 'sw' | 'ne' | 'se';
+export enum Legend {
+  NORTH_WEST = 'nw',
+  SOUTH_WEST = 'sw',
+  NORTH_EAST = 'ne',
+  SOUTH_EAST = 'se',
+}
+
+export enum Position {
+  TOP = 'top',
+  BOTTOM = 'bottom',
+  LEFT = 'left',
+  RIGHT = 'right',
+}
+
+/**
+ * Allowed column names in a PointSeries
+ */
+export type PointSeriesColumnName = 'x' | 'y' | 'color' | 'size' | 'text';
+
+/**
+ * Column in a PointSeries
+ */
+export interface PointSeriesColumn {
+  type: 'number' | 'string';
+  role: 'measure' | 'dimension';
+  expression: string;
+}
+
+/**
+ * Represents a collection of valid Columns in a PointSeries
+ */
+export type PointSeriesColumns = { [key in PointSeriesColumnName]: PointSeriesColumn };
 
 /**
  * A `PointSeries` in Canvas is a unique structure that represents dots on a chart.
  */
 export interface PointSeries {
-  columns: DatatableColumn[];
-  rows: Array<Record<string, any>>;
   type: 'pointseries';
+  columns: PointSeriesColumns;
+  rows: Array<Record<string, any>>;
 }
 
 export interface SeriesStyle {
+  type: 'seriesStyle';
   bars: number;
   color: string;
   fill: number;
@@ -107,7 +140,6 @@ export interface SeriesStyle {
   lines: number;
   points: number;
   stack: number;
-  type: 'seriesStyle';
 }
 
 export interface Palette {
@@ -130,7 +162,7 @@ export interface Ticks {
 export interface AxisConfig {
   type: 'axisConfig';
   show: boolean;
-  position: 'bottom' | 'top' | 'left' | 'right';
+  position: Position;
   min: number;
   max: number;
   tickSize: number;

@@ -3,14 +3,19 @@
  * or more contributor license agreements. Licensed under the Elastic License;
  * you may not use this file except in compliance with the Elastic License.
  */
-import { Filter, ContextFunction } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { Filter } from '../types';
+import { getFunctionHelp } from '../../strings';
 
 interface Arguments {
   column: string;
   value: string;
+  filterGroup: string;
 }
 
-export function exactly(): ContextFunction<'exactly', Filter, Arguments, Filter> {
+export function exactly(): ExpressionFunction<'exactly', Filter, Arguments, Filter> {
+  const { help, args: argHelp } = getFunctionHelp().exactly;
+
   return {
     name: 'exactly',
     aliases: [],
@@ -18,17 +23,23 @@ export function exactly(): ContextFunction<'exactly', Filter, Arguments, Filter>
     context: {
       types: ['filter'],
     },
-    help: 'Create a filter that matches a given column for a perfectly exact value',
+    help,
     args: {
       column: {
         types: ['string'],
         aliases: ['field', 'c'],
-        help: 'The column or field to attach the filter to',
+        required: true,
+        help: argHelp.column,
       },
       value: {
         types: ['string'],
         aliases: ['v', 'val'],
-        help: 'The value to match exactly, including white space and capitalization',
+        required: true,
+        help: argHelp.value,
+      },
+      filterGroup: {
+        types: ['string'],
+        help: argHelp.filterGroup,
       },
     },
     fn: (context, args) => {

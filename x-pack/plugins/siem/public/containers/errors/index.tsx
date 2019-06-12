@@ -5,27 +5,33 @@
  */
 
 import { onError } from 'apollo-link-error';
+import { throttle, noop } from 'lodash/fp';
 import uuid from 'uuid';
-
-import { store } from '../../store';
-import { appActions } from '../../store';
 
 import * as i18n from './translations';
 
+import { getStore } from '../../store';
+import { appActions } from '../../store/actions';
+
 export const errorLink = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors != null) {
-    graphQLErrors.forEach(({ message }) =>
-      store.dispatch(
-        appActions.addError({ id: uuid.v4(), title: i18n.DATA_FETCH_FAILURE, message })
-      )
+  const store = getStore();
+  const dispatch = throttle(50, store != null ? store.dispatch : noop);
+  if (graphQLErrors != null && store != null) {
+    dispatch(
+      appActions.addError({
+        id: uuid.v4(),
+        title: i18n.DATA_FETCH_FAILURE,
+        message: graphQLErrors.map(({ message }) => message),
+      })
     );
   }
-  if (networkError != null) {
-    store.dispatch(
+
+  if (networkError != null && store != null) {
+    dispatch(
       appActions.addError({
         id: uuid.v4(),
         title: i18n.NETWORK_FAILURE,
-        message: networkError.message,
+        message: [networkError.message],
       })
     );
   }

@@ -18,7 +18,7 @@
  */
 import { EuiFlyoutBody, EuiFlyoutHeader, EuiTitle } from '@elastic/eui';
 import React from 'react';
-import { getNewPlatform } from 'ui/new_platform';
+import { npStart } from 'ui/new_platform';
 
 import {
   ContextMenuAction,
@@ -28,17 +28,23 @@ import {
 
 class SamplePanelAction extends ContextMenuAction {
   constructor() {
-    super({
-      displayName: 'Sample Panel Action',
-      id: 'samplePanelAction',
-      parentPanelId: 'mainMenu',
-    });
+    super(
+      {
+        id: 'samplePanelAction',
+        parentPanelId: 'mainMenu',
+      },
+      {
+        getDisplayName: () => {
+          return 'Sample Panel Action';
+        },
+      }
+    );
   }
   public onClick = ({ embeddable }: PanelActionAPI) => {
     if (!embeddable) {
       return;
     }
-    getNewPlatform().start.core.overlays.openFlyout(
+    npStart.core.overlays.openFlyout(
       <React.Fragment>
         <EuiFlyoutHeader>
           <EuiTitle size="m" data-test-subj="samplePanelActionTitle">

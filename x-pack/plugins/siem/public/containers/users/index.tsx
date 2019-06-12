@@ -9,8 +9,15 @@ import React from 'react';
 import { Query } from 'react-apollo';
 import { connect } from 'react-redux';
 
-import { FlowTarget } from '../../../server/graphql/types';
-import { GetUsersQuery, PageInfo, UsersEdges, UsersSortField } from '../../graphql/types';
+import chrome from 'ui/chrome';
+import { DEFAULT_INDEX_KEY } from '../../../common/constants';
+import {
+  GetUsersQuery,
+  FlowTarget,
+  PageInfo,
+  UsersEdges,
+  UsersSortField,
+} from '../../graphql/types';
 import { inputsModel, networkModel, networkSelectors, State } from '../../store';
 import { createFilter } from '../helpers';
 import { generateTablePaginationOptions } from '../../components/load_more_table/helpers';
@@ -79,6 +86,7 @@ class UsersComponentQuery extends QueryTemplate<
           sort: usersSortField,
           pagination: generateTablePaginationOptions(activePage, limit),
           filterQuery: createFilter(filterQuery),
+          defaultIndex: chrome.getUiSettingsClient().get(DEFAULT_INDEX_KEY),
         }}
       >
         {({ data, loading, fetchMore, refetch }) => {

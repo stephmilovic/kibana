@@ -99,6 +99,7 @@ export interface Columns<T> {
   truncateText?: boolean;
   hideForMobile?: boolean;
   render?: (item: T) => void;
+  width?: string;
 }
 
 export const LoadMoreTable = memo<BasicTableProps<any>>(
@@ -171,7 +172,7 @@ export const LoadMoreTable = memo<BasicTableProps<any>>(
         iconSide="right"
         onClick={onButtonClick}
       >
-        Rows: {limit}
+        {`${i18n.ROWS}: ${limit}`}
       </EuiButtonEmpty>
     );
 
@@ -277,10 +278,6 @@ export const LoadMoreTable = memo<BasicTableProps<any>>(
 );
 
 export const BasicTableContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  height: auto;
   position: relative;
 `;
 

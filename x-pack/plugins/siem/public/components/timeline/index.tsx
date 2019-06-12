@@ -4,29 +4,26 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
+import { isEqual } from 'lodash/fp';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { ActionCreator } from 'typescript-fsa';
 
 import { WithSource } from '../../containers/source';
-import { IndexType } from '../../graphql/types';
-import {
-  inputsModel,
-  inputsSelectors,
-  State,
-  timelineActions,
-  timelineModel,
-  timelineSelectors,
-} from '../../store';
+import { inputsModel, inputsSelectors, State, timelineSelectors } from '../../store';
+import { timelineActions } from '../../store/actions';
+import { KqlMode, TimelineModel } from '../../store/timeline/model';
 
 import { ColumnHeader } from './body/column_headers/column_header';
+import { DataProvider, QueryOperator } from './data_providers/data_provider';
+import { defaultHeaders } from './body/column_headers/default_headers';
 import { Sort } from './body/sort';
-import { DataProvider } from './data_providers/data_provider';
 import {
   OnChangeDataProviderKqlQuery,
   OnChangeDroppableAndProvider,
   OnChangeItemsPerPage,
   OnDataProviderRemoved,
+  OnDataProviderEdited,
   OnToggleDataProviderEnabled,
   OnToggleDataProviderExcluded,
 } from './events';
@@ -46,7 +43,7 @@ interface StateReduxProps {
   isLive: boolean;
   itemsPerPage?: number;
   itemsPerPageOptions?: number[];
-  kqlMode: timelineModel.KqlMode;
+  kqlMode: KqlMode;
   kqlQueryExpression: string;
   pageCount?: number;
   sort?: Sort;
@@ -55,10 +52,28 @@ interface StateReduxProps {
 }
 
 interface DispatchProps {
-  createTimeline?: ActionCreator<{ id: string }>;
+  createTimeline?: ActionCreator<{
+    id: string;
+    columns: ColumnHeader[];
+    show?: boolean;
+  }>;
   addProvider?: ActionCreator<{
     id: string;
     provider: DataProvider;
+  }>;
+  onDataProviderEdited?: ActionCreator<{
+    andProviderId?: string;
+    excluded: boolean;
+    field: string;
+    id: string;
+    operator: QueryOperator;
+    providerId: string;
+    value: string | number;
+  }>;
+  updateColumns?: ActionCreator<{
+    id: string;
+    category: string;
+    columns: ColumnHeader[];
   }>;
   updateProviders?: ActionCreator<{
     id: string;
@@ -106,11 +121,48 @@ interface DispatchProps {
 
 type Props = OwnProps & StateReduxProps & DispatchProps;
 
-class StatefulTimelineComponent extends React.PureComponent<Props> {
+class StatefulTimelineComponent extends React.Component<Props> {
+  public shouldComponentUpdate = ({
+    id,
+    flyoutHeaderHeight,
+    flyoutHeight,
+    activePage,
+    columns,
+    dataProviders,
+    end,
+    isLive,
+    itemsPerPage,
+    itemsPerPageOptions,
+    kqlMode,
+    kqlQueryExpression,
+    pageCount,
+    sort,
+    start,
+    show,
+  }: Props) =>
+    id !== this.props.id ||
+    flyoutHeaderHeight !== this.props.flyoutHeaderHeight ||
+    flyoutHeight !== this.props.flyoutHeight ||
+    activePage !== this.props.activePage ||
+    !isEqual(columns, this.props.columns) ||
+    !isEqual(dataProviders, this.props.dataProviders) ||
+    end !== this.props.end ||
+    isLive !== this.props.isLive ||
+    itemsPerPage !== this.props.itemsPerPage ||
+    !isEqual(itemsPerPageOptions, this.props.itemsPerPageOptions) ||
+    kqlMode !== this.props.kqlMode ||
+    kqlQueryExpression !== this.props.kqlQueryExpression ||
+    pageCount !== this.props.pageCount ||
+    !isEqual(sort, this.props.sort) ||
+    start !== this.props.start ||
+    show !== this.props.show;
+
   public componentDidMount() {
     const { createTimeline, id } = this.props;
 
-    createTimeline!({ id });
+    if (createTimeline != null) {
+      createTimeline({ id, columns: defaultHeaders, show: false });
+    }
   }
 
   public render() {
@@ -132,7 +184,7 @@ class StatefulTimelineComponent extends React.PureComponent<Props> {
     } = this.props;
 
     return (
-      <WithSource sourceId="default" indexTypes={[IndexType.ANY]}>
+      <WithSource sourceId="default">
         {({ indexPattern, browserFields }) => (
           <Timeline
             browserFields={browserFields}
@@ -151,6 +203,7 @@ class StatefulTimelineComponent extends React.PureComponent<Props> {
             onChangeDataProviderKqlQuery={this.onChangeDataProviderKqlQuery}
             onChangeDroppableAndProvider={this.onChangeDroppableAndProvider}
             onChangeItemsPerPage={this.onChangeItemsPerPage}
+            onDataProviderEdited={this.onDataProviderEdited}
             onDataProviderRemoved={this.onDataProviderRemoved}
             onToggleDataProviderEnabled={this.onToggleDataProviderEnabled}
             onToggleDataProviderExcluded={this.onToggleDataProviderExcluded}
@@ -192,6 +245,24 @@ class StatefulTimelineComponent extends React.PureComponent<Props> {
       andProviderId,
     });
 
+  private onDataProviderEdited: OnDataProviderEdited = ({
+    andProviderId,
+    excluded,
+    field,
+    operator,
+    providerId,
+    value,
+  }) =>
+    this.props.onDataProviderEdited!({
+      andProviderId,
+      excluded,
+      field,
+      id: this.props.id,
+      operator,
+      providerId,
+      value,
+    });
+
   private onChangeDataProviderKqlQuery: OnChangeDataProviderKqlQuery = ({ providerId, kqlQuery }) =>
     this.props.updateDataProviderKqlQuery!({ id: this.props.id, kqlQuery, providerId });
 
@@ -207,7 +278,7 @@ const makeMapStateToProps = () => {
   const getKqlQueryTimeline = timelineSelectors.getKqlFilterQuerySelector();
   const getInputsTimeline = inputsSelectors.getTimelineSelector();
   const mapStateToProps = (state: State, { id }: OwnProps) => {
-    const timeline: timelineModel.TimelineModel = getTimeline(state, id);
+    const timeline: TimelineModel = getTimeline(state, id);
     const input: inputsModel.InputsRange = getInputsTimeline(state);
     const {
       columns,
@@ -243,13 +314,15 @@ export const StatefulTimeline = connect(
   {
     addProvider: timelineActions.addProvider,
     createTimeline: timelineActions.createTimeline,
-    updateSort: timelineActions.updateSort,
+    onDataProviderEdited: timelineActions.dataProviderEdited,
+    updateColumns: timelineActions.updateColumns,
     updateDataProviderEnabled: timelineActions.updateDataProviderEnabled,
     updateDataProviderExcluded: timelineActions.updateDataProviderExcluded,
     updateDataProviderKqlQuery: timelineActions.updateDataProviderKqlQuery,
     updateHighlightedDropAndProviderId: timelineActions.updateHighlightedDropAndProviderId,
     updateItemsPerPage: timelineActions.updateItemsPerPage,
     updateItemsPerPageOptions: timelineActions.updateItemsPerPageOptions,
+    updateSort: timelineActions.updateSort,
     removeProvider: timelineActions.removeProvider,
   }
 )(StatefulTimelineComponent);

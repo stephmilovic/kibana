@@ -16,7 +16,8 @@ import { getEmptyValue } from '../../../empty_value';
 import { defaultHeaders } from '../column_headers/default_headers';
 
 import { columnRenderers } from '.';
-import { deleteItemIdx, findItem, getColumnRenderer, getValues } from '.';
+import { getColumnRenderer } from './get_column_renderer';
+import { getValues, findItem, deleteItemIdx } from './helpers';
 
 describe('get_column_renderer', () => {
   let nonSuricata: TimelineNonEcsData[];
@@ -67,7 +68,11 @@ describe('get_column_renderer', () => {
       values: getValues(columnName, nonSuricata),
       field: defaultHeaders[7],
     });
-    const wrapper = mount(<span>{column}</span>);
+    const wrapper = mount(
+      <TestProviders>
+        <span>{column}</span>
+      </TestProviders>
+    );
     expect(wrapper.text()).toEqual(getEmptyValue());
   });
 
@@ -80,7 +85,11 @@ describe('get_column_renderer', () => {
       values: getValues(columnName, nonSuricata),
       field: defaultHeaders[7],
     });
-    const wrapper = mount(<span>{column}</span>);
+    const wrapper = mount(
+      <TestProviders>
+        <span>{column}</span>
+      </TestProviders>
+    );
     expect(wrapper.text()).toEqual(getEmptyValue());
   });
 });

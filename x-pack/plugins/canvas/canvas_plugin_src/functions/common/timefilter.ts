@@ -5,15 +5,21 @@
  */
 
 import dateMath from '@elastic/datemath';
-import { ContextFunction, Filter } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { Filter } from '../types';
+import { getFunctionHelp, getFunctionErrors } from '../../strings';
 
 interface Arguments {
   column: string;
-  from: string | null;
-  to: string | null;
+  from: string;
+  to: string;
+  filterGroup: string;
 }
 
-export function timefilter(): ContextFunction<'timefilter', Filter, Arguments, Filter> {
+export function timefilter(): ExpressionFunction<'timefilter', Filter, Arguments, Filter> {
+  const { help, args: argHelp } = getFunctionHelp().timefilter;
+  const errors = getFunctionErrors().timefilter;
+
   return {
     name: 'timefilter',
     aliases: [],
@@ -21,23 +27,27 @@ export function timefilter(): ContextFunction<'timefilter', Filter, Arguments, F
     context: {
       types: ['filter'],
     },
-    help: 'Create a timefilter for querying a source',
+    help,
     args: {
       column: {
         types: ['string'],
         aliases: ['field', 'c'],
         default: '@timestamp',
-        help: 'The column or field to attach the filter to',
+        help: argHelp.column,
       },
       from: {
-        types: ['string', 'null'],
+        types: ['string'],
         aliases: ['f', 'start'],
-        help: 'Beginning of the range, in ISO8601 or Elasticsearch datemath format',
+        help: argHelp.from,
       },
       to: {
-        types: ['string', 'null'],
+        types: ['string'],
         aliases: ['t', 'end'],
-        help: 'End of the range, in ISO8601 or Elasticsearch datemath format',
+        help: argHelp.to,
+      },
+      filterGroup: {
+        types: ['string'],
+        help: 'Group name for the filter',
       },
     },
     fn: (context, args) => {
@@ -56,7 +66,7 @@ export function timefilter(): ContextFunction<'timefilter', Filter, Arguments, F
         const moment = dateMath.parse(str);
 
         if (!moment || !moment.isValid()) {
-          throw new Error(`Invalid date/time string: '${str}'`);
+          throw errors.invalidString(str);
         }
 
         return moment.toISOString();

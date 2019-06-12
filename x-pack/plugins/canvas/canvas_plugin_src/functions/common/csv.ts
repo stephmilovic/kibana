@@ -5,7 +5,9 @@
  */
 
 import Papa from 'papaparse';
-import { Datatable, NullContextFunction } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { Datatable } from '../types';
+import { getFunctionHelp, getFunctionErrors } from '../../strings';
 
 interface Arguments {
   data: string;
@@ -13,10 +15,14 @@ interface Arguments {
   newline: string;
 }
 
-export function csv(): NullContextFunction<'csv', Arguments, Datatable> {
+export function csv(): ExpressionFunction<'csv', null, Arguments, Datatable> {
+  const { help, args: argHelp } = getFunctionHelp().csv;
+  const errorMessages = getFunctionErrors().csv;
+
   return {
     name: 'csv',
     type: 'datatable',
+    help,
     context: {
       types: ['null'],
     },
@@ -24,18 +30,18 @@ export function csv(): NullContextFunction<'csv', Arguments, Datatable> {
       data: {
         aliases: ['_'],
         types: ['string'],
-        help: 'CSV data to use',
+        required: true,
+        help: argHelp.data,
       },
       delimiter: {
         types: ['string'],
-        help: 'Data separation character',
+        help: argHelp.delimiter,
       },
       newline: {
         types: ['string'],
-        help: 'Row separation character',
+        help: argHelp.newline,
       },
     },
-    help: 'Create datatable from csv input',
     fn(_context, args) {
       const { data: csvString, delimiter, newline } = args;
 
@@ -59,7 +65,7 @@ export function csv(): NullContextFunction<'csv', Arguments, Datatable> {
       const { data, errors } = output;
 
       if (errors.length > 0) {
-        throw new Error('Error parsing input CSV.');
+        throw errorMessages.invalidInputCSV();
       }
 
       // output.data is an array of arrays, rows and values in each row

@@ -8,7 +8,12 @@ import { getOr } from 'lodash/fp';
 
 import { SourceResolvers } from '../../graphql/types';
 import { AppResolverOf, ChildResolverOf } from '../../lib/framework';
-import { Hosts } from '../../lib/hosts';
+import {
+  Hosts,
+  HostOverviewRequestOptions,
+  HostsRequestOptions,
+  HostLastFirstSeenRequestOptions,
+} from '../../lib/hosts';
 import { getFields } from '../../utils/build_query';
 import { createOptions } from '../../utils/build_query/create_options';
 import { QuerySourceResolver } from '../sources/resolvers';
@@ -18,8 +23,8 @@ type QueryHostsResolver = ChildResolverOf<
   QuerySourceResolver
 >;
 
-type QueryHostDetailsResolver = ChildResolverOf<
-  AppResolverOf<SourceResolvers.HostDetailsResolver>,
+type QueryHostOverviewResolver = ChildResolverOf<
+  AppResolverOf<SourceResolvers.HostOverviewResolver>,
   QuerySourceResolver
 >;
 
@@ -37,30 +42,36 @@ export const createHostsResolvers = (
 ): {
   Source: {
     Hosts: QueryHostsResolver;
-    HostDetails: QueryHostDetailsResolver;
+    HostOverview: QueryHostOverviewResolver;
     HostFirstLastSeen: QueryHostFirstLastSeenResolver;
   };
 } => ({
   Source: {
     async Hosts(source, args, { req }, info) {
-      const options = {
+      const options: HostsRequestOptions = {
         ...createOptions(source, args, info),
         sort: args.sort,
+        defaultIndex: args.defaultIndex,
       };
       return libs.hosts.getHosts(req, options);
     },
-    async HostDetails(source, args, { req }, info) {
+    async HostOverview(source, args, { req }, info) {
       const fields = getFields(getOr([], 'fieldNodes[0]', info));
-      const options = {
+      const options: HostOverviewRequestOptions = {
+        defaultIndex: args.defaultIndex,
         sourceConfiguration: source.configuration,
         fields: fields.map(field => field.replace('edges.node.', '')),
         hostName: args.hostName,
         timerange: args.timerange,
       };
-      return libs.hosts.getHostDetails(req, options);
+      return libs.hosts.getHostOverview(req, options);
     },
     async HostFirstLastSeen(source, args, { req }) {
-      const options = { sourceConfiguration: source.configuration, hostName: args.hostName };
+      const options: HostLastFirstSeenRequestOptions = {
+        sourceConfiguration: source.configuration,
+        hostName: args.hostName,
+        defaultIndex: args.defaultIndex,
+      };
       return libs.hosts.getHostFirstLastSeen(req, options);
     },
   },

@@ -4,45 +4,71 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { ContextFunction, Render, ContainerStyle } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { Render, ContainerStyle } from '../types';
+import { getFunctionHelp } from '../../strings';
+// @ts-ignore unconverted local file
+import { DEFAULT_ELEMENT_CSS } from '../../../common/lib/constants';
 
-interface Arguments {
-  as: string | null;
-  css: string | null;
-  containerStyle: ContainerStyle | null;
+interface ContainerStyleArgument extends ContainerStyle {
+  type: 'containerStyle';
 }
 
-export function render(): ContextFunction<'render', Render<any>, Arguments, Render<Arguments>> {
+interface Arguments {
+  as: string;
+  css: string;
+  containerStyle: ContainerStyleArgument;
+}
+export function render(): ExpressionFunction<'render', Render<any>, Arguments, Render<Arguments>> {
+  const { help, args: argHelp } = getFunctionHelp().render;
+
   return {
     name: 'render',
     aliases: [],
     type: 'render',
-    help: 'Render an input as a specific element and set element level options such as styling',
+    help,
     context: {
       types: ['render'],
     },
     args: {
       as: {
-        types: ['string', 'null'],
-        help:
-          'The element type to use in rendering. You probably want a specialized function instead, such as plot or grid',
-        options: ['debug', 'error', 'image', 'pie', 'plot', 'shape', 'table', 'text'],
+        types: ['string'],
+        help: argHelp.as,
+        options: [
+          'advanced_filter',
+          'debug',
+          'dropdown_filter',
+          'error',
+          'image',
+          'markdown',
+          'metric',
+          'pie',
+          'plot',
+          'progress',
+          'repeatImage',
+          'revealImage',
+          'shape',
+          'table',
+          'time_filter',
+          'text',
+        ],
       },
       css: {
-        types: ['string', 'null'],
-        default: '"* > * {}"',
-        help: 'Any block of custom CSS to be scoped to this element.',
+        types: ['string'],
+        help: argHelp.css,
+        default: `"${DEFAULT_ELEMENT_CSS}"`,
       },
       containerStyle: {
-        types: ['containerStyle', 'null'],
-        help: 'Style for the container, including background, border, and opacity',
+        types: ['containerStyle'],
+        help: argHelp.containerStyle,
+        default: '{containerStyle}',
       },
     },
     fn: (context, args) => {
       return {
         ...context,
         as: args.as || context.as,
-        css: args.css,
+        css: args.css || DEFAULT_ELEMENT_CSS,
         containerStyle: args.containerStyle,
       };
     },

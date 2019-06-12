@@ -5,24 +5,21 @@
  */
 
 import { reduceFields } from '../../utils/build_query/reduce_fields';
-import { hostFieldsMap } from '../ecs_fields';
+import { cloudFieldsMap, hostFieldsMap } from '../ecs_fields';
 
 import { buildFieldsTermAggregation } from './helpers';
-import { HostDetailsRequestOptions } from './types';
+import { HostOverviewRequestOptions } from './types';
 
-export const buildHostDetailsQuery = ({
+export const buildHostOverviewQuery = ({
   fields,
   hostName,
+  defaultIndex,
   sourceConfiguration: {
     fields: { timestamp },
-    logAlias,
-    auditbeatAlias,
-    packetbeatAlias,
-    winlogbeatAlias,
   },
   timerange: { from, to },
-}: HostDetailsRequestOptions) => {
-  const esFields = reduceFields(fields, hostFieldsMap);
+}: HostOverviewRequestOptions) => {
+  const esFields = reduceFields(fields, { ...hostFieldsMap, ...cloudFieldsMap });
 
   const filter = [
     { term: { 'host.name': hostName } },
@@ -38,7 +35,7 @@ export const buildHostDetailsQuery = ({
 
   const dslQuery = {
     allowNoIndices: true,
-    index: [logAlias, auditbeatAlias, packetbeatAlias, winlogbeatAlias],
+    index: defaultIndex,
     ignoreUnavailable: true,
     body: {
       aggregations: {

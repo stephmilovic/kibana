@@ -4,13 +4,15 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { Function } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { getFunctionHelp } from '../../strings';
 
-export function context(): Function<'context', {}, any> {
+export function context(): ExpressionFunction<'context', any, {}, any> {
+  const { help } = getFunctionHelp().context;
+
   return {
     name: 'context',
-    help:
-      'Returns whatever you pass into it. This can be useful when you need to use context as argument to a function as a sub-expression',
+    help,
     args: {},
     fn: obj => obj,
   };

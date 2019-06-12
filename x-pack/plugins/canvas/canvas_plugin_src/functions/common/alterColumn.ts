@@ -5,19 +5,24 @@
  */
 
 import { omit } from 'lodash';
-import { ContextFunction, Datatable, DatatableColumn, DatatableColumnType } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { Datatable, DatatableColumn, DatatableColumnType } from '../types';
+import { getFunctionHelp, getFunctionErrors } from '../../strings';
 
 interface Arguments {
   column: string;
   type: DatatableColumnType | null;
-  name: string | null;
+  name: string;
 }
 
-export function alterColumn(): ContextFunction<'alterColumn', Datatable, Arguments, Datatable> {
+export function alterColumn(): ExpressionFunction<'alterColumn', Datatable, Arguments, Datatable> {
+  const { help, args: argHelp } = getFunctionHelp().alterColumn;
+  const errors = getFunctionErrors().alterColumn;
+
   return {
     name: 'alterColumn',
     type: 'datatable',
-    help: 'Converts between core types, eg string, number, null, boolean, date and rename columns',
+    help,
     context: {
       types: ['datatable'],
     },
@@ -25,18 +30,17 @@ export function alterColumn(): ContextFunction<'alterColumn', Datatable, Argumen
       column: {
         aliases: ['_'],
         types: ['string'],
-        help: 'The name of the column to alter',
+        required: true,
+        help: argHelp.column,
       },
       type: {
         types: ['string'],
-        help: 'The type to convert the column to. Leave blank to not change type',
-        default: null,
-        options: ['null', 'boolean', 'number', 'string'],
+        help: argHelp.type,
+        options: ['null', 'boolean', 'number', 'string', 'date'],
       },
       name: {
-        types: ['string', 'null'],
-        help: 'The resultant column name. Leave blank to not rename',
-        default: null,
+        types: ['string'],
+        help: argHelp.name,
       },
     },
     fn: (context, args) => {
@@ -46,7 +50,7 @@ export function alterColumn(): ContextFunction<'alterColumn', Datatable, Argumen
 
       const column = context.columns.find(col => col.name === args.column);
       if (!column) {
-        throw new Error(`Column not found: '${args.column}'`);
+        throw errors.columnNotFound(args.column);
       }
 
       const name = args.name || column.name;
@@ -82,7 +86,7 @@ export function alterColumn(): ContextFunction<'alterColumn', Datatable, Argumen
             case 'null':
               return () => null;
             default:
-              throw new Error(`Cannot convert to '${type}'`);
+              throw errors.cannotConvertType(type);
           }
         })();
       }

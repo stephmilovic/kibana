@@ -13,8 +13,7 @@ import { mockBrowserFields } from '../../../../../containers/source/mock';
 import { Ecs } from '../../../../../graphql/types';
 import { mockTimelineData } from '../../../../../mock';
 import { TestProviders } from '../../../../../mock/test_providers';
-
-import { suricataRowRenderer } from '.';
+import { suricataRowRenderer } from './suricata_row_renderer';
 
 describe('suricata_row_renderer', () => {
   let nonSuricata: Ecs;
@@ -30,7 +29,7 @@ describe('suricata_row_renderer', () => {
       browserFields: mockBrowserFields,
       data: nonSuricata,
       width: 100,
-      children: <span>some children</span>,
+      children: <span>{'some children'}</span>,
     });
 
     const wrapper = shallow(<span>{children}</span>);
@@ -50,7 +49,7 @@ describe('suricata_row_renderer', () => {
       browserFields: mockBrowserFields,
       data: nonSuricata,
       width: 100,
-      children: <span>some children</span>,
+      children: <span>{'some children'}</span>,
     });
     const wrapper = mount(
       <TestProviders>
@@ -65,7 +64,7 @@ describe('suricata_row_renderer', () => {
       browserFields: mockBrowserFields,
       data: suricata,
       width: 100,
-      children: <span>some children </span>,
+      children: <span>{'some children '}</span>,
     });
     const wrapper = mount(
       <TestProviders>
@@ -83,7 +82,7 @@ describe('suricata_row_renderer', () => {
       browserFields: mockBrowserFields,
       data: suricata,
       width: 100,
-      children: <span>some children</span>,
+      children: <span>{'some children'}</span>,
     });
     const wrapper = mount(
       <TestProviders>

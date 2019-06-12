@@ -12,13 +12,13 @@ import { StaticIndexPattern } from 'ui/index_patterns';
 
 import { convertKueryToElasticSearchQuery } from '../../lib/keury';
 import {
-  hostsActions,
   hostsModel,
   hostsSelectors,
   KueryFilterQuery,
   SerializedFilterQuery,
   State,
 } from '../../store';
+import { hostsActions } from '../../store/actions';
 
 export interface HostsFilterArgs {
   applyFilterQueryFromKueryExpression: (expression: string) => void;
@@ -66,7 +66,7 @@ const HostsFilterComponent = pure<HostsFilterProps>(
         applyFilterQueryFromKueryExpression: (expression: string) =>
           applyHostsFilterQuery({
             filterQuery: {
-              query: {
+              kuery: {
                 kind: 'kuery',
                 expression,
               },

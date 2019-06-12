@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { DEFAULT_TIMELINE_WIDTH } from '../components/timeline/body';
+import { DEFAULT_TIMELINE_WIDTH } from '../components/timeline/body/helpers';
 import {
   Direction,
   DomainsFields,
@@ -24,8 +24,8 @@ export const mockGlobalState: State = {
   app: {
     notesById: {},
     errors: [
-      { id: 'error-id-1', title: 'title-1', message: 'error-message-1' },
-      { id: 'error-id-2', title: 'title-2', message: 'error-message-2' },
+      { id: 'error-id-1', title: 'title-1', message: ['error-message-1'] },
+      { id: 'error-id-2', title: 'title-2', message: ['error-message-2'] },
     ],
   },
   hosts: {
@@ -120,9 +120,14 @@ export const mockGlobalState: State = {
   },
   dragAndDrop: { dataProviders: {} },
   timeline: {
+    autoSavedWarningMsg: {
+      timelineId: null,
+      newTimelineModel: null,
+    },
     timelineById: {
       test: {
         id: 'test',
+        savedObjectId: null,
         columns: defaultHeaders,
         itemsPerPage: 5,
         dataProviders: [],
@@ -132,16 +137,23 @@ export const mockGlobalState: State = {
         historyIds: [],
         isFavorite: false,
         isLive: false,
+        isLoading: false,
         kqlMode: 'filter',
         kqlQuery: { filterQuery: null, filterQueryDraft: null },
         title: '',
         noteIds: [],
-        range: '1 Day',
+        dateRange: {
+          start: 0,
+          end: 0,
+        },
         show: false,
         pinnedEventIds: {},
+        pinnedEventsSaveObject: {},
         itemsPerPageOptions: [5, 10, 20],
         sort: { columnId: '@timestamp', sortDirection: Direction.desc },
         width: DEFAULT_TIMELINE_WIDTH,
+        isSaving: false,
+        version: null,
       },
     },
   },

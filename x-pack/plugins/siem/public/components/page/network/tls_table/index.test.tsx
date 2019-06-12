@@ -10,7 +10,7 @@ import * as React from 'react';
 import { MockedProvider } from 'react-apollo/test-utils';
 import { Provider as ReduxStoreProvider } from 'react-redux';
 
-import { mockGlobalState, TestProviders } from '../../../../mock';
+import { apolloClientObservable, mockGlobalState, TestProviders } from '../../../../mock';
 import { createStore, networkModel, State } from '../../../../store';
 
 import { TlsTable } from '.';
@@ -25,10 +25,10 @@ describe('Tls Table Component', () => {
   const loadMore = jest.fn();
   const state: State = mockGlobalState;
 
-  let store = createStore(state);
+  let store = createStore(state, apolloClientObservable);
 
   beforeEach(() => {
-    store = createStore(state);
+    store = createStore(state, apolloClientObservable);
   });
 
   describe('Rendering', () => {

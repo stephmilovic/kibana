@@ -5,32 +5,33 @@
  */
 
 import { omit, pick, find } from 'lodash';
-import { ContextFunction, Datatable, DatatableColumn } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { Datatable, DatatableColumn } from '../types';
+import { getFunctionHelp } from '../../strings';
 
 interface Arguments {
-  include: string | null;
-  exclude: string | null;
+  include: string;
+  exclude: string;
 }
 
-export function columns(): ContextFunction<'columns', Datatable, Arguments, Datatable> {
+export function columns(): ExpressionFunction<'columns', Datatable, Arguments, Datatable> {
+  const { help, args: argHelp } = getFunctionHelp().columns;
+
   return {
     name: 'columns',
     type: 'datatable',
-    help:
-      'Include or exclude columns from a data table. If you specify both, this will exclude first',
+    help,
     context: {
       types: ['datatable'],
     },
     args: {
       include: {
         types: ['string'],
-        help: 'A comma separated list of column names to keep in the table',
-        default: null,
+        help: argHelp.include,
       },
       exclude: {
         types: ['string'],
-        help: 'A comma separated list of column names to remove from the table',
-        default: null,
+        help: argHelp.exclude,
       },
     },
     fn: (context, args) => {

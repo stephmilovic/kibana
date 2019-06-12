@@ -7,7 +7,7 @@
 import { i18n } from '@kbn/i18n';
 
 export const HOSTS = i18n.translate('xpack.siem.hostsTable.hostsTitle', {
-  defaultMessage: 'Hosts',
+  defaultMessage: 'All Hosts',
 });
 
 export const UNIT = (totalCount: number) =>
@@ -41,10 +41,6 @@ export const OS = i18n.translate('xpack.siem.hostsTable.osTitle', {
 
 export const VERSION = i18n.translate('xpack.siem.hostsTable.versionTitle', {
   defaultMessage: 'Version',
-});
-
-export const TOOLTIP = i18n.translate('xpack.siem.hostsTable.helperTooltip', {
-  defaultMessage: 'Hosts table is sorted by last seen',
 });
 
 export const ROWS_2 = i18n.translate('xpack.siem.hostsTable.rows', {

@@ -6,53 +6,88 @@
 
 import { defaultTo, noop } from 'lodash/fp';
 import * as React from 'react';
-import { DragDropContext, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, DropResult, ResponderProvided } from 'react-beautiful-dnd';
 import { connect } from 'react-redux';
-import { pure } from 'recompose';
 import { Dispatch } from 'redux';
 
-import { dragAndDropModel, dragAndDropSelectors, State } from '../../store';
+import { BrowserFields } from '../../containers/source';
+import { dragAndDropModel, dragAndDropSelectors } from '../../store';
+import { IdToDataProvider } from '../../store/drag_and_drop/model';
+import { State } from '../../store/reducer';
 
 import {
+  addFieldToTimelineColumns,
   addProviderToTimeline,
+  fieldWasDroppedOnTimelineColumns,
   providerWasDroppedOnTimeline,
   providerWasDroppedOnTimelineButton,
 } from './helpers';
 
 interface Props {
+  browserFields: BrowserFields;
+  children: React.ReactNode;
   dataProviders?: dragAndDropModel.IdToDataProvider;
   dispatch: Dispatch;
 }
 
 interface OnDragEndHandlerParams {
-  result: DropResult;
-  dataProviders: dragAndDropModel.IdToDataProvider;
+  browserFields: BrowserFields;
+  dataProviders: IdToDataProvider;
   dispatch: Dispatch;
+  result: DropResult;
 }
 
-const onDragEndHandler = ({ result, dataProviders, dispatch }: OnDragEndHandlerParams) => {
+const onDragEndHandler = ({
+  browserFields,
+  dataProviders,
+  dispatch,
+  result,
+}: OnDragEndHandlerParams) => {
   if (providerWasDroppedOnTimeline(result)) {
     addProviderToTimeline({ dataProviders, result, dispatch });
   } else if (providerWasDroppedOnTimelineButton(result)) {
     addProviderToTimeline({ dataProviders, result, dispatch });
+  } else if (fieldWasDroppedOnTimelineColumns(result)) {
+    addFieldToTimelineColumns({ browserFields, dispatch, result });
   }
 };
 
-const DragDropContextWrapperComponent = pure<Props>(({ dataProviders, dispatch, children }) => (
-  <DragDropContext
-    onDragEnd={result => {
-      enableScrolling();
+/**
+ * DragDropContextWrapperComponent handles all drag end events
+ */
+export class DragDropContextWrapperComponent extends React.Component<Props> {
+  public shouldComponentUpdate = ({ children, dataProviders }: Props) =>
+    children === this.props.children && dataProviders !== this.props.dataProviders // prevent re-renders when data providers are added or removed, but all other props are the same
+      ? false
+      : true;
+
+  public render() {
+    const { children } = this.props;
+
+    return (
+      <DragDropContext onDragEnd={this.onDragEnd} onDragStart={disableScrolling}>
+        {children}
+      </DragDropContext>
+    );
+  }
+
+  private onDragEnd: (result: DropResult, provided: ResponderProvided) => void = (
+    result: DropResult
+  ) => {
+    const { browserFields, dataProviders, dispatch } = this.props;
+
+    enableScrolling();
+
+    if (dataProviders != null) {
       onDragEndHandler({
+        browserFields,
         result,
-        dataProviders: dataProviders!,
+        dataProviders,
         dispatch,
       });
-    }}
-    onDragStart={disableScrolling}
-  >
-    {children}
-  </DragDropContext>
-));
+    }
+  };
+}
 
 const emptyDataProviders: dragAndDropModel.IdToDataProvider = {}; // stable reference
 

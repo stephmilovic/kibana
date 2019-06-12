@@ -3,23 +3,24 @@
  * or more contributor license agreements. Licensed under the Elastic License;
  * you may not use this file except in compliance with the Elastic License.
  */
-import { Function } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { getFunctionHelp } from '../../strings';
 
 interface Arguments {
   fn: any[];
 }
 
-export function doFn(): Function<'do', Arguments, any> {
+export function doFn(): ExpressionFunction<'do', any, Arguments, any> {
+  const { help, args: argHelp } = getFunctionHelp().do;
+
   return {
     name: 'do',
-    help:
-      'Runs multiple sub-expressions. Returns the passed in context. Nice for running actions producing functions.',
+    help,
     args: {
       fn: {
-        aliases: ['_'],
+        aliases: ['_', 'exp', 'expression', 'function'],
         multi: true,
-        help:
-          'One or more sub-expressions. The value of these is not available in the root pipeline as this function simply returns the passed in context',
+        help: argHelp.fn,
       },
     },
     fn: context => context,

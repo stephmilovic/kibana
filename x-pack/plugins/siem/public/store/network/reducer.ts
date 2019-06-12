@@ -226,7 +226,7 @@ export const networkReducer = reducerWithInitialState(initialNetworkState)
     ...state,
     [networkType]: {
       ...state[networkType],
-      filterQueryDraft: filterQuery.query,
+      filterQueryDraft: filterQuery.kuery,
       filterQuery,
     },
   }))

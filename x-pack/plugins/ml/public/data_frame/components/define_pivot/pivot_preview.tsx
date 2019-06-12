@@ -15,8 +15,10 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiInMemoryTable,
+  EuiInMemoryTableProps,
   EuiPanel,
   EuiProgress,
+  EuiText,
   EuiTitle,
   SortDirection,
 } from '@elastic/eui';
@@ -25,15 +27,25 @@ import { dictionaryToArray } from '../../../../common/types/common';
 
 import {
   DataFramePreviewRequest,
-  IndexPatternContext,
+  isKibanaContext,
+  KibanaContext,
   PivotAggsConfigDict,
   PivotGroupByConfig,
   PivotGroupByConfigDict,
-  SimpleQuery,
+  PivotQuery,
 } from '../../common';
+
+import { getFlattenedFields } from '../source_index_preview/common';
 
 import { getPivotPreviewDevConsoleStatement } from './common';
 import { PIVOT_PREVIEW_STATUS, usePivotPreviewData } from './use_pivot_preview_data';
+
+// TODO EUI's types for EuiInMemoryTable is missing these props
+interface CompressedTableProps extends EuiInMemoryTableProps {
+  compressed: boolean;
+}
+
+const CompressedTable = (EuiInMemoryTable as any) as SFC<CompressedTableProps>;
 
 function sortColumns(groupByArr: PivotGroupByConfig[]) {
   return (a: string, b: string) => {
@@ -93,21 +105,45 @@ const PreviewTitle: SFC<PreviewTitleProps> = ({ previewRequest }) => {
   );
 };
 
+interface ErrorMessageProps {
+  message: string;
+}
+
+const ErrorMessage: SFC<ErrorMessageProps> = ({ message }) => {
+  const error = JSON.parse(message);
+
+  const statusCodeLabel = i18n.translate('xpack.ml.dataframe.pivotPreview.statusCodeLabel', {
+    defaultMessage: 'Status code',
+  });
+
+  return (
+    <EuiText size="xs">
+      <pre>
+        {(error.message &&
+          error.statusCode &&
+          `${statusCodeLabel}: ${error.statusCode}\n${error.message}`) ||
+          message}
+      </pre>
+    </EuiText>
+  );
+};
+
 interface PivotPreviewProps {
   aggs: PivotAggsConfigDict;
   groupBy: PivotGroupByConfigDict;
-  query: SimpleQuery;
+  query: PivotQuery;
 }
 
 export const PivotPreview: SFC<PivotPreviewProps> = React.memo(({ aggs, groupBy, query }) => {
   const [clearTable, setClearTable] = useState(false);
 
-  const indexPattern = useContext(IndexPatternContext);
+  const kibanaContext = useContext(KibanaContext);
 
-  if (indexPattern === null) {
+  if (!isKibanaContext(kibanaContext)) {
     return null;
   }
 
+  const indexPattern = kibanaContext.currentIndexPattern;
   const { dataFramePreviewData, errorMessage, previewRequest, status } = usePivotPreviewData(
     indexPattern,
     query,
@@ -155,13 +191,30 @@ export const PivotPreview: SFC<PivotPreviewProps> = React.memo(({ aggs, groupBy,
           color="danger"
           iconType="cross"
         >
-          <p>{errorMessage}</p>
+          <ErrorMessage message={errorMessage} />
         </EuiCallOut>
       </EuiPanel>
     );
   }
 
   if (dataFramePreviewData.length === 0) {
+    let noDataMessage = i18n.translate(
+      'xpack.ml.dataframe.pivotPreview.dataFramePivotPreviewNoDataCalloutBody',
+      {
+        defaultMessage:
+          'The preview request did not return any data. Please ensure the optional query returns data and that values exist for the field used by group-by and aggregation fields.',
+      }
+    );
+
+    const aggsArr = dictionaryToArray(aggs);
+    if (aggsArr.length === 0 || groupByArr.length === 0) {
+      noDataMessage = i18n.translate(
+        'xpack.ml.dataframe.pivotPreview.dataFramePivotPreviewIncompleteConfigCalloutBody',
+        {
+          defaultMessage: 'Please choose at least one group-by field and aggregation.',
+        }
+      );
+    }
     return (
       <EuiPanel grow={false}>
         <PreviewTitle previewRequest={previewRequest} />
@@ -174,20 +227,13 @@ export const PivotPreview: SFC<PivotPreviewProps> = React.memo(({ aggs, groupBy,
           )}
           color="primary"
         >
-          <p>
-            {i18n.translate(
-              'xpack.ml.dataframe.pivotPreview.dataFramePivotPreviewNoDataCalloutBody',
-              {
-                defaultMessage: 'Please choose at least one group-by field and aggregation.',
-              }
-            )}
-          </p>
+          <p>{noDataMessage}</p>
         </EuiCallOut>
       </EuiPanel>
     );
   }
 
-  const columnKeys = Object.keys(dataFramePreviewData[0]);
+  const columnKeys = getFlattenedFields(dataFramePreviewData[0]);
   columnKeys.sort(sortColumns(groupByArr));
 
   const columns = columnKeys.map(k => {
@@ -214,10 +260,14 @@ export const PivotPreview: SFC<PivotPreviewProps> = React.memo(({ aggs, groupBy,
         <EuiProgress size="xs" color="accent" max={1} value={0} />
       )}
       {dataFramePreviewData.length > 0 && clearTable === false && (
-        <EuiInMemoryTable
+        <CompressedTable
+          compressed
           items={dataFramePreviewData}
           columns={columns}
-          pagination={true}
+          pagination={{
+            initialPageSize: 5,
+            pageSizeOptions: [5, 10, 25],
+          }}
           sorting={sorting}
         />
       )}

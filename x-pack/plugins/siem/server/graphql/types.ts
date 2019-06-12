@@ -60,10 +60,71 @@ export type EsValue = any;
 // ====================================================
 
 export interface Query {
+  getNote: NoteResult;
+
+  getNotesByTimelineId: NoteResult[];
+
+  getNotesByEventId: NoteResult[];
+
+  getAllNotes: ResponseNotes;
+
+  getAllPinnedEventsByTimelineId: PinnedEvent[];
   /** Get a security data source by id */
   source: Source;
   /** Get a list of all security data sources */
   allSources: Source[];
+
+  getOneTimeline: TimelineResult;
+
+  getAllTimeline: ResponseTimelines;
+}
+
+export interface NoteResult {
+  eventId?: string | null;
+
+  note?: string | null;
+
+  timelineId?: string | null;
+
+  noteId: string;
+
+  created?: number | null;
+
+  createdBy?: string | null;
+
+  timelineVersion?: string | null;
+
+  updated?: number | null;
+
+  updatedBy?: string | null;
+
+  version?: string | null;
+}
+
+export interface ResponseNotes {
+  notes: NoteResult[];
+
+  totalCount?: number | null;
+}
+
+export interface PinnedEvent {
+  pinnedEventId: string;
+
+  eventId?: string | null;
+
+  timelineId?: string | null;
+
+  timelineVersion?: string | null;
+
+  created?: number | null;
+
+  createdBy?: string | null;
+
+  updated?: number | null;
+
+  updatedBy?: string | null;
+
+  version?: string | null;
 }
 
 export interface Source {
@@ -86,7 +147,7 @@ export interface Source {
   /** Gets Hosts based on timerange and specified criteria, or all events in the timerange if no criteria is specified */
   Hosts: HostsData;
 
-  HostDetails: HostItem;
+  HostOverview: HostItem;
 
   HostFirstLastSeen: FirstLastSeenHost;
 
@@ -101,6 +162,8 @@ export interface Source {
   Users: UsersData;
 
   KpiNetwork?: KpiNetworkData | null;
+
+  KpiHosts: KpiHostsData;
   /** Gets Hosts based on timerange and specified criteria, or all events in the timerange if no criteria is specified */
   NetworkTopNFlow: NetworkTopNFlowData;
 
@@ -116,14 +179,6 @@ export interface Source {
 }
 /** A set of configuration options for a security data source */
 export interface SourceConfiguration {
-  /** The alias to read file data from */
-  logAlias: string;
-  /** The alias to read auditbeat data from */
-  auditbeatAlias: string;
-  /** The alias to read packetbeat data from */
-  packetbeatAlias: string;
-  /** The alias to read winlogbeat data from */
-  winlogbeatAlias: string;
   /** The field mapping to use for this source */
   fields: SourceFields;
 }
@@ -144,30 +199,8 @@ export interface SourceFields {
 }
 /** The status of an infrastructure data source */
 export interface SourceStatus {
-  /** Whether the configured auditbeat alias exists */
-  auditbeatAliasExists: boolean;
   /** Whether the configured alias or wildcard pattern resolve to any auditbeat indices */
-  auditbeatIndicesExist: boolean;
-  /** The list of indices in the auditbeat alias */
-  auditbeatIndices: string[];
-  /** Whether the configured filebeat alias exists */
-  filebeatAliasExists: boolean;
-  /** Whether the configured alias or wildcard pattern resolve to any filebeat indices */
-  filebeatIndicesExist: boolean;
-  /** The list of indices in the filebeat alias */
-  filebeatIndices: string[];
-  /** Whether the configured packetbeat alias exists */
-  packetbeatAliasExists: boolean;
-  /** Whether the configured alias or wildcard pattern resolve to any packetbeat indices */
-  packetbeatIndicesExist: boolean;
-  /** The list of indices in the packetbeat alias */
-  packetbeatIndices: string[];
-  /** Whether the configured winlogbeat alias exists */
-  winlogbeatAliasExists: boolean;
-  /** Whether the configured alias or wildcard pattern resolve to any winlogbeat indices */
-  winlogbeatIndicesExist: boolean;
-  /** The list of indices in the winlogbeat alias */
-  winlogbeatIndices: string[];
+  indicesExist: boolean;
   /** The list of fields defined in the index mappings */
   indexFields: IndexField[];
 }
@@ -308,7 +341,7 @@ export interface OsEcsFields {
 }
 
 export interface CursorType {
-  value: string;
+  value?: string | null;
 
   tiebreaker?: string | null;
 }
@@ -872,37 +905,27 @@ export interface HostItem {
 
   lastSeen?: Date | null;
 
-  host?: HostFields | null;
+  host?: HostEcsFields | null;
+
+  cloud?: CloudFields | null;
 }
 
-export interface HostFields {
-  architecture?: string | null;
+export interface CloudFields {
+  instance?: CloudInstance | null;
 
-  id?: string | null;
+  machine?: CloudMachine | null;
 
-  ip?: (string | null)[] | null;
+  provider?: (string | null)[] | null;
 
-  mac?: (string | null)[] | null;
-
-  name?: string | null;
-
-  os?: OsFields | null;
-
-  type?: string | null;
+  region?: (string | null)[] | null;
 }
 
-export interface OsFields {
-  platform?: string | null;
+export interface CloudInstance {
+  id?: (string | null)[] | null;
+}
 
-  name?: string | null;
-
-  full?: string | null;
-
-  family?: string | null;
-
-  version?: string | null;
-
-  kernel?: string | null;
+export interface CloudMachine {
+  type?: (string | null)[] | null;
 }
 
 export interface FirstLastSeenHost {
@@ -916,6 +939,8 @@ export interface IpOverviewData {
 
   destination?: Overview | null;
 
+  host: HostEcsFields;
+
   server?: Overview | null;
 
   source?: Overview | null;
@@ -927,8 +952,6 @@ export interface Overview {
   lastSeen?: Date | null;
 
   autonomousSystem: AutonomousSystem;
-
-  host: HostEcsFields;
 
   geo: GeoEcsFields;
 }
@@ -1066,15 +1089,51 @@ export interface KpiNetworkData {
 
   uniqueFlowId?: number | null;
 
-  activeAgents?: number | null;
-
   uniqueSourcePrivateIps?: number | null;
 
+  uniqueSourcePrivateIpsHistogram?: KpiNetworkHistogramData[] | null;
+
   uniqueDestinationPrivateIps?: number | null;
+
+  uniqueDestinationPrivateIpsHistogram?: KpiNetworkHistogramData[] | null;
 
   dnsQueries?: number | null;
 
   tlsHandshakes?: number | null;
+}
+
+export interface KpiNetworkHistogramData {
+  x?: string | null;
+
+  y?: number | null;
+}
+
+export interface KpiHostsData {
+  hosts?: number | null;
+
+  hostsHistogram?: KpiHostHistogramData[] | null;
+
+  authSuccess?: number | null;
+
+  authSuccessHistogram?: KpiHostHistogramData[] | null;
+
+  authFailure?: number | null;
+
+  authFailureHistogram?: KpiHostHistogramData[] | null;
+
+  uniqueSourceIps?: number | null;
+
+  uniqueSourceIpsHistogram?: KpiHostHistogramData[] | null;
+
+  uniqueDestinationIps?: number | null;
+
+  uniqueDestinationIpsHistogram?: KpiHostHistogramData[] | null;
+}
+
+export interface KpiHostHistogramData {
+  x?: string | null;
+
+  y?: number | null;
 }
 
 export interface NetworkTopNFlowData {
@@ -1156,15 +1215,23 @@ export interface NetworkDnsItem {
 }
 
 export interface OverviewNetworkData {
-  packetbeatFlow: number;
+  auditbeatSocket?: number | null;
 
-  packetbeatDNS: number;
+  filebeatCisco?: number | null;
 
-  filebeatSuricata: number;
+  filebeatNetflow?: number | null;
+
+  filebeatPanw?: number | null;
+
+  filebeatSuricata?: number | null;
 
   filebeatZeek?: number | null;
 
-  auditbeatSocket?: number | null;
+  packetbeatDNS?: number | null;
+
+  packetbeatFlow?: number | null;
+
+  packetbeatTLS?: number | null;
 }
 
 export interface OverviewHostData {
@@ -1179,6 +1246,10 @@ export interface OverviewHostData {
   auditbeatProcess?: number | null;
 
   auditbeatUser?: number | null;
+
+  filebeatSystemModule?: number | null;
+
+  winlogbeat?: number | null;
 }
 
 export interface UncommonProcessesData {
@@ -1212,9 +1283,232 @@ export interface SayMyName {
   appName: string;
 }
 
+export interface TimelineResult {
+  savedObjectId: string;
+
+  columns?: ColumnHeaderResult[] | null;
+
+  dataProviders?: DataProviderResult[] | null;
+
+  dateRange?: DateRangePickerResult | null;
+
+  description?: string | null;
+
+  eventIdToNoteIds?: NoteResult[] | null;
+
+  favorite?: FavoriteTimelineResult[] | null;
+
+  kqlMode?: string | null;
+
+  kqlQuery?: SerializedFilterQueryResult | null;
+
+  notes?: NoteResult[] | null;
+
+  noteIds?: string[] | null;
+
+  pinnedEventIds?: string[] | null;
+
+  pinnedEventsSaveObject?: PinnedEvent[] | null;
+
+  title?: string | null;
+
+  sort?: SortTimelineResult | null;
+
+  created?: number | null;
+
+  createdBy?: string | null;
+
+  updated?: number | null;
+
+  updatedBy?: string | null;
+
+  version: string;
+}
+
+export interface ColumnHeaderResult {
+  aggregatable?: boolean | null;
+
+  category?: string | null;
+
+  columnHeaderType?: string | null;
+
+  description?: string | null;
+
+  example?: string | null;
+
+  indexes?: string[] | null;
+
+  id?: string | null;
+
+  name?: string | null;
+
+  placeholder?: string | null;
+
+  searchable?: boolean | null;
+
+  type?: string | null;
+}
+
+export interface DataProviderResult {
+  id?: string | null;
+
+  name?: string | null;
+
+  enabled?: boolean | null;
+
+  excluded?: boolean | null;
+
+  kqlQuery?: string | null;
+
+  queryMatch?: QueryMatchResult | null;
+
+  and?: DataProviderResult[] | null;
+}
+
+export interface QueryMatchResult {
+  field?: string | null;
+
+  displayField?: string | null;
+
+  value?: string | null;
+
+  displayValue?: string | null;
+
+  operator?: string | null;
+}
+
+export interface DateRangePickerResult {
+  start?: number | null;
+
+  end?: number | null;
+}
+
+export interface FavoriteTimelineResult {
+  fullName?: string | null;
+
+  userName?: string | null;
+
+  favoriteDate?: number | null;
+}
+
+export interface SerializedFilterQueryResult {
+  filterQuery?: SerializedKueryQueryResult | null;
+}
+
+export interface SerializedKueryQueryResult {
+  kuery?: KueryFilterQueryResult | null;
+
+  serializedQuery?: string | null;
+}
+
+export interface KueryFilterQueryResult {
+  kind?: string | null;
+
+  expression?: string | null;
+}
+
+export interface SortTimelineResult {
+  columnId?: string | null;
+
+  sortDirection?: string | null;
+}
+
+export interface ResponseTimelines {
+  timeline: (TimelineResult | null)[];
+
+  totalCount?: number | null;
+}
+
+export interface Mutation {
+  /** Persists a note */
+  persistNote: ResponseNote;
+
+  deleteNote?: boolean | null;
+
+  deleteNoteByTimelineId?: boolean | null;
+  /** Persists a pinned event in a timeline */
+  persistPinnedEventOnTimeline?: PinnedEvent | null;
+  /** Remove a pinned events in a timeline */
+  deletePinnedEventOnTimeline: boolean;
+  /** Remove all pinned events in a timeline */
+  deleteAllPinnedEventsOnTimeline: boolean;
+  /** Persists a timeline */
+  persistTimeline: ResponseTimeline;
+
+  persistFavorite: ResponseFavoriteTimeline;
+
+  deleteTimeline: boolean;
+}
+
+export interface ResponseNote {
+  code?: number | null;
+
+  message?: string | null;
+
+  note: NoteResult;
+}
+
+export interface ResponseTimeline {
+  code?: number | null;
+
+  message?: string | null;
+
+  timeline: TimelineResult;
+}
+
+export interface ResponseFavoriteTimeline {
+  savedObjectId: string;
+
+  version: string;
+
+  favorite?: FavoriteTimelineResult[] | null;
+}
+
+export interface OsFields {
+  platform?: string | null;
+
+  name?: string | null;
+
+  full?: string | null;
+
+  family?: string | null;
+
+  version?: string | null;
+
+  kernel?: string | null;
+}
+
+export interface HostFields {
+  architecture?: string | null;
+
+  id?: string | null;
+
+  ip?: (string | null)[] | null;
+
+  mac?: (string | null)[] | null;
+
+  name?: string | null;
+
+  os?: OsFields | null;
+
+  type?: string | null;
+}
+
 // ====================================================
 // InputTypes
 // ====================================================
+
+export interface PageInfoNote {
+  pageIndex: number;
+
+  pageSize: number;
+}
+
+export interface SortNote {
+  sortField: SortFieldNote;
+
+  sortOrder: Direction;
+}
 
 export interface TimerangeInput {
   /** The interval string to use for last bucket. The format is '{value}{unit}'. For example '5m' would return the metrics for the last 5 minutes of the timespan. */
@@ -1284,13 +1578,170 @@ export interface NetworkDnsSortField {
   direction: Direction;
 }
 
+export interface PageInfoTimeline {
+  pageIndex: number;
+
+  pageSize: number;
+}
+
+export interface SortTimeline {
+  sortField: SortFieldTimeline;
+
+  sortOrder: Direction;
+}
+
+export interface NoteInput {
+  eventId?: string | null;
+
+  note?: string | null;
+
+  timelineId?: string | null;
+}
+
+export interface TimelineInput {
+  columns?: ColumnHeaderInput[] | null;
+
+  dataProviders?: DataProviderInput[] | null;
+
+  description?: string | null;
+
+  kqlMode?: string | null;
+
+  kqlQuery?: SerializedFilterQueryInput | null;
+
+  title?: string | null;
+
+  dateRange?: DateRangePickerInput | null;
+
+  sort?: SortTimelineInput | null;
+}
+
+export interface ColumnHeaderInput {
+  aggregatable?: boolean | null;
+
+  category?: string | null;
+
+  columnHeaderType?: string | null;
+
+  description?: string | null;
+
+  example?: string | null;
+
+  indexes?: string[] | null;
+
+  id?: string | null;
+
+  name?: string | null;
+
+  placeholder?: string | null;
+
+  searchable?: boolean | null;
+
+  type?: string | null;
+}
+
+export interface DataProviderInput {
+  id?: string | null;
+
+  name?: string | null;
+
+  enabled?: boolean | null;
+
+  excluded?: boolean | null;
+
+  kqlQuery?: string | null;
+
+  queryMatch?: QueryMatchInput | null;
+
+  and?: DataProviderInput[] | null;
+}
+
+export interface QueryMatchInput {
+  field?: string | null;
+
+  displayField?: string | null;
+
+  value?: string | null;
+
+  displayValue?: string | null;
+
+  operator?: string | null;
+}
+
+export interface SerializedFilterQueryInput {
+  filterQuery?: SerializedKueryQueryInput | null;
+}
+
+export interface SerializedKueryQueryInput {
+  kuery?: KueryFilterQueryInput | null;
+
+  serializedQuery?: string | null;
+}
+
+export interface KueryFilterQueryInput {
+  kind?: string | null;
+
+  expression?: string | null;
+}
+
+export interface DateRangePickerInput {
+  start?: number | null;
+
+  end?: number | null;
+}
+
+export interface SortTimelineInput {
+  columnId?: string | null;
+
+  sortDirection?: string | null;
+}
+
+export interface FavoriteTimelineInput {
+  fullName?: string | null;
+
+  userName?: string | null;
+
+  favoriteDate?: number | null;
+}
+
 // ====================================================
 // Arguments
 // ====================================================
 
+export interface GetNoteQueryArgs {
+  id: string;
+}
+export interface GetNotesByTimelineIdQueryArgs {
+  timelineId: string;
+}
+export interface GetNotesByEventIdQueryArgs {
+  eventId: string;
+}
+export interface GetAllNotesQueryArgs {
+  pageInfo?: PageInfoNote | null;
+
+  search?: string | null;
+
+  sort?: SortNote | null;
+}
+export interface GetAllPinnedEventsByTimelineIdQueryArgs {
+  timelineId: string;
+}
 export interface SourceQueryArgs {
   /** The id of the source */
   id: string;
+}
+export interface GetOneTimelineQueryArgs {
+  id: string;
+}
+export interface GetAllTimelineQueryArgs {
+  pageInfo?: PageInfoTimeline | null;
+
+  search?: string | null;
+
+  sort?: SortTimeline | null;
+
+  onlyUserFavorite?: boolean | null;
 }
 export interface AuthenticationsSourceArgs {
   timerange: TimerangeInput;
@@ -1298,6 +1749,8 @@ export interface AuthenticationsSourceArgs {
   pagination: PaginationInput;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface EventsSourceArgs {
   pagination: PaginationInput;
@@ -1307,6 +1760,8 @@ export interface EventsSourceArgs {
   timerange?: TimerangeInput | null;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface TimelineSourceArgs {
   pagination: PaginationInput;
@@ -1318,11 +1773,15 @@ export interface TimelineSourceArgs {
   timerange?: TimerangeInput | null;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface TimelineDetailsSourceArgs {
   eventId: string;
 
   indexName: string;
+
+  defaultIndex: string[];
 }
 export interface LastEventTimeSourceArgs {
   id?: string | null;
@@ -1330,6 +1789,8 @@ export interface LastEventTimeSourceArgs {
   indexKey: LastEventIndexKey;
 
   details: LastTimeDetails;
+
+  defaultIndex: string[];
 }
 export interface HostsSourceArgs {
   id?: string | null;
@@ -1341,18 +1802,24 @@ export interface HostsSourceArgs {
   sort: HostsSortField;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
-export interface HostDetailsSourceArgs {
+export interface HostOverviewSourceArgs {
   id?: string | null;
 
   hostName: string;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface HostFirstLastSeenSourceArgs {
   id?: string | null;
 
   hostName: string;
+
+  defaultIndex: string[];
 }
 export interface IpOverviewSourceArgs {
   id?: string | null;
@@ -1360,6 +1827,8 @@ export interface IpOverviewSourceArgs {
   filterQuery?: string | null;
 
   ip: string;
+
+  defaultIndex: string[];
 }
 export interface DomainsSourceArgs {
   filterQuery?: string | null;
@@ -1377,6 +1846,8 @@ export interface DomainsSourceArgs {
   flowTarget: FlowTarget;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface DomainFirstLastSeenSourceArgs {
   id?: string | null;
@@ -1386,6 +1857,8 @@ export interface DomainFirstLastSeenSourceArgs {
   domainName: string;
 
   flowTarget: FlowTarget;
+
+  defaultIndex: string[];
 }
 export interface TlsSourceArgs {
   filterQuery?: string | null;
@@ -1401,6 +1874,8 @@ export interface TlsSourceArgs {
   flowTarget: FlowTarget;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface UsersSourceArgs {
   filterQuery?: string | null;
@@ -1416,6 +1891,8 @@ export interface UsersSourceArgs {
   flowTarget: FlowTarget;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface KpiNetworkSourceArgs {
   id?: string | null;
@@ -1423,6 +1900,17 @@ export interface KpiNetworkSourceArgs {
   timerange: TimerangeInput;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
+}
+export interface KpiHostsSourceArgs {
+  id?: string | null;
+
+  timerange: TimerangeInput;
+
+  filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface NetworkTopNFlowSourceArgs {
   id?: string | null;
@@ -1438,6 +1926,8 @@ export interface NetworkTopNFlowSourceArgs {
   sort: NetworkTopNFlowSortField;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface NetworkDnsSourceArgs {
   filterQuery?: string | null;
@@ -1451,6 +1941,8 @@ export interface NetworkDnsSourceArgs {
   sort: NetworkDnsSortField;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface OverviewNetworkSourceArgs {
   id?: string | null;
@@ -1458,6 +1950,8 @@ export interface OverviewNetworkSourceArgs {
   timerange: TimerangeInput;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface OverviewHostSourceArgs {
   id?: string | null;
@@ -1465,6 +1959,8 @@ export interface OverviewHostSourceArgs {
   timerange: TimerangeInput;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface UncommonProcessesSourceArgs {
   timerange: TimerangeInput;
@@ -1472,21 +1968,66 @@ export interface UncommonProcessesSourceArgs {
   pagination: PaginationInput;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
+}
+export interface IndicesExistSourceStatusArgs {
+  defaultIndex: string[];
 }
 export interface IndexFieldsSourceStatusArgs {
-  indexTypes?: IndexType[] | null;
+  defaultIndex: string[];
+}
+export interface PersistNoteMutationArgs {
+  noteId?: string | null;
+
+  version?: string | null;
+
+  note: NoteInput;
+}
+export interface DeleteNoteMutationArgs {
+  id: string[];
+
+  version?: string | null;
+}
+export interface DeleteNoteByTimelineIdMutationArgs {
+  timelineId: string;
+
+  version?: string | null;
+}
+export interface PersistPinnedEventOnTimelineMutationArgs {
+  pinnedEventId?: string | null;
+
+  eventId: string;
+
+  timelineId?: string | null;
+}
+export interface DeletePinnedEventOnTimelineMutationArgs {
+  id: string[];
+}
+export interface DeleteAllPinnedEventsOnTimelineMutationArgs {
+  timelineId: string;
+}
+export interface PersistTimelineMutationArgs {
+  id?: string | null;
+
+  version?: string | null;
+
+  timeline: TimelineInput;
+}
+export interface PersistFavoriteMutationArgs {
+  timelineId?: string | null;
+}
+export interface DeleteTimelineMutationArgs {
+  id: string[];
 }
 
 // ====================================================
 // Enums
 // ====================================================
 
-export enum IndexType {
-  ANY = 'ANY',
-  FILEBEAT = 'FILEBEAT',
-  AUDITBEAT = 'AUDITBEAT',
-  PACKETBEAT = 'PACKETBEAT',
-  WINLOGBEAT = 'WINLOGBEAT',
+export enum SortFieldNote {
+  updatedBy = 'updatedBy',
+  updated = 'updated',
 }
 
 export enum Direction {
@@ -1560,6 +2101,13 @@ export enum NetworkDnsFields {
   dnsBytesOut = 'dnsBytesOut',
 }
 
+export enum SortFieldTimeline {
+  title = 'title',
+  description = 'description',
+  updated = 'updated',
+  created = 'created',
+}
+
 // ====================================================
 // END: Typescript template
 // ====================================================
@@ -1570,10 +2118,77 @@ export enum NetworkDnsFields {
 
 export namespace QueryResolvers {
   export interface Resolvers<Context = SiemContext, TypeParent = never> {
+    getNote?: GetNoteResolver<NoteResult, TypeParent, Context>;
+
+    getNotesByTimelineId?: GetNotesByTimelineIdResolver<NoteResult[], TypeParent, Context>;
+
+    getNotesByEventId?: GetNotesByEventIdResolver<NoteResult[], TypeParent, Context>;
+
+    getAllNotes?: GetAllNotesResolver<ResponseNotes, TypeParent, Context>;
+
+    getAllPinnedEventsByTimelineId?: GetAllPinnedEventsByTimelineIdResolver<
+      PinnedEvent[],
+      TypeParent,
+      Context
+    >;
     /** Get a security data source by id */
     source?: SourceResolver<Source, TypeParent, Context>;
     /** Get a list of all security data sources */
     allSources?: AllSourcesResolver<Source[], TypeParent, Context>;
+
+    getOneTimeline?: GetOneTimelineResolver<TimelineResult, TypeParent, Context>;
+
+    getAllTimeline?: GetAllTimelineResolver<ResponseTimelines, TypeParent, Context>;
+  }
+
+  export type GetNoteResolver<R = NoteResult, Parent = never, Context = SiemContext> = Resolver<
+    R,
+    Parent,
+    Context,
+    GetNoteArgs
+  >;
+  export interface GetNoteArgs {
+    id: string;
+  }
+
+  export type GetNotesByTimelineIdResolver<
+    R = NoteResult[],
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, GetNotesByTimelineIdArgs>;
+  export interface GetNotesByTimelineIdArgs {
+    timelineId: string;
+  }
+
+  export type GetNotesByEventIdResolver<
+    R = NoteResult[],
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, GetNotesByEventIdArgs>;
+  export interface GetNotesByEventIdArgs {
+    eventId: string;
+  }
+
+  export type GetAllNotesResolver<
+    R = ResponseNotes,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, GetAllNotesArgs>;
+  export interface GetAllNotesArgs {
+    pageInfo?: PageInfoNote | null;
+
+    search?: string | null;
+
+    sort?: SortNote | null;
+  }
+
+  export type GetAllPinnedEventsByTimelineIdResolver<
+    R = PinnedEvent[],
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, GetAllPinnedEventsByTimelineIdArgs>;
+  export interface GetAllPinnedEventsByTimelineIdArgs {
+    timelineId: string;
   }
 
   export type SourceResolver<R = Source, Parent = never, Context = SiemContext> = Resolver<
@@ -1592,6 +2207,191 @@ export namespace QueryResolvers {
     Parent,
     Context
   >;
+  export type GetOneTimelineResolver<
+    R = TimelineResult,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, GetOneTimelineArgs>;
+  export interface GetOneTimelineArgs {
+    id: string;
+  }
+
+  export type GetAllTimelineResolver<
+    R = ResponseTimelines,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, GetAllTimelineArgs>;
+  export interface GetAllTimelineArgs {
+    pageInfo?: PageInfoTimeline | null;
+
+    search?: string | null;
+
+    sort?: SortTimeline | null;
+
+    onlyUserFavorite?: boolean | null;
+  }
+}
+
+export namespace NoteResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = NoteResult> {
+    eventId?: EventIdResolver<string | null, TypeParent, Context>;
+
+    note?: NoteResolver<string | null, TypeParent, Context>;
+
+    timelineId?: TimelineIdResolver<string | null, TypeParent, Context>;
+
+    noteId?: NoteIdResolver<string, TypeParent, Context>;
+
+    created?: CreatedResolver<number | null, TypeParent, Context>;
+
+    createdBy?: CreatedByResolver<string | null, TypeParent, Context>;
+
+    timelineVersion?: TimelineVersionResolver<string | null, TypeParent, Context>;
+
+    updated?: UpdatedResolver<number | null, TypeParent, Context>;
+
+    updatedBy?: UpdatedByResolver<string | null, TypeParent, Context>;
+
+    version?: VersionResolver<string | null, TypeParent, Context>;
+  }
+
+  export type EventIdResolver<
+    R = string | null,
+    Parent = NoteResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type NoteResolver<
+    R = string | null,
+    Parent = NoteResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type TimelineIdResolver<
+    R = string | null,
+    Parent = NoteResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type NoteIdResolver<R = string, Parent = NoteResult, Context = SiemContext> = Resolver<
+    R,
+    Parent,
+    Context
+  >;
+  export type CreatedResolver<
+    R = number | null,
+    Parent = NoteResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type CreatedByResolver<
+    R = string | null,
+    Parent = NoteResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type TimelineVersionResolver<
+    R = string | null,
+    Parent = NoteResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UpdatedResolver<
+    R = number | null,
+    Parent = NoteResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UpdatedByResolver<
+    R = string | null,
+    Parent = NoteResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type VersionResolver<
+    R = string | null,
+    Parent = NoteResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace ResponseNotesResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = ResponseNotes> {
+    notes?: NotesResolver<NoteResult[], TypeParent, Context>;
+
+    totalCount?: TotalCountResolver<number | null, TypeParent, Context>;
+  }
+
+  export type NotesResolver<
+    R = NoteResult[],
+    Parent = ResponseNotes,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type TotalCountResolver<
+    R = number | null,
+    Parent = ResponseNotes,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace PinnedEventResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = PinnedEvent> {
+    pinnedEventId?: PinnedEventIdResolver<string, TypeParent, Context>;
+
+    eventId?: EventIdResolver<string | null, TypeParent, Context>;
+
+    timelineId?: TimelineIdResolver<string | null, TypeParent, Context>;
+
+    timelineVersion?: TimelineVersionResolver<string | null, TypeParent, Context>;
+
+    created?: CreatedResolver<number | null, TypeParent, Context>;
+
+    createdBy?: CreatedByResolver<string | null, TypeParent, Context>;
+
+    updated?: UpdatedResolver<number | null, TypeParent, Context>;
+
+    updatedBy?: UpdatedByResolver<string | null, TypeParent, Context>;
+
+    version?: VersionResolver<string | null, TypeParent, Context>;
+  }
+
+  export type PinnedEventIdResolver<
+    R = string,
+    Parent = PinnedEvent,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type EventIdResolver<
+    R = string | null,
+    Parent = PinnedEvent,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type TimelineIdResolver<
+    R = string | null,
+    Parent = PinnedEvent,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type TimelineVersionResolver<
+    R = string | null,
+    Parent = PinnedEvent,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type CreatedResolver<
+    R = number | null,
+    Parent = PinnedEvent,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type CreatedByResolver<
+    R = string | null,
+    Parent = PinnedEvent,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UpdatedResolver<
+    R = number | null,
+    Parent = PinnedEvent,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UpdatedByResolver<
+    R = string | null,
+    Parent = PinnedEvent,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type VersionResolver<
+    R = string | null,
+    Parent = PinnedEvent,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
 }
 
 export namespace SourceResolvers {
@@ -1615,7 +2415,7 @@ export namespace SourceResolvers {
     /** Gets Hosts based on timerange and specified criteria, or all events in the timerange if no criteria is specified */
     Hosts?: HostsResolver<HostsData, TypeParent, Context>;
 
-    HostDetails?: HostDetailsResolver<HostItem, TypeParent, Context>;
+    HostOverview?: HostOverviewResolver<HostItem, TypeParent, Context>;
 
     HostFirstLastSeen?: HostFirstLastSeenResolver<FirstLastSeenHost, TypeParent, Context>;
 
@@ -1630,6 +2430,8 @@ export namespace SourceResolvers {
     Users?: UsersResolver<UsersData, TypeParent, Context>;
 
     KpiNetwork?: KpiNetworkResolver<KpiNetworkData | null, TypeParent, Context>;
+
+    KpiHosts?: KpiHostsResolver<KpiHostsData, TypeParent, Context>;
     /** Gets Hosts based on timerange and specified criteria, or all events in the timerange if no criteria is specified */
     NetworkTopNFlow?: NetworkTopNFlowResolver<NetworkTopNFlowData, TypeParent, Context>;
 
@@ -1670,6 +2472,8 @@ export namespace SourceResolvers {
     pagination: PaginationInput;
 
     filterQuery?: string | null;
+
+    defaultIndex: string[];
   }
 
   export type EventsResolver<R = EventsData, Parent = Source, Context = SiemContext> = Resolver<
@@ -1686,6 +2490,8 @@ export namespace SourceResolvers {
     timerange?: TimerangeInput | null;
 
     filterQuery?: string | null;
+
+    defaultIndex: string[];
   }
 
   export type TimelineResolver<R = TimelineData, Parent = Source, Context = SiemContext> = Resolver<
@@ -1704,6 +2510,8 @@ export namespace SourceResolvers {
     timerange?: TimerangeInput | null;
 
     filterQuery?: string | null;
+
+    defaultIndex: string[];
   }
 
   export type TimelineDetailsResolver<
@@ -1715,6 +2523,8 @@ export namespace SourceResolvers {
     eventId: string;
 
     indexName: string;
+
+    defaultIndex: string[];
   }
 
   export type LastEventTimeResolver<
@@ -1728,6 +2538,8 @@ export namespace SourceResolvers {
     indexKey: LastEventIndexKey;
 
     details: LastTimeDetails;
+
+    defaultIndex: string[];
   }
 
   export type HostsResolver<R = HostsData, Parent = Source, Context = SiemContext> = Resolver<
@@ -1746,20 +2558,24 @@ export namespace SourceResolvers {
     sort: HostsSortField;
 
     filterQuery?: string | null;
+
+    defaultIndex: string[];
   }
 
-  export type HostDetailsResolver<R = HostItem, Parent = Source, Context = SiemContext> = Resolver<
+  export type HostOverviewResolver<R = HostItem, Parent = Source, Context = SiemContext> = Resolver<
     R,
     Parent,
     Context,
-    HostDetailsArgs
+    HostOverviewArgs
   >;
-  export interface HostDetailsArgs {
+  export interface HostOverviewArgs {
     id?: string | null;
 
     hostName: string;
 
     timerange: TimerangeInput;
+
+    defaultIndex: string[];
   }
 
   export type HostFirstLastSeenResolver<
@@ -1771,6 +2587,8 @@ export namespace SourceResolvers {
     id?: string | null;
 
     hostName: string;
+
+    defaultIndex: string[];
   }
 
   export type IpOverviewResolver<
@@ -1784,6 +2602,8 @@ export namespace SourceResolvers {
     filterQuery?: string | null;
 
     ip: string;
+
+    defaultIndex: string[];
   }
 
   export type DomainsResolver<R = DomainsData, Parent = Source, Context = SiemContext> = Resolver<
@@ -1808,6 +2628,8 @@ export namespace SourceResolvers {
     flowTarget: FlowTarget;
 
     timerange: TimerangeInput;
+
+    defaultIndex: string[];
   }
 
   export type DomainFirstLastSeenResolver<
@@ -1823,6 +2645,8 @@ export namespace SourceResolvers {
     domainName: string;
 
     flowTarget: FlowTarget;
+
+    defaultIndex: string[];
   }
 
   export type TlsResolver<R = TlsData, Parent = Source, Context = SiemContext> = Resolver<
@@ -1845,6 +2669,8 @@ export namespace SourceResolvers {
     flowTarget: FlowTarget;
 
     timerange: TimerangeInput;
+
+    defaultIndex: string[];
   }
 
   export type UsersResolver<R = UsersData, Parent = Source, Context = SiemContext> = Resolver<
@@ -1867,6 +2693,8 @@ export namespace SourceResolvers {
     flowTarget: FlowTarget;
 
     timerange: TimerangeInput;
+
+    defaultIndex: string[];
   }
 
   export type KpiNetworkResolver<
@@ -1880,6 +2708,24 @@ export namespace SourceResolvers {
     timerange: TimerangeInput;
 
     filterQuery?: string | null;
+
+    defaultIndex: string[];
+  }
+
+  export type KpiHostsResolver<R = KpiHostsData, Parent = Source, Context = SiemContext> = Resolver<
+    R,
+    Parent,
+    Context,
+    KpiHostsArgs
+  >;
+  export interface KpiHostsArgs {
+    id?: string | null;
+
+    timerange: TimerangeInput;
+
+    filterQuery?: string | null;
+
+    defaultIndex: string[];
   }
 
   export type NetworkTopNFlowResolver<
@@ -1901,6 +2747,8 @@ export namespace SourceResolvers {
     sort: NetworkTopNFlowSortField;
 
     timerange: TimerangeInput;
+
+    defaultIndex: string[];
   }
 
   export type NetworkDnsResolver<
@@ -1920,6 +2768,8 @@ export namespace SourceResolvers {
     sort: NetworkDnsSortField;
 
     timerange: TimerangeInput;
+
+    defaultIndex: string[];
   }
 
   export type OverviewNetworkResolver<
@@ -1933,6 +2783,8 @@ export namespace SourceResolvers {
     timerange: TimerangeInput;
 
     filterQuery?: string | null;
+
+    defaultIndex: string[];
   }
 
   export type OverviewHostResolver<
@@ -1946,6 +2798,8 @@ export namespace SourceResolvers {
     timerange: TimerangeInput;
 
     filterQuery?: string | null;
+
+    defaultIndex: string[];
   }
 
   export type UncommonProcessesResolver<
@@ -1959,6 +2813,8 @@ export namespace SourceResolvers {
     pagination: PaginationInput;
 
     filterQuery?: string | null;
+
+    defaultIndex: string[];
   }
 
   export type WhoAmIResolver<
@@ -1970,38 +2826,10 @@ export namespace SourceResolvers {
 /** A set of configuration options for a security data source */
 export namespace SourceConfigurationResolvers {
   export interface Resolvers<Context = SiemContext, TypeParent = SourceConfiguration> {
-    /** The alias to read file data from */
-    logAlias?: LogAliasResolver<string, TypeParent, Context>;
-    /** The alias to read auditbeat data from */
-    auditbeatAlias?: AuditbeatAliasResolver<string, TypeParent, Context>;
-    /** The alias to read packetbeat data from */
-    packetbeatAlias?: PacketbeatAliasResolver<string, TypeParent, Context>;
-    /** The alias to read winlogbeat data from */
-    winlogbeatAlias?: WinlogbeatAliasResolver<string, TypeParent, Context>;
     /** The field mapping to use for this source */
     fields?: FieldsResolver<SourceFields, TypeParent, Context>;
   }
 
-  export type LogAliasResolver<
-    R = string,
-    Parent = SourceConfiguration,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type AuditbeatAliasResolver<
-    R = string,
-    Parent = SourceConfiguration,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type PacketbeatAliasResolver<
-    R = string,
-    Parent = SourceConfiguration,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type WinlogbeatAliasResolver<
-    R = string,
-    Parent = SourceConfiguration,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
   export type FieldsResolver<
     R = SourceFields,
     Parent = SourceConfiguration,
@@ -2059,101 +2887,28 @@ export namespace SourceFieldsResolvers {
 /** The status of an infrastructure data source */
 export namespace SourceStatusResolvers {
   export interface Resolvers<Context = SiemContext, TypeParent = SourceStatus> {
-    /** Whether the configured auditbeat alias exists */
-    auditbeatAliasExists?: AuditbeatAliasExistsResolver<boolean, TypeParent, Context>;
     /** Whether the configured alias or wildcard pattern resolve to any auditbeat indices */
-    auditbeatIndicesExist?: AuditbeatIndicesExistResolver<boolean, TypeParent, Context>;
-    /** The list of indices in the auditbeat alias */
-    auditbeatIndices?: AuditbeatIndicesResolver<string[], TypeParent, Context>;
-    /** Whether the configured filebeat alias exists */
-    filebeatAliasExists?: FilebeatAliasExistsResolver<boolean, TypeParent, Context>;
-    /** Whether the configured alias or wildcard pattern resolve to any filebeat indices */
-    filebeatIndicesExist?: FilebeatIndicesExistResolver<boolean, TypeParent, Context>;
-    /** The list of indices in the filebeat alias */
-    filebeatIndices?: FilebeatIndicesResolver<string[], TypeParent, Context>;
-    /** Whether the configured packetbeat alias exists */
-    packetbeatAliasExists?: PacketbeatAliasExistsResolver<boolean, TypeParent, Context>;
-    /** Whether the configured alias or wildcard pattern resolve to any packetbeat indices */
-    packetbeatIndicesExist?: PacketbeatIndicesExistResolver<boolean, TypeParent, Context>;
-    /** The list of indices in the packetbeat alias */
-    packetbeatIndices?: PacketbeatIndicesResolver<string[], TypeParent, Context>;
-    /** Whether the configured winlogbeat alias exists */
-    winlogbeatAliasExists?: WinlogbeatAliasExistsResolver<boolean, TypeParent, Context>;
-    /** Whether the configured alias or wildcard pattern resolve to any winlogbeat indices */
-    winlogbeatIndicesExist?: WinlogbeatIndicesExistResolver<boolean, TypeParent, Context>;
-    /** The list of indices in the winlogbeat alias */
-    winlogbeatIndices?: WinlogbeatIndicesResolver<string[], TypeParent, Context>;
+    indicesExist?: IndicesExistResolver<boolean, TypeParent, Context>;
     /** The list of fields defined in the index mappings */
     indexFields?: IndexFieldsResolver<IndexField[], TypeParent, Context>;
   }
 
-  export type AuditbeatAliasExistsResolver<
+  export type IndicesExistResolver<
     R = boolean,
     Parent = SourceStatus,
     Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type AuditbeatIndicesExistResolver<
-    R = boolean,
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type AuditbeatIndicesResolver<
-    R = string[],
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type FilebeatAliasExistsResolver<
-    R = boolean,
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type FilebeatIndicesExistResolver<
-    R = boolean,
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type FilebeatIndicesResolver<
-    R = string[],
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type PacketbeatAliasExistsResolver<
-    R = boolean,
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type PacketbeatIndicesExistResolver<
-    R = boolean,
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type PacketbeatIndicesResolver<
-    R = string[],
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type WinlogbeatAliasExistsResolver<
-    R = boolean,
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type WinlogbeatIndicesExistResolver<
-    R = boolean,
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type WinlogbeatIndicesResolver<
-    R = string[],
-    Parent = SourceStatus,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
+  > = Resolver<R, Parent, Context, IndicesExistArgs>;
+  export interface IndicesExistArgs {
+    defaultIndex: string[];
+  }
+
   export type IndexFieldsResolver<
     R = IndexField[],
     Parent = SourceStatus,
     Context = SiemContext
   > = Resolver<R, Parent, Context, IndexFieldsArgs>;
   export interface IndexFieldsArgs {
-    indexTypes?: IndexType[] | null;
+    defaultIndex: string[];
   }
 }
 /** A descriptor of a field in an index */
@@ -2607,16 +3362,16 @@ export namespace OsEcsFieldsResolvers {
 
 export namespace CursorTypeResolvers {
   export interface Resolvers<Context = SiemContext, TypeParent = CursorType> {
-    value?: ValueResolver<string, TypeParent, Context>;
+    value?: ValueResolver<string | null, TypeParent, Context>;
 
     tiebreaker?: TiebreakerResolver<string | null, TypeParent, Context>;
   }
 
-  export type ValueResolver<R = string, Parent = CursorType, Context = SiemContext> = Resolver<
-    R,
-    Parent,
-    Context
-  >;
+  export type ValueResolver<
+    R = string | null,
+    Parent = CursorType,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
   export type TiebreakerResolver<
     R = string | null,
     Parent = CursorType,
@@ -4475,7 +5230,9 @@ export namespace HostItemResolvers {
 
     lastSeen?: LastSeenResolver<Date | null, TypeParent, Context>;
 
-    host?: HostResolver<HostFields | null, TypeParent, Context>;
+    host?: HostResolver<HostEcsFields | null, TypeParent, Context>;
+
+    cloud?: CloudResolver<CloudFields | null, TypeParent, Context>;
   }
 
   export type IdResolver<R = string | null, Parent = HostItem, Context = SiemContext> = Resolver<
@@ -4489,109 +5246,70 @@ export namespace HostItemResolvers {
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
   export type HostResolver<
-    R = HostFields | null,
+    R = HostEcsFields | null,
+    Parent = HostItem,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type CloudResolver<
+    R = CloudFields | null,
     Parent = HostItem,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
 }
 
-export namespace HostFieldsResolvers {
-  export interface Resolvers<Context = SiemContext, TypeParent = HostFields> {
-    architecture?: ArchitectureResolver<string | null, TypeParent, Context>;
+export namespace CloudFieldsResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = CloudFields> {
+    instance?: InstanceResolver<CloudInstance | null, TypeParent, Context>;
 
-    id?: IdResolver<string | null, TypeParent, Context>;
+    machine?: MachineResolver<CloudMachine | null, TypeParent, Context>;
 
-    ip?: IpResolver<(string | null)[] | null, TypeParent, Context>;
+    provider?: ProviderResolver<(string | null)[] | null, TypeParent, Context>;
 
-    mac?: MacResolver<(string | null)[] | null, TypeParent, Context>;
-
-    name?: NameResolver<string | null, TypeParent, Context>;
-
-    os?: OsResolver<OsFields | null, TypeParent, Context>;
-
-    type?: TypeResolver<string | null, TypeParent, Context>;
+    region?: RegionResolver<(string | null)[] | null, TypeParent, Context>;
   }
 
-  export type ArchitectureResolver<
-    R = string | null,
-    Parent = HostFields,
+  export type InstanceResolver<
+    R = CloudInstance | null,
+    Parent = CloudFields,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
-  export type IdResolver<R = string | null, Parent = HostFields, Context = SiemContext> = Resolver<
-    R,
-    Parent,
-    Context
-  >;
-  export type IpResolver<
+  export type MachineResolver<
+    R = CloudMachine | null,
+    Parent = CloudFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type ProviderResolver<
     R = (string | null)[] | null,
-    Parent = HostFields,
+    Parent = CloudFields,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
-  export type MacResolver<
+  export type RegionResolver<
     R = (string | null)[] | null,
-    Parent = HostFields,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type NameResolver<
-    R = string | null,
-    Parent = HostFields,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type OsResolver<
-    R = OsFields | null,
-    Parent = HostFields,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type TypeResolver<
-    R = string | null,
-    Parent = HostFields,
+    Parent = CloudFields,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
 }
 
-export namespace OsFieldsResolvers {
-  export interface Resolvers<Context = SiemContext, TypeParent = OsFields> {
-    platform?: PlatformResolver<string | null, TypeParent, Context>;
-
-    name?: NameResolver<string | null, TypeParent, Context>;
-
-    full?: FullResolver<string | null, TypeParent, Context>;
-
-    family?: FamilyResolver<string | null, TypeParent, Context>;
-
-    version?: VersionResolver<string | null, TypeParent, Context>;
-
-    kernel?: KernelResolver<string | null, TypeParent, Context>;
+export namespace CloudInstanceResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = CloudInstance> {
+    id?: IdResolver<(string | null)[] | null, TypeParent, Context>;
   }
 
-  export type PlatformResolver<
-    R = string | null,
-    Parent = OsFields,
+  export type IdResolver<
+    R = (string | null)[] | null,
+    Parent = CloudInstance,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
-  export type NameResolver<R = string | null, Parent = OsFields, Context = SiemContext> = Resolver<
-    R,
-    Parent,
-    Context
-  >;
-  export type FullResolver<R = string | null, Parent = OsFields, Context = SiemContext> = Resolver<
-    R,
-    Parent,
-    Context
-  >;
-  export type FamilyResolver<
-    R = string | null,
-    Parent = OsFields,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type VersionResolver<
-    R = string | null,
-    Parent = OsFields,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
-  export type KernelResolver<
-    R = string | null,
-    Parent = OsFields,
+}
+
+export namespace CloudMachineResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = CloudMachine> {
+    type?: TypeResolver<(string | null)[] | null, TypeParent, Context>;
+  }
+
+  export type TypeResolver<
+    R = (string | null)[] | null,
+    Parent = CloudMachine,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
 }
@@ -4621,6 +5339,8 @@ export namespace IpOverviewDataResolvers {
 
     destination?: DestinationResolver<Overview | null, TypeParent, Context>;
 
+    host?: HostResolver<HostEcsFields, TypeParent, Context>;
+
     server?: ServerResolver<Overview | null, TypeParent, Context>;
 
     source?: SourceResolver<Overview | null, TypeParent, Context>;
@@ -4633,6 +5353,11 @@ export namespace IpOverviewDataResolvers {
   > = Resolver<R, Parent, Context>;
   export type DestinationResolver<
     R = Overview | null,
+    Parent = IpOverviewData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type HostResolver<
+    R = HostEcsFields,
     Parent = IpOverviewData,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
@@ -4656,8 +5381,6 @@ export namespace OverviewResolvers {
 
     autonomousSystem?: AutonomousSystemResolver<AutonomousSystem, TypeParent, Context>;
 
-    host?: HostResolver<HostEcsFields, TypeParent, Context>;
-
     geo?: GeoResolver<GeoEcsFields, TypeParent, Context>;
   }
 
@@ -4676,11 +5399,6 @@ export namespace OverviewResolvers {
     Parent = Overview,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
-  export type HostResolver<R = HostEcsFields, Parent = Overview, Context = SiemContext> = Resolver<
-    R,
-    Parent,
-    Context
-  >;
   export type GeoResolver<R = GeoEcsFields, Parent = Overview, Context = SiemContext> = Resolver<
     R,
     Parent,
@@ -5114,12 +5832,22 @@ export namespace KpiNetworkDataResolvers {
 
     uniqueFlowId?: UniqueFlowIdResolver<number | null, TypeParent, Context>;
 
-    activeAgents?: ActiveAgentsResolver<number | null, TypeParent, Context>;
-
     uniqueSourcePrivateIps?: UniqueSourcePrivateIpsResolver<number | null, TypeParent, Context>;
+
+    uniqueSourcePrivateIpsHistogram?: UniqueSourcePrivateIpsHistogramResolver<
+      KpiNetworkHistogramData[] | null,
+      TypeParent,
+      Context
+    >;
 
     uniqueDestinationPrivateIps?: UniqueDestinationPrivateIpsResolver<
       number | null,
+      TypeParent,
+      Context
+    >;
+
+    uniqueDestinationPrivateIpsHistogram?: UniqueDestinationPrivateIpsHistogramResolver<
+      KpiNetworkHistogramData[] | null,
       TypeParent,
       Context
     >;
@@ -5139,18 +5867,23 @@ export namespace KpiNetworkDataResolvers {
     Parent = KpiNetworkData,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
-  export type ActiveAgentsResolver<
-    R = number | null,
-    Parent = KpiNetworkData,
-    Context = SiemContext
-  > = Resolver<R, Parent, Context>;
   export type UniqueSourcePrivateIpsResolver<
     R = number | null,
     Parent = KpiNetworkData,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
+  export type UniqueSourcePrivateIpsHistogramResolver<
+    R = KpiNetworkHistogramData[] | null,
+    Parent = KpiNetworkData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
   export type UniqueDestinationPrivateIpsResolver<
     R = number | null,
+    Parent = KpiNetworkData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UniqueDestinationPrivateIpsHistogramResolver<
+    R = KpiNetworkHistogramData[] | null,
     Parent = KpiNetworkData,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
@@ -5162,6 +5895,135 @@ export namespace KpiNetworkDataResolvers {
   export type TlsHandshakesResolver<
     R = number | null,
     Parent = KpiNetworkData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace KpiNetworkHistogramDataResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = KpiNetworkHistogramData> {
+    x?: XResolver<string | null, TypeParent, Context>;
+
+    y?: YResolver<number | null, TypeParent, Context>;
+  }
+
+  export type XResolver<
+    R = string | null,
+    Parent = KpiNetworkHistogramData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type YResolver<
+    R = number | null,
+    Parent = KpiNetworkHistogramData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace KpiHostsDataResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = KpiHostsData> {
+    hosts?: HostsResolver<number | null, TypeParent, Context>;
+
+    hostsHistogram?: HostsHistogramResolver<KpiHostHistogramData[] | null, TypeParent, Context>;
+
+    authSuccess?: AuthSuccessResolver<number | null, TypeParent, Context>;
+
+    authSuccessHistogram?: AuthSuccessHistogramResolver<
+      KpiHostHistogramData[] | null,
+      TypeParent,
+      Context
+    >;
+
+    authFailure?: AuthFailureResolver<number | null, TypeParent, Context>;
+
+    authFailureHistogram?: AuthFailureHistogramResolver<
+      KpiHostHistogramData[] | null,
+      TypeParent,
+      Context
+    >;
+
+    uniqueSourceIps?: UniqueSourceIpsResolver<number | null, TypeParent, Context>;
+
+    uniqueSourceIpsHistogram?: UniqueSourceIpsHistogramResolver<
+      KpiHostHistogramData[] | null,
+      TypeParent,
+      Context
+    >;
+
+    uniqueDestinationIps?: UniqueDestinationIpsResolver<number | null, TypeParent, Context>;
+
+    uniqueDestinationIpsHistogram?: UniqueDestinationIpsHistogramResolver<
+      KpiHostHistogramData[] | null,
+      TypeParent,
+      Context
+    >;
+  }
+
+  export type HostsResolver<
+    R = number | null,
+    Parent = KpiHostsData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type HostsHistogramResolver<
+    R = KpiHostHistogramData[] | null,
+    Parent = KpiHostsData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type AuthSuccessResolver<
+    R = number | null,
+    Parent = KpiHostsData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type AuthSuccessHistogramResolver<
+    R = KpiHostHistogramData[] | null,
+    Parent = KpiHostsData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type AuthFailureResolver<
+    R = number | null,
+    Parent = KpiHostsData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type AuthFailureHistogramResolver<
+    R = KpiHostHistogramData[] | null,
+    Parent = KpiHostsData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UniqueSourceIpsResolver<
+    R = number | null,
+    Parent = KpiHostsData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UniqueSourceIpsHistogramResolver<
+    R = KpiHostHistogramData[] | null,
+    Parent = KpiHostsData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UniqueDestinationIpsResolver<
+    R = number | null,
+    Parent = KpiHostsData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UniqueDestinationIpsHistogramResolver<
+    R = KpiHostHistogramData[] | null,
+    Parent = KpiHostsData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace KpiHostHistogramDataResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = KpiHostHistogramData> {
+    x?: XResolver<string | null, TypeParent, Context>;
+
+    y?: YResolver<number | null, TypeParent, Context>;
+  }
+
+  export type XResolver<
+    R = string | null,
+    Parent = KpiHostHistogramData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type YResolver<
+    R = number | null,
+    Parent = KpiHostHistogramData,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
 }
@@ -5425,29 +6287,47 @@ export namespace NetworkDnsItemResolvers {
 
 export namespace OverviewNetworkDataResolvers {
   export interface Resolvers<Context = SiemContext, TypeParent = OverviewNetworkData> {
-    packetbeatFlow?: PacketbeatFlowResolver<number, TypeParent, Context>;
+    auditbeatSocket?: AuditbeatSocketResolver<number | null, TypeParent, Context>;
 
-    packetbeatDNS?: PacketbeatDnsResolver<number, TypeParent, Context>;
+    filebeatCisco?: FilebeatCiscoResolver<number | null, TypeParent, Context>;
 
-    filebeatSuricata?: FilebeatSuricataResolver<number, TypeParent, Context>;
+    filebeatNetflow?: FilebeatNetflowResolver<number | null, TypeParent, Context>;
+
+    filebeatPanw?: FilebeatPanwResolver<number | null, TypeParent, Context>;
+
+    filebeatSuricata?: FilebeatSuricataResolver<number | null, TypeParent, Context>;
 
     filebeatZeek?: FilebeatZeekResolver<number | null, TypeParent, Context>;
 
-    auditbeatSocket?: AuditbeatSocketResolver<number | null, TypeParent, Context>;
+    packetbeatDNS?: PacketbeatDnsResolver<number | null, TypeParent, Context>;
+
+    packetbeatFlow?: PacketbeatFlowResolver<number | null, TypeParent, Context>;
+
+    packetbeatTLS?: PacketbeatTlsResolver<number | null, TypeParent, Context>;
   }
 
-  export type PacketbeatFlowResolver<
-    R = number,
+  export type AuditbeatSocketResolver<
+    R = number | null,
     Parent = OverviewNetworkData,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
-  export type PacketbeatDnsResolver<
-    R = number,
+  export type FilebeatCiscoResolver<
+    R = number | null,
+    Parent = OverviewNetworkData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type FilebeatNetflowResolver<
+    R = number | null,
+    Parent = OverviewNetworkData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type FilebeatPanwResolver<
+    R = number | null,
     Parent = OverviewNetworkData,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
   export type FilebeatSuricataResolver<
-    R = number,
+    R = number | null,
     Parent = OverviewNetworkData,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
@@ -5456,7 +6336,17 @@ export namespace OverviewNetworkDataResolvers {
     Parent = OverviewNetworkData,
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
-  export type AuditbeatSocketResolver<
+  export type PacketbeatDnsResolver<
+    R = number | null,
+    Parent = OverviewNetworkData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type PacketbeatFlowResolver<
+    R = number | null,
+    Parent = OverviewNetworkData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type PacketbeatTlsResolver<
     R = number | null,
     Parent = OverviewNetworkData,
     Context = SiemContext
@@ -5476,6 +6366,10 @@ export namespace OverviewHostDataResolvers {
     auditbeatProcess?: AuditbeatProcessResolver<number | null, TypeParent, Context>;
 
     auditbeatUser?: AuditbeatUserResolver<number | null, TypeParent, Context>;
+
+    filebeatSystemModule?: FilebeatSystemModuleResolver<number | null, TypeParent, Context>;
+
+    winlogbeat?: WinlogbeatResolver<number | null, TypeParent, Context>;
   }
 
   export type AuditbeatAuditdResolver<
@@ -5504,6 +6398,16 @@ export namespace OverviewHostDataResolvers {
     Context = SiemContext
   > = Resolver<R, Parent, Context>;
   export type AuditbeatUserResolver<
+    R = number | null,
+    Parent = OverviewHostData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type FilebeatSystemModuleResolver<
+    R = number | null,
+    Parent = OverviewHostData,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type WinlogbeatResolver<
     R = number | null,
     Parent = OverviewHostData,
     Context = SiemContext
@@ -5606,4 +6510,770 @@ export namespace SayMyNameResolvers {
     Parent,
     Context
   >;
+}
+
+export namespace TimelineResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = TimelineResult> {
+    savedObjectId?: SavedObjectIdResolver<string, TypeParent, Context>;
+
+    columns?: ColumnsResolver<ColumnHeaderResult[] | null, TypeParent, Context>;
+
+    dataProviders?: DataProvidersResolver<DataProviderResult[] | null, TypeParent, Context>;
+
+    dateRange?: DateRangeResolver<DateRangePickerResult | null, TypeParent, Context>;
+
+    description?: DescriptionResolver<string | null, TypeParent, Context>;
+
+    eventIdToNoteIds?: EventIdToNoteIdsResolver<NoteResult[] | null, TypeParent, Context>;
+
+    favorite?: FavoriteResolver<FavoriteTimelineResult[] | null, TypeParent, Context>;
+
+    kqlMode?: KqlModeResolver<string | null, TypeParent, Context>;
+
+    kqlQuery?: KqlQueryResolver<SerializedFilterQueryResult | null, TypeParent, Context>;
+
+    notes?: NotesResolver<NoteResult[] | null, TypeParent, Context>;
+
+    noteIds?: NoteIdsResolver<string[] | null, TypeParent, Context>;
+
+    pinnedEventIds?: PinnedEventIdsResolver<string[] | null, TypeParent, Context>;
+
+    pinnedEventsSaveObject?: PinnedEventsSaveObjectResolver<
+      PinnedEvent[] | null,
+      TypeParent,
+      Context
+    >;
+
+    title?: TitleResolver<string | null, TypeParent, Context>;
+
+    sort?: SortResolver<SortTimelineResult | null, TypeParent, Context>;
+
+    created?: CreatedResolver<number | null, TypeParent, Context>;
+
+    createdBy?: CreatedByResolver<string | null, TypeParent, Context>;
+
+    updated?: UpdatedResolver<number | null, TypeParent, Context>;
+
+    updatedBy?: UpdatedByResolver<string | null, TypeParent, Context>;
+
+    version?: VersionResolver<string, TypeParent, Context>;
+  }
+
+  export type SavedObjectIdResolver<
+    R = string,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type ColumnsResolver<
+    R = ColumnHeaderResult[] | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type DataProvidersResolver<
+    R = DataProviderResult[] | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type DateRangeResolver<
+    R = DateRangePickerResult | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type DescriptionResolver<
+    R = string | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type EventIdToNoteIdsResolver<
+    R = NoteResult[] | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type FavoriteResolver<
+    R = FavoriteTimelineResult[] | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type KqlModeResolver<
+    R = string | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type KqlQueryResolver<
+    R = SerializedFilterQueryResult | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type NotesResolver<
+    R = NoteResult[] | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type NoteIdsResolver<
+    R = string[] | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type PinnedEventIdsResolver<
+    R = string[] | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type PinnedEventsSaveObjectResolver<
+    R = PinnedEvent[] | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type TitleResolver<
+    R = string | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type SortResolver<
+    R = SortTimelineResult | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type CreatedResolver<
+    R = number | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type CreatedByResolver<
+    R = string | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UpdatedResolver<
+    R = number | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UpdatedByResolver<
+    R = string | null,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type VersionResolver<
+    R = string,
+    Parent = TimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace ColumnHeaderResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = ColumnHeaderResult> {
+    aggregatable?: AggregatableResolver<boolean | null, TypeParent, Context>;
+
+    category?: CategoryResolver<string | null, TypeParent, Context>;
+
+    columnHeaderType?: ColumnHeaderTypeResolver<string | null, TypeParent, Context>;
+
+    description?: DescriptionResolver<string | null, TypeParent, Context>;
+
+    example?: ExampleResolver<string | null, TypeParent, Context>;
+
+    indexes?: IndexesResolver<string[] | null, TypeParent, Context>;
+
+    id?: IdResolver<string | null, TypeParent, Context>;
+
+    name?: NameResolver<string | null, TypeParent, Context>;
+
+    placeholder?: PlaceholderResolver<string | null, TypeParent, Context>;
+
+    searchable?: SearchableResolver<boolean | null, TypeParent, Context>;
+
+    type?: TypeResolver<string | null, TypeParent, Context>;
+  }
+
+  export type AggregatableResolver<
+    R = boolean | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type CategoryResolver<
+    R = string | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type ColumnHeaderTypeResolver<
+    R = string | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type DescriptionResolver<
+    R = string | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type ExampleResolver<
+    R = string | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type IndexesResolver<
+    R = string[] | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type IdResolver<
+    R = string | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type NameResolver<
+    R = string | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type PlaceholderResolver<
+    R = string | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type SearchableResolver<
+    R = boolean | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type TypeResolver<
+    R = string | null,
+    Parent = ColumnHeaderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace DataProviderResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = DataProviderResult> {
+    id?: IdResolver<string | null, TypeParent, Context>;
+
+    name?: NameResolver<string | null, TypeParent, Context>;
+
+    enabled?: EnabledResolver<boolean | null, TypeParent, Context>;
+
+    excluded?: ExcludedResolver<boolean | null, TypeParent, Context>;
+
+    kqlQuery?: KqlQueryResolver<string | null, TypeParent, Context>;
+
+    queryMatch?: QueryMatchResolver<QueryMatchResult | null, TypeParent, Context>;
+
+    and?: AndResolver<DataProviderResult[] | null, TypeParent, Context>;
+  }
+
+  export type IdResolver<
+    R = string | null,
+    Parent = DataProviderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type NameResolver<
+    R = string | null,
+    Parent = DataProviderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type EnabledResolver<
+    R = boolean | null,
+    Parent = DataProviderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type ExcludedResolver<
+    R = boolean | null,
+    Parent = DataProviderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type KqlQueryResolver<
+    R = string | null,
+    Parent = DataProviderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type QueryMatchResolver<
+    R = QueryMatchResult | null,
+    Parent = DataProviderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type AndResolver<
+    R = DataProviderResult[] | null,
+    Parent = DataProviderResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace QueryMatchResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = QueryMatchResult> {
+    field?: FieldResolver<string | null, TypeParent, Context>;
+
+    displayField?: DisplayFieldResolver<string | null, TypeParent, Context>;
+
+    value?: ValueResolver<string | null, TypeParent, Context>;
+
+    displayValue?: DisplayValueResolver<string | null, TypeParent, Context>;
+
+    operator?: OperatorResolver<string | null, TypeParent, Context>;
+  }
+
+  export type FieldResolver<
+    R = string | null,
+    Parent = QueryMatchResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type DisplayFieldResolver<
+    R = string | null,
+    Parent = QueryMatchResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type ValueResolver<
+    R = string | null,
+    Parent = QueryMatchResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type DisplayValueResolver<
+    R = string | null,
+    Parent = QueryMatchResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type OperatorResolver<
+    R = string | null,
+    Parent = QueryMatchResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace DateRangePickerResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = DateRangePickerResult> {
+    start?: StartResolver<number | null, TypeParent, Context>;
+
+    end?: EndResolver<number | null, TypeParent, Context>;
+  }
+
+  export type StartResolver<
+    R = number | null,
+    Parent = DateRangePickerResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type EndResolver<
+    R = number | null,
+    Parent = DateRangePickerResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace FavoriteTimelineResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = FavoriteTimelineResult> {
+    fullName?: FullNameResolver<string | null, TypeParent, Context>;
+
+    userName?: UserNameResolver<string | null, TypeParent, Context>;
+
+    favoriteDate?: FavoriteDateResolver<number | null, TypeParent, Context>;
+  }
+
+  export type FullNameResolver<
+    R = string | null,
+    Parent = FavoriteTimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type UserNameResolver<
+    R = string | null,
+    Parent = FavoriteTimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type FavoriteDateResolver<
+    R = number | null,
+    Parent = FavoriteTimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace SerializedFilterQueryResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = SerializedFilterQueryResult> {
+    filterQuery?: FilterQueryResolver<SerializedKueryQueryResult | null, TypeParent, Context>;
+  }
+
+  export type FilterQueryResolver<
+    R = SerializedKueryQueryResult | null,
+    Parent = SerializedFilterQueryResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace SerializedKueryQueryResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = SerializedKueryQueryResult> {
+    kuery?: KueryResolver<KueryFilterQueryResult | null, TypeParent, Context>;
+
+    serializedQuery?: SerializedQueryResolver<string | null, TypeParent, Context>;
+  }
+
+  export type KueryResolver<
+    R = KueryFilterQueryResult | null,
+    Parent = SerializedKueryQueryResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type SerializedQueryResolver<
+    R = string | null,
+    Parent = SerializedKueryQueryResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace KueryFilterQueryResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = KueryFilterQueryResult> {
+    kind?: KindResolver<string | null, TypeParent, Context>;
+
+    expression?: ExpressionResolver<string | null, TypeParent, Context>;
+  }
+
+  export type KindResolver<
+    R = string | null,
+    Parent = KueryFilterQueryResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type ExpressionResolver<
+    R = string | null,
+    Parent = KueryFilterQueryResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace SortTimelineResultResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = SortTimelineResult> {
+    columnId?: ColumnIdResolver<string | null, TypeParent, Context>;
+
+    sortDirection?: SortDirectionResolver<string | null, TypeParent, Context>;
+  }
+
+  export type ColumnIdResolver<
+    R = string | null,
+    Parent = SortTimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type SortDirectionResolver<
+    R = string | null,
+    Parent = SortTimelineResult,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace ResponseTimelinesResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = ResponseTimelines> {
+    timeline?: TimelineResolver<(TimelineResult | null)[], TypeParent, Context>;
+
+    totalCount?: TotalCountResolver<number | null, TypeParent, Context>;
+  }
+
+  export type TimelineResolver<
+    R = (TimelineResult | null)[],
+    Parent = ResponseTimelines,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type TotalCountResolver<
+    R = number | null,
+    Parent = ResponseTimelines,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace MutationResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = never> {
+    /** Persists a note */
+    persistNote?: PersistNoteResolver<ResponseNote, TypeParent, Context>;
+
+    deleteNote?: DeleteNoteResolver<boolean | null, TypeParent, Context>;
+
+    deleteNoteByTimelineId?: DeleteNoteByTimelineIdResolver<boolean | null, TypeParent, Context>;
+    /** Persists a pinned event in a timeline */
+    persistPinnedEventOnTimeline?: PersistPinnedEventOnTimelineResolver<
+      PinnedEvent | null,
+      TypeParent,
+      Context
+    >;
+    /** Remove a pinned events in a timeline */
+    deletePinnedEventOnTimeline?: DeletePinnedEventOnTimelineResolver<boolean, TypeParent, Context>;
+    /** Remove all pinned events in a timeline */
+    deleteAllPinnedEventsOnTimeline?: DeleteAllPinnedEventsOnTimelineResolver<
+      boolean,
+      TypeParent,
+      Context
+    >;
+    /** Persists a timeline */
+    persistTimeline?: PersistTimelineResolver<ResponseTimeline, TypeParent, Context>;
+
+    persistFavorite?: PersistFavoriteResolver<ResponseFavoriteTimeline, TypeParent, Context>;
+
+    deleteTimeline?: DeleteTimelineResolver<boolean, TypeParent, Context>;
+  }
+
+  export type PersistNoteResolver<
+    R = ResponseNote,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, PersistNoteArgs>;
+  export interface PersistNoteArgs {
+    noteId?: string | null;
+
+    version?: string | null;
+
+    note: NoteInput;
+  }
+
+  export type DeleteNoteResolver<
+    R = boolean | null,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, DeleteNoteArgs>;
+  export interface DeleteNoteArgs {
+    id: string[];
+
+    version?: string | null;
+  }
+
+  export type DeleteNoteByTimelineIdResolver<
+    R = boolean | null,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, DeleteNoteByTimelineIdArgs>;
+  export interface DeleteNoteByTimelineIdArgs {
+    timelineId: string;
+
+    version?: string | null;
+  }
+
+  export type PersistPinnedEventOnTimelineResolver<
+    R = PinnedEvent | null,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, PersistPinnedEventOnTimelineArgs>;
+  export interface PersistPinnedEventOnTimelineArgs {
+    pinnedEventId?: string | null;
+
+    eventId: string;
+
+    timelineId?: string | null;
+  }
+
+  export type DeletePinnedEventOnTimelineResolver<
+    R = boolean,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, DeletePinnedEventOnTimelineArgs>;
+  export interface DeletePinnedEventOnTimelineArgs {
+    id: string[];
+  }
+
+  export type DeleteAllPinnedEventsOnTimelineResolver<
+    R = boolean,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, DeleteAllPinnedEventsOnTimelineArgs>;
+  export interface DeleteAllPinnedEventsOnTimelineArgs {
+    timelineId: string;
+  }
+
+  export type PersistTimelineResolver<
+    R = ResponseTimeline,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, PersistTimelineArgs>;
+  export interface PersistTimelineArgs {
+    id?: string | null;
+
+    version?: string | null;
+
+    timeline: TimelineInput;
+  }
+
+  export type PersistFavoriteResolver<
+    R = ResponseFavoriteTimeline,
+    Parent = never,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context, PersistFavoriteArgs>;
+  export interface PersistFavoriteArgs {
+    timelineId?: string | null;
+  }
+
+  export type DeleteTimelineResolver<R = boolean, Parent = never, Context = SiemContext> = Resolver<
+    R,
+    Parent,
+    Context,
+    DeleteTimelineArgs
+  >;
+  export interface DeleteTimelineArgs {
+    id: string[];
+  }
+}
+
+export namespace ResponseNoteResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = ResponseNote> {
+    code?: CodeResolver<number | null, TypeParent, Context>;
+
+    message?: MessageResolver<string | null, TypeParent, Context>;
+
+    note?: NoteResolver<NoteResult, TypeParent, Context>;
+  }
+
+  export type CodeResolver<
+    R = number | null,
+    Parent = ResponseNote,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type MessageResolver<
+    R = string | null,
+    Parent = ResponseNote,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type NoteResolver<R = NoteResult, Parent = ResponseNote, Context = SiemContext> = Resolver<
+    R,
+    Parent,
+    Context
+  >;
+}
+
+export namespace ResponseTimelineResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = ResponseTimeline> {
+    code?: CodeResolver<number | null, TypeParent, Context>;
+
+    message?: MessageResolver<string | null, TypeParent, Context>;
+
+    timeline?: TimelineResolver<TimelineResult, TypeParent, Context>;
+  }
+
+  export type CodeResolver<
+    R = number | null,
+    Parent = ResponseTimeline,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type MessageResolver<
+    R = string | null,
+    Parent = ResponseTimeline,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type TimelineResolver<
+    R = TimelineResult,
+    Parent = ResponseTimeline,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace ResponseFavoriteTimelineResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = ResponseFavoriteTimeline> {
+    savedObjectId?: SavedObjectIdResolver<string, TypeParent, Context>;
+
+    version?: VersionResolver<string, TypeParent, Context>;
+
+    favorite?: FavoriteResolver<FavoriteTimelineResult[] | null, TypeParent, Context>;
+  }
+
+  export type SavedObjectIdResolver<
+    R = string,
+    Parent = ResponseFavoriteTimeline,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type VersionResolver<
+    R = string,
+    Parent = ResponseFavoriteTimeline,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type FavoriteResolver<
+    R = FavoriteTimelineResult[] | null,
+    Parent = ResponseFavoriteTimeline,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace OsFieldsResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = OsFields> {
+    platform?: PlatformResolver<string | null, TypeParent, Context>;
+
+    name?: NameResolver<string | null, TypeParent, Context>;
+
+    full?: FullResolver<string | null, TypeParent, Context>;
+
+    family?: FamilyResolver<string | null, TypeParent, Context>;
+
+    version?: VersionResolver<string | null, TypeParent, Context>;
+
+    kernel?: KernelResolver<string | null, TypeParent, Context>;
+  }
+
+  export type PlatformResolver<
+    R = string | null,
+    Parent = OsFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type NameResolver<R = string | null, Parent = OsFields, Context = SiemContext> = Resolver<
+    R,
+    Parent,
+    Context
+  >;
+  export type FullResolver<R = string | null, Parent = OsFields, Context = SiemContext> = Resolver<
+    R,
+    Parent,
+    Context
+  >;
+  export type FamilyResolver<
+    R = string | null,
+    Parent = OsFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type VersionResolver<
+    R = string | null,
+    Parent = OsFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type KernelResolver<
+    R = string | null,
+    Parent = OsFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+}
+
+export namespace HostFieldsResolvers {
+  export interface Resolvers<Context = SiemContext, TypeParent = HostFields> {
+    architecture?: ArchitectureResolver<string | null, TypeParent, Context>;
+
+    id?: IdResolver<string | null, TypeParent, Context>;
+
+    ip?: IpResolver<(string | null)[] | null, TypeParent, Context>;
+
+    mac?: MacResolver<(string | null)[] | null, TypeParent, Context>;
+
+    name?: NameResolver<string | null, TypeParent, Context>;
+
+    os?: OsResolver<OsFields | null, TypeParent, Context>;
+
+    type?: TypeResolver<string | null, TypeParent, Context>;
+  }
+
+  export type ArchitectureResolver<
+    R = string | null,
+    Parent = HostFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type IdResolver<R = string | null, Parent = HostFields, Context = SiemContext> = Resolver<
+    R,
+    Parent,
+    Context
+  >;
+  export type IpResolver<
+    R = (string | null)[] | null,
+    Parent = HostFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type MacResolver<
+    R = (string | null)[] | null,
+    Parent = HostFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type NameResolver<
+    R = string | null,
+    Parent = HostFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type OsResolver<
+    R = OsFields | null,
+    Parent = HostFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
+  export type TypeResolver<
+    R = string | null,
+    Parent = HostFields,
+    Context = SiemContext
+  > = Resolver<R, Parent, Context>;
 }

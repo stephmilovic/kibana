@@ -9,6 +9,8 @@ import React from 'react';
 import { Query } from 'react-apollo';
 import { connect } from 'react-redux';
 
+import chrome from 'ui/chrome';
+import { DEFAULT_INDEX_KEY } from '../../../common/constants';
 import {
   GetNetworkDnsQuery,
   NetworkDnsEdges,
@@ -80,6 +82,7 @@ class NetworkDnsComponentQuery extends QueryTemplate<
           isPtrIncluded,
           pagination: generateTablePaginationOptions(activePage, limit),
           filterQuery: createFilter(filterQuery),
+          defaultIndex: chrome.getUiSettingsClient().get(DEFAULT_INDEX_KEY),
         }}
       >
         {({ data, loading, fetchMore, refetch }) => {

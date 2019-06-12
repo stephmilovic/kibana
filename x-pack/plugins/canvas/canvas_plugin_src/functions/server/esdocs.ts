@@ -5,57 +5,59 @@
  */
 
 import squel from 'squel';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
 // @ts-ignore untyped local
 import { queryEsSQL } from '../../../server/lib/query_es_sql';
-import { ContextFunction, Filter } from '../types';
+import { Filter } from '../types';
+import { getFunctionHelp } from '../../strings';
 
 interface Arguments {
-  index: string | null;
+  index: string;
   query: string;
-  sort: string | null;
-  fields: string | null;
-  metaFields: string | null;
+  sort: string;
+  fields: string;
+  metaFields: string;
   count: number;
 }
 
-export function esdocs(): ContextFunction<'esdocs', Filter, Arguments, any> {
+export function esdocs(): ExpressionFunction<'esdocs', Filter, Arguments, any> {
+  const { help, args: argHelp } = getFunctionHelp().esdocs;
+
   return {
     name: 'esdocs',
     type: 'datatable',
-    help:
-      'Query elasticsearch and get back raw documents. We recommend you specify the fields you want, ' +
-      'especially if you are going to ask for a lot of rows',
+    help,
     context: {
       types: ['filter'],
     },
     args: {
       index: {
-        types: ['string', 'null'],
+        types: ['string'],
         default: '_all',
-        help: 'Specify an index pattern. Eg "logstash-*"',
+        help: argHelp.index,
       },
       query: {
         types: ['string'],
         aliases: ['_', 'q'],
-        help: 'A Lucene query string',
+        help: argHelp.query,
         default: '-_index:.kibana',
       },
       sort: {
-        types: ['string', 'null'],
-        help: 'Sort directions as "field, direction". Eg "@timestamp, desc" or "bytes, asc"',
+        types: ['string'],
+        help: argHelp.sort,
       },
       fields: {
-        help: 'Comma separated list of fields. Fewer fields will perform better',
-        types: ['string', 'null'],
+        help: argHelp.fields,
+        types: ['string'],
       },
       metaFields: {
-        help: 'Comma separated list of meta fields, eg "_index,_type"',
-        types: ['string', 'null'],
+        help: argHelp.metaFields,
+        types: ['string'],
       },
       count: {
         types: ['number'],
         default: 100,
-        help: 'The number of docs to pull back. Smaller numbers perform better',
+        help: argHelp.count,
       },
     },
     fn: (context, args, handlers) => {

@@ -4,10 +4,10 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { EuiDescriptionList, EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
-import { isEmpty } from 'lodash';
+import { EuiDescriptionList, EuiFlexItem } from '@elastic/eui';
 import React from 'react';
 import { pure } from 'recompose';
+import styled from 'styled-components';
 
 import { FlowTarget, IpOverviewData, Overview } from '../../../../graphql/types';
 import { networkModel } from '../../../../store';
@@ -21,10 +21,10 @@ import {
   locationRenderer,
   reputationRenderer,
   whoisRenderer,
-} from './field_renderers';
+} from '../../../field_renderers/field_renderers';
 import * as i18n from './translations';
-
-export const IpOverviewId = 'ip-overview';
+import { LoadingOverlay, OverviewWrapper } from '../../index';
+import { LoadingPanel } from '../../../loading';
 
 interface DescriptionList {
   title: string;
@@ -41,20 +41,24 @@ interface OwnProps {
 
 export type IpOverviewProps = OwnProps;
 
+const DescriptionList = styled(EuiDescriptionList)`
+  ${({ theme }) => `
+    dt {
+      font-size: ${theme.eui.euiFontSizeXS} !important;
+    }
+  `}
+`;
+
 const getDescriptionList = (descriptionList: DescriptionList[], key: number) => {
   return (
     <EuiFlexItem key={key}>
-      <EuiDescriptionList listItems={descriptionList} />
+      <DescriptionList listItems={descriptionList} />
     </EuiFlexItem>
   );
 };
 
 export const IpOverview = pure<IpOverviewProps>(({ ip, data, loading, flowTarget }) => {
-  if (isEmpty(data)) {
-    return null;
-  }
   const typeData: Overview = data[flowTarget]!;
-
   const descriptionLists: Readonly<DescriptionList[][]> = [
     [
       {
@@ -78,11 +82,13 @@ export const IpOverview = pure<IpOverviewProps>(({ ip, data, loading, flowTarget
     [
       {
         title: i18n.HOST_ID,
-        description: typeData ? hostIdRenderer(typeData.host, ip) : getEmptyTagValue(),
+        description: typeData
+          ? hostIdRenderer({ host: data.host, ipFilter: ip })
+          : getEmptyTagValue(),
       },
       {
         title: i18n.HOST_NAME,
-        description: typeData ? hostNameRenderer(typeData.host, ip) : getEmptyTagValue(),
+        description: typeData ? hostNameRenderer(data.host, ip) : getEmptyTagValue(),
       },
     ],
     [
@@ -91,8 +97,21 @@ export const IpOverview = pure<IpOverviewProps>(({ ip, data, loading, flowTarget
     ],
   ];
   return (
-    <EuiFlexGroup>
+    <OverviewWrapper>
+      {loading && (
+        <>
+          <LoadingOverlay />
+          <LoadingPanel
+            height="100%"
+            width="100%"
+            text=""
+            position="absolute"
+            zIndex={3}
+            data-test-subj="LoadingPanelLoadMoreTable"
+          />
+        </>
+      )}
       {descriptionLists.map((descriptionList, index) => getDescriptionList(descriptionList, index))}
-    </EuiFlexGroup>
+    </OverviewWrapper>
   );
 });

@@ -105,7 +105,7 @@ export const hostsReducer = reducerWithInitialState(initialHostsState)
     ...state,
     [hostsType]: {
       ...state[hostsType],
-      filterQueryDraft: filterQuery.query,
+      filterQueryDraft: filterQuery.kuery,
       filterQuery,
     },
   }))

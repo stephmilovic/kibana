@@ -13,12 +13,12 @@ import { StaticIndexPattern } from 'ui/index_patterns';
 import { convertKueryToElasticSearchQuery } from '../../lib/keury';
 import {
   KueryFilterQuery,
-  networkActions,
   networkModel,
   networkSelectors,
   SerializedFilterQuery,
   State,
 } from '../../store';
+import { networkActions } from '../../store/actions';
 
 export interface NetworkFilterArgs {
   applyFilterQueryFromKueryExpression: (expression: string) => void;
@@ -66,7 +66,7 @@ const NetworkFilterComponent = pure<NetworkFilterProps>(
         applyFilterQueryFromKueryExpression: (expression: string) =>
           applyNetworkFilterQuery({
             filterQuery: {
-              query: {
+              kuery: {
                 kind: 'kuery',
                 expression,
               },

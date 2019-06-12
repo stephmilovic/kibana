@@ -4,16 +4,12 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { isEmpty } from 'lodash/fp';
-import * as React from 'react';
+import { get, getOr, isEmpty, uniqBy } from 'lodash/fp';
 
-import { DetailItem } from '../../graphql/types';
-import { escapeQueryValue } from '../../lib/keury';
-import { DragEffects, DraggableWrapper } from '../drag_and_drop/draggable_wrapper';
-import { escapeDataProviderId } from '../drag_and_drop/helpers';
-import { FormattedFieldValue } from '../timeline/body/renderers/formatted_field';
-import { parseValue } from '../timeline/body/renderers/plain_column_renderer';
-import { Provider } from '../timeline/data_providers/provider';
+import { BrowserField, BrowserFields } from '../../containers/source';
+import { ColumnHeader } from '../timeline/body/column_headers/column_header';
+import { DEFAULT_DATE_COLUMN_MIN_WIDTH, DEFAULT_COLUMN_MIN_WIDTH } from '../timeline/body/helpers';
+import { ToStringArray } from '../../graphql/types';
 
 import * as i18n from './translations';
 
@@ -25,10 +21,10 @@ export const search = {
     incremental: true,
     placeholder: i18n.PLACEHOLDER,
     schema: {
-      field: {
+      fieldId: {
         type: 'string',
       },
-      value: {
+      valuesFlattened: {
         type: 'string',
       },
       description: {
@@ -47,20 +43,69 @@ export interface ItemValues {
  * An item rendered in the table
  */
 export interface Item {
-  field: string;
   description: string;
+  field: JSX.Element;
+  fieldId: string;
   type: string;
-  values: ItemValues[];
+  values: ToStringArray;
 }
 
-/** Returns example text, or an empty string if the field does not have an example */
-export const getExampleText = (field: DetailItem): string =>
-  !isEmpty(field.example) ? `Example: ${field.example}` : '';
+export const getColumnHeaderFromBrowserField = ({
+  browserField,
+  width = DEFAULT_COLUMN_MIN_WIDTH,
+}: {
+  browserField: Partial<BrowserField>;
+  width?: number;
+}): ColumnHeader => ({
+  category: browserField.category,
+  columnHeaderType: 'not-filtered',
+  description: browserField.description != null ? browserField.description : undefined,
+  example: browserField.example != null ? `${browserField.example}` : undefined,
+  id: browserField.name || '',
+  type: browserField.type,
+  aggregatable: browserField.aggregatable,
+  width,
+});
 
-export const getIconFromType = (type: string) => {
+/**
+ * Returns a collection of columns, where the first column in the collection
+ * is a timestamp, and the remaining columns are all the columns in the
+ * specified category
+ */
+export const getColumnsWithTimestamp = ({
+  browserFields,
+  category,
+}: {
+  browserFields: BrowserFields;
+  category: string;
+}): ColumnHeader[] => {
+  const emptyFields: Record<string, Partial<BrowserField>> = {};
+  const timestamp = get('base.fields.@timestamp', browserFields);
+  const categoryFields: Array<Partial<BrowserField>> = [
+    ...Object.values(getOr(emptyFields, `${category}.fields`, browserFields)),
+  ];
+
+  return timestamp != null && categoryFields.length
+    ? uniqBy('id', [
+        getColumnHeaderFromBrowserField({
+          browserField: timestamp,
+          width: DEFAULT_DATE_COLUMN_MIN_WIDTH,
+        }),
+        ...categoryFields.map(f => getColumnHeaderFromBrowserField({ browserField: f })),
+      ])
+    : [];
+};
+
+/** Returns example text, or an empty string if the field does not have an example */
+export const getExampleText = (example: string | number | null | undefined): string =>
+  !isEmpty(example) ? `Example: ${example}` : '';
+
+export const getIconFromType = (type: string | null) => {
   switch (type) {
+    case 'string': // fall through
     case 'keyword':
       return 'string';
+    case 'number': // fall through
     case 'long':
       return 'number';
     case 'date':
@@ -75,56 +120,3 @@ export const getIconFromType = (type: string) => {
       return 'questionInCircle';
   }
 };
-
-/**
- * Return a draggable value for the details item view in the timeline
- */
-export const getItems = (data: DetailItem[], id: string): Item[] =>
-  data.map(item => ({
-    description: `${item.description || ''} ${getExampleText(item)}`,
-    field: item.field,
-    type: item.type,
-    values:
-      item.values == null
-        ? []
-        : item.values.map((itemValue: string) => {
-            const itemDataProvider = {
-              enabled: true,
-              id: escapeDataProviderId(
-                `id-event-field-browser-value-for-${item.field}-${id}-${itemValue}`
-              ),
-              name: item.field,
-              queryMatch: {
-                field: item.field,
-                value: escapeQueryValue(itemValue),
-              },
-              excluded: false,
-              kqlQuery: '',
-              and: [],
-            };
-            return {
-              valueAsString: itemValue,
-              value: (
-                <DraggableWrapper
-                  key={`event-field-browser-value-for-${item.field}-${id}-${itemValue}`}
-                  dataProvider={itemDataProvider}
-                  render={(dataProvider, _, snapshot) =>
-                    snapshot.isDragging ? (
-                      <DragEffects>
-                        <Provider dataProvider={dataProvider} />
-                      </DragEffects>
-                    ) : (
-                      <FormattedFieldValue
-                        contextId="event-details"
-                        eventId={id}
-                        fieldName={item.field}
-                        fieldType={item.type}
-                        value={parseValue(itemValue)}
-                      />
-                    )
-                  }
-                />
-              ),
-            };
-          }),
-  }));

@@ -14,8 +14,10 @@ import { mockBrowserFields } from '../../../../../containers/source/mock';
 import { Ecs } from '../../../../../graphql/types';
 import { mockTimelineData, TestProviders } from '../../../../../mock';
 import { RowRenderer } from '../row_renderer';
-
-import { createGenericAuditRowRenderer, createGenericFileRowRenderer } from '.';
+import {
+  createGenericAuditRowRenderer,
+  createGenericFileRowRenderer,
+} from './generic_row_renderer';
 
 describe('GenericRowRenderer', () => {
   describe('#createGenericAuditRowRenderer', () => {
@@ -37,7 +39,7 @@ describe('GenericRowRenderer', () => {
         browserFields,
         data: auditd,
         width: 100,
-        children: <span>some children</span>,
+        children: <span>{'some children'}</span>,
       });
 
       const wrapper = shallow(<span>{children}</span>);
@@ -67,7 +69,7 @@ describe('GenericRowRenderer', () => {
         browserFields: mockBrowserFields,
         data: nonAuditd,
         width: 100,
-        children: <span>some children</span>,
+        children: <span>{'some children'}</span>,
       });
       const wrapper = mount(
         <TestProviders>
@@ -82,7 +84,7 @@ describe('GenericRowRenderer', () => {
         browserFields: mockBrowserFields,
         data: auditd,
         width: 100,
-        children: <span>some children </span>,
+        children: <span>{'some children '}</span>,
       });
       const wrapper = mount(
         <TestProviders>
@@ -116,7 +118,7 @@ describe('GenericRowRenderer', () => {
         browserFields,
         data: auditdFile,
         width: 100,
-        children: <span>some children</span>,
+        children: <span>{'some children'}</span>,
       });
 
       const wrapper = shallow(<span>{children}</span>);
@@ -146,7 +148,7 @@ describe('GenericRowRenderer', () => {
         browserFields: mockBrowserFields,
         data: nonAuditd,
         width: 100,
-        children: <span>some children</span>,
+        children: <span>{'some children'}</span>,
       });
       const wrapper = mount(
         <TestProviders>
@@ -161,7 +163,7 @@ describe('GenericRowRenderer', () => {
         browserFields: mockBrowserFields,
         data: auditdFile,
         width: 100,
-        children: <span>some children </span>,
+        children: <span>{'some children '}</span>,
       });
       const wrapper = mount(
         <TestProviders>

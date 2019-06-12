@@ -13,6 +13,7 @@ export const eventsQuery = gql`
     $pagination: PaginationInput!
     $sortField: SortField!
     $filterQuery: String
+    $defaultIndex: [String!]!
   ) {
     source(id: $sourceId) {
       id
@@ -21,6 +22,7 @@ export const eventsQuery = gql`
         pagination: $pagination
         sortField: $sortField
         filterQuery: $filterQuery
+        defaultIndex: $defaultIndex
       ) {
         totalCount
         pageInfo {
@@ -33,16 +35,18 @@ export const eventsQuery = gql`
             timestamp
             event {
               action
-              severity
-              module
               category
+              dataset
               id
+              module
+              severity
             }
             host {
               name
               ip
               id
             }
+            message
             source {
               ip
               port
@@ -50,10 +54,6 @@ export const eventsQuery = gql`
             destination {
               ip
               port
-            }
-            geo {
-              region_name
-              country_iso_code
             }
             suricata {
               eve {
@@ -64,6 +64,9 @@ export const eventsQuery = gql`
                   signature_id
                 }
               }
+            }
+            user {
+              name
             }
             zeek {
               session_id

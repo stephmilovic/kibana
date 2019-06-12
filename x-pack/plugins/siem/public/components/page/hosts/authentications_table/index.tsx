@@ -12,13 +12,15 @@ import { connect } from 'react-redux';
 import { pure } from 'recompose';
 import { ActionCreator } from 'typescript-fsa';
 
+import { hostsActions } from '../../../../store/hosts';
 import { AuthenticationsEdges } from '../../../../graphql/types';
-import { hostsActions, hostsModel, hostsSelectors, State } from '../../../../store';
+import { hostsModel, hostsSelectors, State } from '../../../../store';
 import { DragEffects, DraggableWrapper } from '../../../drag_and_drop/draggable_wrapper';
 import { escapeDataProviderId } from '../../../drag_and_drop/helpers';
 import { getEmptyTagValue } from '../../../empty_value';
 import { HostDetailsLink, IPDetailsLink } from '../../../links';
 import { Columns, ItemsPerRow, LoadMoreTable } from '../../../load_more_table';
+import { IS_OPERATOR } from '../../../timeline/data_providers/data_provider';
 import { Provider } from '../../../timeline/data_providers/provider';
 import * as i18n from './translations';
 import { getRowItemDraggables } from '../../../tables/helpers';
@@ -85,7 +87,7 @@ const AuthenticationTableComponent = pure<AuthenticationTableProps>(
     type,
   }) => (
     <LoadMoreTable
-      columns={getAuthenticationColumns()}
+      columns={getAuthenticationColumnsCurated(type)}
       headerCount={totalCount}
       headerTitle={i18n.AUTHENTICATIONS}
       headerUnit={i18n.UNIT(totalCount)}
@@ -152,89 +154,6 @@ const getAuthenticationColumns = (): [
       }),
   },
   {
-    name: i18n.FAILURES,
-    truncateText: false,
-    hideForMobile: false,
-    render: ({ node }) => {
-      const id = escapeDataProviderId(
-        `authentications-table-${node._id}-failures-${node.failures}`
-      );
-      return (
-        <DraggableWrapper
-          key={id}
-          dataProvider={{
-            and: [],
-            enabled: true,
-            id,
-            name: 'authentication_failure',
-            excluded: false,
-            kqlQuery: '',
-            queryMatch: {
-              field: 'event.type',
-              value: 'authentication_failure',
-            },
-          }}
-          render={(dataProvider, _, snapshot) =>
-            snapshot.isDragging ? (
-              <DragEffects>
-                <Provider dataProvider={dataProvider} />
-              </DragEffects>
-            ) : (
-              node.failures
-            )
-          }
-        />
-      );
-    },
-  },
-  {
-    name: i18n.LAST_FAILED_TIME,
-    truncateText: false,
-    hideForMobile: false,
-    render: ({ node }) =>
-      has('lastFailure.timestamp', node) && node.lastFailure!.timestamp != null ? (
-        <EuiToolTip position="bottom" content={node.lastFailure!.timestamp!}>
-          <FormattedRelative value={new Date(node.lastFailure!.timestamp!)} />
-        </EuiToolTip>
-      ) : (
-        getEmptyTagValue()
-      ),
-  },
-  {
-    name: i18n.LAST_FAILED_SOURCE,
-    truncateText: false,
-    hideForMobile: false,
-    render: ({ node }) =>
-      getRowItemDraggables({
-        rowItems:
-          node.lastFailure != null &&
-          node.lastFailure.source != null &&
-          node.lastFailure.source.ip != null
-            ? node.lastFailure.source.ip
-            : null,
-        attrName: 'source.ip',
-        idPrefix: `authentications-table-${node._id}-lastFailureSource`,
-        render: item => <IPDetailsLink ip={item} />,
-      }),
-  },
-  {
-    name: i18n.LAST_FAILED_DESTINATION,
-    truncateText: false,
-    hideForMobile: false,
-    render: ({ node }) =>
-      getRowItemDraggables({
-        rowItems:
-          node.lastFailure != null &&
-          node.lastFailure.host != null &&
-          node.lastFailure.host.name != null
-            ? node.lastFailure.host.name
-            : null,
-        attrName: 'host.name',
-        idPrefix: `authentications-table-${node._id}-lastFailureDestination`,
-        render: item => <HostDetailsLink hostName={item} />,
-      }),
-  },
-  {
     name: i18n.SUCCESSES,
     truncateText: false,
     hideForMobile: false,
@@ -255,6 +174,7 @@ const getAuthenticationColumns = (): [
             queryMatch: {
               field: 'event.type',
               value: 'authentication_success',
+              operator: IS_OPERATOR,
             },
           }}
           render={(dataProvider, _, snapshot) =>
@@ -264,6 +184,43 @@ const getAuthenticationColumns = (): [
               </DragEffects>
             ) : (
               node.successes
+            )
+          }
+        />
+      );
+    },
+  },
+  {
+    name: i18n.FAILURES,
+    truncateText: false,
+    hideForMobile: false,
+    render: ({ node }) => {
+      const id = escapeDataProviderId(
+        `authentications-table-${node._id}-failures-${node.failures}`
+      );
+      return (
+        <DraggableWrapper
+          key={id}
+          dataProvider={{
+            and: [],
+            enabled: true,
+            id,
+            name: 'authentication_failure',
+            excluded: false,
+            kqlQuery: '',
+            queryMatch: {
+              field: 'event.type',
+              value: 'authentication_failure',
+              operator: IS_OPERATOR,
+            },
+          }}
+          render={(dataProvider, _, snapshot) =>
+            snapshot.isDragging ? (
+              <DragEffects>
+                <Provider dataProvider={dataProvider} />
+              </DragEffects>
+            ) : (
+              node.failures
             )
           }
         />
@@ -317,4 +274,65 @@ const getAuthenticationColumns = (): [
         render: item => <HostDetailsLink hostName={item} />,
       }),
   },
+  {
+    name: i18n.LAST_FAILED_TIME,
+    truncateText: false,
+    hideForMobile: false,
+    render: ({ node }) =>
+      has('lastFailure.timestamp', node) && node.lastFailure!.timestamp != null ? (
+        <EuiToolTip position="bottom" content={node.lastFailure!.timestamp!}>
+          <FormattedRelative value={new Date(node.lastFailure!.timestamp!)} />
+        </EuiToolTip>
+      ) : (
+        getEmptyTagValue()
+      ),
+  },
+  {
+    name: i18n.LAST_FAILED_SOURCE,
+    truncateText: false,
+    hideForMobile: false,
+    render: ({ node }) =>
+      getRowItemDraggables({
+        rowItems:
+          node.lastFailure != null &&
+          node.lastFailure.source != null &&
+          node.lastFailure.source.ip != null
+            ? node.lastFailure.source.ip
+            : null,
+        attrName: 'source.ip',
+        idPrefix: `authentications-table-${node._id}-lastFailureSource`,
+        render: item => <IPDetailsLink ip={item} />,
+      }),
+  },
+  {
+    name: i18n.LAST_FAILED_DESTINATION,
+    truncateText: false,
+    hideForMobile: false,
+    render: ({ node }) =>
+      getRowItemDraggables({
+        rowItems:
+          node.lastFailure != null &&
+          node.lastFailure.host != null &&
+          node.lastFailure.host.name != null
+            ? node.lastFailure.host.name
+            : null,
+        attrName: 'host.name',
+        idPrefix: `authentications-table-${node._id}-lastFailureDestination`,
+        render: item => <HostDetailsLink hostName={item} />,
+      }),
+  },
 ];
+
+export const getAuthenticationColumnsCurated = (pageType: hostsModel.HostsType) => {
+  const columns = getAuthenticationColumns();
+
+  // Columns to exclude from host details pages
+  if (pageType === 'details') {
+    return [i18n.LAST_FAILED_DESTINATION, i18n.LAST_SUCCESSFUL_DESTINATION].reduce((acc, name) => {
+      acc.splice(acc.findIndex(column => column.name === name), 1);
+      return acc;
+    }, columns);
+  }
+
+  return columns;
+};

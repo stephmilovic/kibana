@@ -11,7 +11,12 @@ import { MockedProvider } from 'react-apollo/test-utils';
 import { Provider as ReduxStoreProvider } from 'react-redux';
 
 import { FlowDirection } from '../../../../graphql/types';
-import { mockIndexPattern, mockGlobalState, TestProviders } from '../../../../mock';
+import {
+  apolloClientObservable,
+  mockIndexPattern,
+  mockGlobalState,
+  TestProviders,
+} from '../../../../mock';
 import { createStore, networkModel, State } from '../../../../store';
 
 import { NetworkTopNFlowTable, NetworkTopNFlowTableId } from '.';
@@ -24,10 +29,10 @@ describe('NetworkTopNFlow Table Component', () => {
   const loadMore = jest.fn();
   const state: State = mockGlobalState;
 
-  let store = createStore(state);
+  let store = createStore(state, apolloClientObservable);
 
   beforeEach(() => {
-    store = createStore(state);
+    store = createStore(state, apolloClientObservable);
   });
 
   describe('rendering', () => {
@@ -50,7 +55,7 @@ describe('NetworkTopNFlow Table Component', () => {
   });
 
   describe('Direction', () => {
-    test('when you click on the bi-direction button, it get selected', () => {
+    test('when you click on the bi-directional button, it get selected', () => {
       const event = {
         target: { name: 'direction', value: FlowDirection.biDirectional },
       };
@@ -71,16 +76,18 @@ describe('NetworkTopNFlow Table Component', () => {
       );
 
       wrapper
-        .find('input[value="biDirectional"]')
+        .find(`[data-test-subj="${FlowDirection.biDirectional}"]`)
         .first()
-        .simulate('change', event);
+        .simulate('click', event);
 
       wrapper.update();
 
       expect(
         wrapper
-          .find(`button#${NetworkTopNFlowTableId}-select-flow-direction-biDirectional`)
-          .hasClass('euiButton--fill')
+          .find(`[data-test-subj="${FlowDirection.biDirectional}"]`)
+          .first()
+          .render()
+          .hasClass('euiFilterButton-hasActiveFilters')
       ).toEqual(true);
     });
   });

@@ -31,10 +31,71 @@ export type EsValue = any;
 // ====================================================
 
 export interface Query {
+  getNote: NoteResult;
+
+  getNotesByTimelineId: NoteResult[];
+
+  getNotesByEventId: NoteResult[];
+
+  getAllNotes: ResponseNotes;
+
+  getAllPinnedEventsByTimelineId: PinnedEvent[];
   /** Get a security data source by id */
   source: Source;
   /** Get a list of all security data sources */
   allSources: Source[];
+
+  getOneTimeline: TimelineResult;
+
+  getAllTimeline: ResponseTimelines;
+}
+
+export interface NoteResult {
+  eventId?: string | null;
+
+  note?: string | null;
+
+  timelineId?: string | null;
+
+  noteId: string;
+
+  created?: number | null;
+
+  createdBy?: string | null;
+
+  timelineVersion?: string | null;
+
+  updated?: number | null;
+
+  updatedBy?: string | null;
+
+  version?: string | null;
+}
+
+export interface ResponseNotes {
+  notes: NoteResult[];
+
+  totalCount?: number | null;
+}
+
+export interface PinnedEvent {
+  pinnedEventId: string;
+
+  eventId?: string | null;
+
+  timelineId?: string | null;
+
+  timelineVersion?: string | null;
+
+  created?: number | null;
+
+  createdBy?: string | null;
+
+  updated?: number | null;
+
+  updatedBy?: string | null;
+
+  version?: string | null;
 }
 
 export interface Source {
@@ -57,7 +118,7 @@ export interface Source {
   /** Gets Hosts based on timerange and specified criteria, or all events in the timerange if no criteria is specified */
   Hosts: HostsData;
 
-  HostDetails: HostItem;
+  HostOverview: HostItem;
 
   HostFirstLastSeen: FirstLastSeenHost;
 
@@ -72,6 +133,8 @@ export interface Source {
   Users: UsersData;
 
   KpiNetwork?: KpiNetworkData | null;
+
+  KpiHosts: KpiHostsData;
   /** Gets Hosts based on timerange and specified criteria, or all events in the timerange if no criteria is specified */
   NetworkTopNFlow: NetworkTopNFlowData;
 
@@ -87,14 +150,6 @@ export interface Source {
 }
 /** A set of configuration options for a security data source */
 export interface SourceConfiguration {
-  /** The alias to read file data from */
-  logAlias: string;
-  /** The alias to read auditbeat data from */
-  auditbeatAlias: string;
-  /** The alias to read packetbeat data from */
-  packetbeatAlias: string;
-  /** The alias to read winlogbeat data from */
-  winlogbeatAlias: string;
   /** The field mapping to use for this source */
   fields: SourceFields;
 }
@@ -115,30 +170,8 @@ export interface SourceFields {
 }
 /** The status of an infrastructure data source */
 export interface SourceStatus {
-  /** Whether the configured auditbeat alias exists */
-  auditbeatAliasExists: boolean;
   /** Whether the configured alias or wildcard pattern resolve to any auditbeat indices */
-  auditbeatIndicesExist: boolean;
-  /** The list of indices in the auditbeat alias */
-  auditbeatIndices: string[];
-  /** Whether the configured filebeat alias exists */
-  filebeatAliasExists: boolean;
-  /** Whether the configured alias or wildcard pattern resolve to any filebeat indices */
-  filebeatIndicesExist: boolean;
-  /** The list of indices in the filebeat alias */
-  filebeatIndices: string[];
-  /** Whether the configured packetbeat alias exists */
-  packetbeatAliasExists: boolean;
-  /** Whether the configured alias or wildcard pattern resolve to any packetbeat indices */
-  packetbeatIndicesExist: boolean;
-  /** The list of indices in the packetbeat alias */
-  packetbeatIndices: string[];
-  /** Whether the configured winlogbeat alias exists */
-  winlogbeatAliasExists: boolean;
-  /** Whether the configured alias or wildcard pattern resolve to any winlogbeat indices */
-  winlogbeatIndicesExist: boolean;
-  /** The list of indices in the winlogbeat alias */
-  winlogbeatIndices: string[];
+  indicesExist: boolean;
   /** The list of fields defined in the index mappings */
   indexFields: IndexField[];
 }
@@ -279,7 +312,7 @@ export interface OsEcsFields {
 }
 
 export interface CursorType {
-  value: string;
+  value?: string | null;
 
   tiebreaker?: string | null;
 }
@@ -843,37 +876,27 @@ export interface HostItem {
 
   lastSeen?: Date | null;
 
-  host?: HostFields | null;
+  host?: HostEcsFields | null;
+
+  cloud?: CloudFields | null;
 }
 
-export interface HostFields {
-  architecture?: string | null;
+export interface CloudFields {
+  instance?: CloudInstance | null;
 
-  id?: string | null;
+  machine?: CloudMachine | null;
 
-  ip?: (string | null)[] | null;
+  provider?: (string | null)[] | null;
 
-  mac?: (string | null)[] | null;
-
-  name?: string | null;
-
-  os?: OsFields | null;
-
-  type?: string | null;
+  region?: (string | null)[] | null;
 }
 
-export interface OsFields {
-  platform?: string | null;
+export interface CloudInstance {
+  id?: (string | null)[] | null;
+}
 
-  name?: string | null;
-
-  full?: string | null;
-
-  family?: string | null;
-
-  version?: string | null;
-
-  kernel?: string | null;
+export interface CloudMachine {
+  type?: (string | null)[] | null;
 }
 
 export interface FirstLastSeenHost {
@@ -887,6 +910,8 @@ export interface IpOverviewData {
 
   destination?: Overview | null;
 
+  host: HostEcsFields;
+
   server?: Overview | null;
 
   source?: Overview | null;
@@ -898,8 +923,6 @@ export interface Overview {
   lastSeen?: Date | null;
 
   autonomousSystem: AutonomousSystem;
-
-  host: HostEcsFields;
 
   geo: GeoEcsFields;
 }
@@ -1037,15 +1060,51 @@ export interface KpiNetworkData {
 
   uniqueFlowId?: number | null;
 
-  activeAgents?: number | null;
-
   uniqueSourcePrivateIps?: number | null;
 
+  uniqueSourcePrivateIpsHistogram?: KpiNetworkHistogramData[] | null;
+
   uniqueDestinationPrivateIps?: number | null;
+
+  uniqueDestinationPrivateIpsHistogram?: KpiNetworkHistogramData[] | null;
 
   dnsQueries?: number | null;
 
   tlsHandshakes?: number | null;
+}
+
+export interface KpiNetworkHistogramData {
+  x?: string | null;
+
+  y?: number | null;
+}
+
+export interface KpiHostsData {
+  hosts?: number | null;
+
+  hostsHistogram?: KpiHostHistogramData[] | null;
+
+  authSuccess?: number | null;
+
+  authSuccessHistogram?: KpiHostHistogramData[] | null;
+
+  authFailure?: number | null;
+
+  authFailureHistogram?: KpiHostHistogramData[] | null;
+
+  uniqueSourceIps?: number | null;
+
+  uniqueSourceIpsHistogram?: KpiHostHistogramData[] | null;
+
+  uniqueDestinationIps?: number | null;
+
+  uniqueDestinationIpsHistogram?: KpiHostHistogramData[] | null;
+}
+
+export interface KpiHostHistogramData {
+  x?: string | null;
+
+  y?: number | null;
 }
 
 export interface NetworkTopNFlowData {
@@ -1127,15 +1186,23 @@ export interface NetworkDnsItem {
 }
 
 export interface OverviewNetworkData {
-  packetbeatFlow: number;
+  auditbeatSocket?: number | null;
 
-  packetbeatDNS: number;
+  filebeatCisco?: number | null;
 
-  filebeatSuricata: number;
+  filebeatNetflow?: number | null;
+
+  filebeatPanw?: number | null;
+
+  filebeatSuricata?: number | null;
 
   filebeatZeek?: number | null;
 
-  auditbeatSocket?: number | null;
+  packetbeatDNS?: number | null;
+
+  packetbeatFlow?: number | null;
+
+  packetbeatTLS?: number | null;
 }
 
 export interface OverviewHostData {
@@ -1150,6 +1217,10 @@ export interface OverviewHostData {
   auditbeatProcess?: number | null;
 
   auditbeatUser?: number | null;
+
+  filebeatSystemModule?: number | null;
+
+  winlogbeat?: number | null;
 }
 
 export interface UncommonProcessesData {
@@ -1183,9 +1254,232 @@ export interface SayMyName {
   appName: string;
 }
 
+export interface TimelineResult {
+  savedObjectId: string;
+
+  columns?: ColumnHeaderResult[] | null;
+
+  dataProviders?: DataProviderResult[] | null;
+
+  dateRange?: DateRangePickerResult | null;
+
+  description?: string | null;
+
+  eventIdToNoteIds?: NoteResult[] | null;
+
+  favorite?: FavoriteTimelineResult[] | null;
+
+  kqlMode?: string | null;
+
+  kqlQuery?: SerializedFilterQueryResult | null;
+
+  notes?: NoteResult[] | null;
+
+  noteIds?: string[] | null;
+
+  pinnedEventIds?: string[] | null;
+
+  pinnedEventsSaveObject?: PinnedEvent[] | null;
+
+  title?: string | null;
+
+  sort?: SortTimelineResult | null;
+
+  created?: number | null;
+
+  createdBy?: string | null;
+
+  updated?: number | null;
+
+  updatedBy?: string | null;
+
+  version: string;
+}
+
+export interface ColumnHeaderResult {
+  aggregatable?: boolean | null;
+
+  category?: string | null;
+
+  columnHeaderType?: string | null;
+
+  description?: string | null;
+
+  example?: string | null;
+
+  indexes?: string[] | null;
+
+  id?: string | null;
+
+  name?: string | null;
+
+  placeholder?: string | null;
+
+  searchable?: boolean | null;
+
+  type?: string | null;
+}
+
+export interface DataProviderResult {
+  id?: string | null;
+
+  name?: string | null;
+
+  enabled?: boolean | null;
+
+  excluded?: boolean | null;
+
+  kqlQuery?: string | null;
+
+  queryMatch?: QueryMatchResult | null;
+
+  and?: DataProviderResult[] | null;
+}
+
+export interface QueryMatchResult {
+  field?: string | null;
+
+  displayField?: string | null;
+
+  value?: string | null;
+
+  displayValue?: string | null;
+
+  operator?: string | null;
+}
+
+export interface DateRangePickerResult {
+  start?: number | null;
+
+  end?: number | null;
+}
+
+export interface FavoriteTimelineResult {
+  fullName?: string | null;
+
+  userName?: string | null;
+
+  favoriteDate?: number | null;
+}
+
+export interface SerializedFilterQueryResult {
+  filterQuery?: SerializedKueryQueryResult | null;
+}
+
+export interface SerializedKueryQueryResult {
+  kuery?: KueryFilterQueryResult | null;
+
+  serializedQuery?: string | null;
+}
+
+export interface KueryFilterQueryResult {
+  kind?: string | null;
+
+  expression?: string | null;
+}
+
+export interface SortTimelineResult {
+  columnId?: string | null;
+
+  sortDirection?: string | null;
+}
+
+export interface ResponseTimelines {
+  timeline: (TimelineResult | null)[];
+
+  totalCount?: number | null;
+}
+
+export interface Mutation {
+  /** Persists a note */
+  persistNote: ResponseNote;
+
+  deleteNote?: boolean | null;
+
+  deleteNoteByTimelineId?: boolean | null;
+  /** Persists a pinned event in a timeline */
+  persistPinnedEventOnTimeline?: PinnedEvent | null;
+  /** Remove a pinned events in a timeline */
+  deletePinnedEventOnTimeline: boolean;
+  /** Remove all pinned events in a timeline */
+  deleteAllPinnedEventsOnTimeline: boolean;
+  /** Persists a timeline */
+  persistTimeline: ResponseTimeline;
+
+  persistFavorite: ResponseFavoriteTimeline;
+
+  deleteTimeline: boolean;
+}
+
+export interface ResponseNote {
+  code?: number | null;
+
+  message?: string | null;
+
+  note: NoteResult;
+}
+
+export interface ResponseTimeline {
+  code?: number | null;
+
+  message?: string | null;
+
+  timeline: TimelineResult;
+}
+
+export interface ResponseFavoriteTimeline {
+  savedObjectId: string;
+
+  version: string;
+
+  favorite?: FavoriteTimelineResult[] | null;
+}
+
+export interface OsFields {
+  platform?: string | null;
+
+  name?: string | null;
+
+  full?: string | null;
+
+  family?: string | null;
+
+  version?: string | null;
+
+  kernel?: string | null;
+}
+
+export interface HostFields {
+  architecture?: string | null;
+
+  id?: string | null;
+
+  ip?: (string | null)[] | null;
+
+  mac?: (string | null)[] | null;
+
+  name?: string | null;
+
+  os?: OsFields | null;
+
+  type?: string | null;
+}
+
 // ====================================================
 // InputTypes
 // ====================================================
+
+export interface PageInfoNote {
+  pageIndex: number;
+
+  pageSize: number;
+}
+
+export interface SortNote {
+  sortField: SortFieldNote;
+
+  sortOrder: Direction;
+}
 
 export interface TimerangeInput {
   /** The interval string to use for last bucket. The format is '{value}{unit}'. For example '5m' would return the metrics for the last 5 minutes of the timespan. */
@@ -1255,13 +1549,170 @@ export interface NetworkDnsSortField {
   direction: Direction;
 }
 
+export interface PageInfoTimeline {
+  pageIndex: number;
+
+  pageSize: number;
+}
+
+export interface SortTimeline {
+  sortField: SortFieldTimeline;
+
+  sortOrder: Direction;
+}
+
+export interface NoteInput {
+  eventId?: string | null;
+
+  note?: string | null;
+
+  timelineId?: string | null;
+}
+
+export interface TimelineInput {
+  columns?: ColumnHeaderInput[] | null;
+
+  dataProviders?: DataProviderInput[] | null;
+
+  description?: string | null;
+
+  kqlMode?: string | null;
+
+  kqlQuery?: SerializedFilterQueryInput | null;
+
+  title?: string | null;
+
+  dateRange?: DateRangePickerInput | null;
+
+  sort?: SortTimelineInput | null;
+}
+
+export interface ColumnHeaderInput {
+  aggregatable?: boolean | null;
+
+  category?: string | null;
+
+  columnHeaderType?: string | null;
+
+  description?: string | null;
+
+  example?: string | null;
+
+  indexes?: string[] | null;
+
+  id?: string | null;
+
+  name?: string | null;
+
+  placeholder?: string | null;
+
+  searchable?: boolean | null;
+
+  type?: string | null;
+}
+
+export interface DataProviderInput {
+  id?: string | null;
+
+  name?: string | null;
+
+  enabled?: boolean | null;
+
+  excluded?: boolean | null;
+
+  kqlQuery?: string | null;
+
+  queryMatch?: QueryMatchInput | null;
+
+  and?: DataProviderInput[] | null;
+}
+
+export interface QueryMatchInput {
+  field?: string | null;
+
+  displayField?: string | null;
+
+  value?: string | null;
+
+  displayValue?: string | null;
+
+  operator?: string | null;
+}
+
+export interface SerializedFilterQueryInput {
+  filterQuery?: SerializedKueryQueryInput | null;
+}
+
+export interface SerializedKueryQueryInput {
+  kuery?: KueryFilterQueryInput | null;
+
+  serializedQuery?: string | null;
+}
+
+export interface KueryFilterQueryInput {
+  kind?: string | null;
+
+  expression?: string | null;
+}
+
+export interface DateRangePickerInput {
+  start?: number | null;
+
+  end?: number | null;
+}
+
+export interface SortTimelineInput {
+  columnId?: string | null;
+
+  sortDirection?: string | null;
+}
+
+export interface FavoriteTimelineInput {
+  fullName?: string | null;
+
+  userName?: string | null;
+
+  favoriteDate?: number | null;
+}
+
 // ====================================================
 // Arguments
 // ====================================================
 
+export interface GetNoteQueryArgs {
+  id: string;
+}
+export interface GetNotesByTimelineIdQueryArgs {
+  timelineId: string;
+}
+export interface GetNotesByEventIdQueryArgs {
+  eventId: string;
+}
+export interface GetAllNotesQueryArgs {
+  pageInfo?: PageInfoNote | null;
+
+  search?: string | null;
+
+  sort?: SortNote | null;
+}
+export interface GetAllPinnedEventsByTimelineIdQueryArgs {
+  timelineId: string;
+}
 export interface SourceQueryArgs {
   /** The id of the source */
   id: string;
+}
+export interface GetOneTimelineQueryArgs {
+  id: string;
+}
+export interface GetAllTimelineQueryArgs {
+  pageInfo?: PageInfoTimeline | null;
+
+  search?: string | null;
+
+  sort?: SortTimeline | null;
+
+  onlyUserFavorite?: boolean | null;
 }
 export interface AuthenticationsSourceArgs {
   timerange: TimerangeInput;
@@ -1269,6 +1720,8 @@ export interface AuthenticationsSourceArgs {
   pagination: PaginationInput;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface EventsSourceArgs {
   pagination: PaginationInput;
@@ -1278,6 +1731,8 @@ export interface EventsSourceArgs {
   timerange?: TimerangeInput | null;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface TimelineSourceArgs {
   pagination: PaginationInput;
@@ -1289,11 +1744,15 @@ export interface TimelineSourceArgs {
   timerange?: TimerangeInput | null;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface TimelineDetailsSourceArgs {
   eventId: string;
 
   indexName: string;
+
+  defaultIndex: string[];
 }
 export interface LastEventTimeSourceArgs {
   id?: string | null;
@@ -1301,6 +1760,8 @@ export interface LastEventTimeSourceArgs {
   indexKey: LastEventIndexKey;
 
   details: LastTimeDetails;
+
+  defaultIndex: string[];
 }
 export interface HostsSourceArgs {
   id?: string | null;
@@ -1312,18 +1773,24 @@ export interface HostsSourceArgs {
   sort: HostsSortField;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
-export interface HostDetailsSourceArgs {
+export interface HostOverviewSourceArgs {
   id?: string | null;
 
   hostName: string;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface HostFirstLastSeenSourceArgs {
   id?: string | null;
 
   hostName: string;
+
+  defaultIndex: string[];
 }
 export interface IpOverviewSourceArgs {
   id?: string | null;
@@ -1331,6 +1798,8 @@ export interface IpOverviewSourceArgs {
   filterQuery?: string | null;
 
   ip: string;
+
+  defaultIndex: string[];
 }
 export interface DomainsSourceArgs {
   filterQuery?: string | null;
@@ -1348,6 +1817,8 @@ export interface DomainsSourceArgs {
   flowTarget: FlowTarget;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface DomainFirstLastSeenSourceArgs {
   id?: string | null;
@@ -1357,6 +1828,8 @@ export interface DomainFirstLastSeenSourceArgs {
   domainName: string;
 
   flowTarget: FlowTarget;
+
+  defaultIndex: string[];
 }
 export interface TlsSourceArgs {
   filterQuery?: string | null;
@@ -1372,6 +1845,8 @@ export interface TlsSourceArgs {
   flowTarget: FlowTarget;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface UsersSourceArgs {
   filterQuery?: string | null;
@@ -1387,6 +1862,8 @@ export interface UsersSourceArgs {
   flowTarget: FlowTarget;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface KpiNetworkSourceArgs {
   id?: string | null;
@@ -1394,6 +1871,17 @@ export interface KpiNetworkSourceArgs {
   timerange: TimerangeInput;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
+}
+export interface KpiHostsSourceArgs {
+  id?: string | null;
+
+  timerange: TimerangeInput;
+
+  filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface NetworkTopNFlowSourceArgs {
   id?: string | null;
@@ -1409,6 +1897,8 @@ export interface NetworkTopNFlowSourceArgs {
   sort: NetworkTopNFlowSortField;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface NetworkDnsSourceArgs {
   filterQuery?: string | null;
@@ -1422,6 +1912,8 @@ export interface NetworkDnsSourceArgs {
   sort: NetworkDnsSortField;
 
   timerange: TimerangeInput;
+
+  defaultIndex: string[];
 }
 export interface OverviewNetworkSourceArgs {
   id?: string | null;
@@ -1429,6 +1921,8 @@ export interface OverviewNetworkSourceArgs {
   timerange: TimerangeInput;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface OverviewHostSourceArgs {
   id?: string | null;
@@ -1436,6 +1930,8 @@ export interface OverviewHostSourceArgs {
   timerange: TimerangeInput;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
 }
 export interface UncommonProcessesSourceArgs {
   timerange: TimerangeInput;
@@ -1443,21 +1939,66 @@ export interface UncommonProcessesSourceArgs {
   pagination: PaginationInput;
 
   filterQuery?: string | null;
+
+  defaultIndex: string[];
+}
+export interface IndicesExistSourceStatusArgs {
+  defaultIndex: string[];
 }
 export interface IndexFieldsSourceStatusArgs {
-  indexTypes?: IndexType[] | null;
+  defaultIndex: string[];
+}
+export interface PersistNoteMutationArgs {
+  noteId?: string | null;
+
+  version?: string | null;
+
+  note: NoteInput;
+}
+export interface DeleteNoteMutationArgs {
+  id: string[];
+
+  version?: string | null;
+}
+export interface DeleteNoteByTimelineIdMutationArgs {
+  timelineId: string;
+
+  version?: string | null;
+}
+export interface PersistPinnedEventOnTimelineMutationArgs {
+  pinnedEventId?: string | null;
+
+  eventId: string;
+
+  timelineId?: string | null;
+}
+export interface DeletePinnedEventOnTimelineMutationArgs {
+  id: string[];
+}
+export interface DeleteAllPinnedEventsOnTimelineMutationArgs {
+  timelineId: string;
+}
+export interface PersistTimelineMutationArgs {
+  id?: string | null;
+
+  version?: string | null;
+
+  timeline: TimelineInput;
+}
+export interface PersistFavoriteMutationArgs {
+  timelineId?: string | null;
+}
+export interface DeleteTimelineMutationArgs {
+  id: string[];
 }
 
 // ====================================================
 // Enums
 // ====================================================
 
-export enum IndexType {
-  ANY = 'ANY',
-  FILEBEAT = 'FILEBEAT',
-  AUDITBEAT = 'AUDITBEAT',
-  PACKETBEAT = 'PACKETBEAT',
-  WINLOGBEAT = 'WINLOGBEAT',
+export enum SortFieldNote {
+  updatedBy = 'updatedBy',
+  updated = 'updated',
 }
 
 export enum Direction {
@@ -1531,6 +2072,13 @@ export enum NetworkDnsFields {
   dnsBytesOut = 'dnsBytesOut',
 }
 
+export enum SortFieldTimeline {
+  title = 'title',
+  description = 'description',
+  updated = 'updated',
+  created = 'created',
+}
+
 // ====================================================
 // END: Typescript template
 // ====================================================
@@ -1545,6 +2093,7 @@ export namespace GetAuthenticationsQuery {
     timerange: TimerangeInput;
     pagination: PaginationInput;
     filterQuery?: string | null;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -1652,7 +2201,7 @@ export namespace GetAuthenticationsQuery {
   export type Cursor = {
     __typename?: 'CursorType';
 
-    value: string;
+    value?: string | null;
   };
 
   export type PageInfo = {
@@ -1668,6 +2217,7 @@ export namespace GetDomainFirstLastSeenQuery {
     ip: string;
     domainName: string;
     flowTarget: FlowTarget;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -1703,6 +2253,7 @@ export namespace GetDomainsQuery {
     pagination: PaginationInput;
     sort: DomainsSortField;
     timerange: TimerangeInput;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -1784,7 +2335,7 @@ export namespace GetDomainsQuery {
   export type Cursor = {
     __typename?: 'CursorType';
 
-    value: string;
+    value?: string | null;
   };
 
   export type PageInfo = {
@@ -1801,6 +2352,7 @@ export namespace GetEventsQuery {
     pagination: PaginationInput;
     sortField: SortField;
     filterQuery?: string | null;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -1852,13 +2404,15 @@ export namespace GetEventsQuery {
 
     host?: Host | null;
 
+    message?: ToStringArray | null;
+
     source?: _Source | null;
 
     destination?: Destination | null;
 
-    geo?: Geo | null;
-
     suricata?: Suricata | null;
+
+    user?: User | null;
 
     zeek?: Zeek | null;
   };
@@ -1868,13 +2422,15 @@ export namespace GetEventsQuery {
 
     action?: ToStringArray | null;
 
-    severity?: ToNumberArray | null;
+    category?: ToStringArray | null;
+
+    dataset?: ToStringArray | null;
+
+    id?: ToStringArray | null;
 
     module?: ToStringArray | null;
 
-    category?: ToStringArray | null;
-
-    id?: ToStringArray | null;
+    severity?: ToNumberArray | null;
   };
 
   export type Host = {
@@ -1903,14 +2459,6 @@ export namespace GetEventsQuery {
     port?: ToNumberArray | null;
   };
 
-  export type Geo = {
-    __typename?: 'GeoEcsFields';
-
-    region_name?: ToStringArray | null;
-
-    country_iso_code?: ToStringArray | null;
-  };
-
   export type Suricata = {
     __typename?: 'SuricataEcsFields';
 
@@ -1935,6 +2483,12 @@ export namespace GetEventsQuery {
     signature_id?: ToNumberArray | null;
   };
 
+  export type User = {
+    __typename?: 'UserEcsFields';
+
+    name?: ToStringArray | null;
+  };
+
   export type Zeek = {
     __typename?: 'ZeekEcsFields';
 
@@ -1947,6 +2501,7 @@ export namespace GetLastEventTimeQuery {
     sourceId: string;
     indexKey: LastEventIndexKey;
     details: LastTimeDetails;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -1970,70 +2525,11 @@ export namespace GetLastEventTimeQuery {
   };
 }
 
-export namespace GetHostDetailsQuery {
-  export type Variables = {
-    sourceId: string;
-    hostName: string;
-    timerange: TimerangeInput;
-  };
-
-  export type Query = {
-    __typename?: 'Query';
-
-    source: Source;
-  };
-
-  export type Source = {
-    __typename?: 'Source';
-
-    id: string;
-
-    HostDetails: HostDetails;
-  };
-
-  export type HostDetails = {
-    __typename?: 'HostItem';
-
-    _id?: string | null;
-
-    host?: Host | null;
-  };
-
-  export type Host = {
-    __typename?: 'HostFields';
-
-    architecture?: string | null;
-
-    id?: string | null;
-
-    ip?: (string | null)[] | null;
-
-    mac?: (string | null)[] | null;
-
-    name?: string | null;
-
-    os?: Os | null;
-
-    type?: string | null;
-  };
-
-  export type Os = {
-    __typename?: 'OsFields';
-
-    family?: string | null;
-
-    name?: string | null;
-
-    platform?: string | null;
-
-    version?: string | null;
-  };
-}
-
 export namespace GetHostFirstLastSeenQuery {
   export type Variables = {
     sourceId: string;
     hostName: string;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2066,6 +2562,7 @@ export namespace GetHostsTableQuery {
     pagination: PaginationInput;
     sort: HostsSortField;
     filterQuery?: string | null;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2111,27 +2608,27 @@ export namespace GetHostsTableQuery {
   };
 
   export type Host = {
-    __typename?: 'HostFields';
+    __typename?: 'HostEcsFields';
 
-    id?: string | null;
+    id?: ToStringArray | null;
 
-    name?: string | null;
+    name?: ToStringArray | null;
 
     os?: Os | null;
   };
 
   export type Os = {
-    __typename?: 'OsFields';
+    __typename?: 'OsEcsFields';
 
-    name?: string | null;
+    name?: ToStringArray | null;
 
-    version?: string | null;
+    version?: ToStringArray | null;
   };
 
   export type Cursor = {
     __typename?: 'CursorType';
 
-    value: string;
+    value?: string | null;
   };
 
   export type PageInfo = {
@@ -2141,11 +2638,99 @@ export namespace GetHostsTableQuery {
   };
 }
 
+export namespace GetHostOverviewQuery {
+  export type Variables = {
+    sourceId: string;
+    hostName: string;
+    timerange: TimerangeInput;
+    defaultIndex: string[];
+  };
+
+  export type Query = {
+    __typename?: 'Query';
+
+    source: Source;
+  };
+
+  export type Source = {
+    __typename?: 'Source';
+
+    id: string;
+
+    HostOverview: HostOverview;
+  };
+
+  export type HostOverview = {
+    __typename?: 'HostItem';
+
+    _id?: string | null;
+
+    host?: Host | null;
+
+    cloud?: Cloud | null;
+  };
+
+  export type Host = {
+    __typename?: 'HostEcsFields';
+
+    architecture?: ToStringArray | null;
+
+    id?: ToStringArray | null;
+
+    ip?: ToStringArray | null;
+
+    mac?: ToStringArray | null;
+
+    name?: ToStringArray | null;
+
+    os?: Os | null;
+
+    type?: ToStringArray | null;
+  };
+
+  export type Os = {
+    __typename?: 'OsEcsFields';
+
+    family?: ToStringArray | null;
+
+    name?: ToStringArray | null;
+
+    platform?: ToStringArray | null;
+
+    version?: ToStringArray | null;
+  };
+
+  export type Cloud = {
+    __typename?: 'CloudFields';
+
+    instance?: Instance | null;
+
+    machine?: Machine | null;
+
+    provider?: (string | null)[] | null;
+
+    region?: (string | null)[] | null;
+  };
+
+  export type Instance = {
+    __typename?: 'CloudInstance';
+
+    id?: (string | null)[] | null;
+  };
+
+  export type Machine = {
+    __typename?: 'CloudMachine';
+
+    type?: (string | null)[] | null;
+  };
+}
+
 export namespace GetIpOverviewQuery {
   export type Variables = {
     sourceId: string;
     filterQuery?: string | null;
     ip: string;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2168,6 +2753,8 @@ export namespace GetIpOverviewQuery {
     source?: _Source | null;
 
     destination?: Destination | null;
+
+    host: Host;
   };
 
   export type _Source = {
@@ -2180,8 +2767,6 @@ export namespace GetIpOverviewQuery {
     autonomousSystem: AutonomousSystem;
 
     geo: Geo;
-
-    host: Host;
   };
 
   export type AutonomousSystem = {
@@ -2220,36 +2805,6 @@ export namespace GetIpOverviewQuery {
     lon?: ToNumberArray | null;
   };
 
-  export type Host = {
-    __typename?: 'HostEcsFields';
-
-    architecture?: ToStringArray | null;
-
-    id?: ToStringArray | null;
-
-    ip?: ToStringArray | null;
-
-    mac?: ToStringArray | null;
-
-    name?: ToStringArray | null;
-
-    os?: Os | null;
-
-    type?: ToStringArray | null;
-  };
-
-  export type Os = {
-    __typename?: 'OsEcsFields';
-
-    family?: ToStringArray | null;
-
-    name?: ToStringArray | null;
-
-    platform?: ToStringArray | null;
-
-    version?: ToStringArray | null;
-  };
-
   export type Destination = {
     __typename?: 'Overview';
 
@@ -2260,8 +2815,6 @@ export namespace GetIpOverviewQuery {
     autonomousSystem: _AutonomousSystem;
 
     geo: _Geo;
-
-    host: _Host;
   };
 
   export type _AutonomousSystem = {
@@ -2300,7 +2853,7 @@ export namespace GetIpOverviewQuery {
     lon?: ToNumberArray | null;
   };
 
-  export type _Host = {
+  export type Host = {
     __typename?: 'HostEcsFields';
 
     architecture?: ToStringArray | null;
@@ -2313,12 +2866,12 @@ export namespace GetIpOverviewQuery {
 
     name?: ToStringArray | null;
 
-    os?: _Os | null;
+    os?: Os | null;
 
     type?: ToStringArray | null;
   };
 
-  export type _Os = {
+  export type Os = {
     __typename?: 'OsEcsFields';
 
     family?: ToStringArray | null;
@@ -2331,11 +2884,69 @@ export namespace GetIpOverviewQuery {
   };
 }
 
+export namespace GetKpiHostsQuery {
+  export type Variables = {
+    sourceId: string;
+    timerange: TimerangeInput;
+    filterQuery?: string | null;
+    defaultIndex: string[];
+  };
+
+  export type Query = {
+    __typename?: 'Query';
+
+    source: Source;
+  };
+
+  export type Source = {
+    __typename?: 'Source';
+
+    id: string;
+
+    KpiHosts: KpiHosts;
+  };
+
+  export type KpiHosts = {
+    __typename?: 'KpiHostsData';
+
+    hosts?: number | null;
+
+    hostsHistogram?: HostsHistogram[] | null;
+
+    authSuccess?: number | null;
+
+    authSuccessHistogram?: AuthSuccessHistogram[] | null;
+
+    authFailure?: number | null;
+
+    authFailureHistogram?: AuthFailureHistogram[] | null;
+
+    uniqueSourceIps?: number | null;
+
+    uniqueSourceIpsHistogram?: UniqueSourceIpsHistogram[] | null;
+
+    uniqueDestinationIps?: number | null;
+
+    uniqueDestinationIpsHistogram?: UniqueDestinationIpsHistogram[] | null;
+  };
+
+  export type HostsHistogram = KpiHostChartFields.Fragment;
+
+  export type AuthSuccessHistogram = KpiHostChartFields.Fragment;
+
+  export type AuthFailureHistogram = KpiHostChartFields.Fragment;
+
+  export type UniqueSourceIpsHistogram = KpiHostChartFields.Fragment;
+
+  export type UniqueDestinationIpsHistogram = KpiHostChartFields.Fragment;
+}
+
 export namespace GetKpiNetworkQuery {
   export type Variables = {
     sourceId: string;
     timerange: TimerangeInput;
     filterQuery?: string | null;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2359,16 +2970,22 @@ export namespace GetKpiNetworkQuery {
 
     uniqueFlowId?: number | null;
 
-    activeAgents?: number | null;
-
     uniqueSourcePrivateIps?: number | null;
 
+    uniqueSourcePrivateIpsHistogram?: UniqueSourcePrivateIpsHistogram[] | null;
+
     uniqueDestinationPrivateIps?: number | null;
+
+    uniqueDestinationPrivateIpsHistogram?: UniqueDestinationPrivateIpsHistogram[] | null;
 
     dnsQueries?: number | null;
 
     tlsHandshakes?: number | null;
   };
+
+  export type UniqueSourcePrivateIpsHistogram = KpiNetworkChartFields.Fragment;
+
+  export type UniqueDestinationPrivateIpsHistogram = KpiNetworkChartFields.Fragment;
 }
 
 export namespace GetNetworkDnsQuery {
@@ -2379,6 +2996,7 @@ export namespace GetNetworkDnsQuery {
     timerange: TimerangeInput;
     pagination: PaginationInput;
     filterQuery?: string | null;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2432,7 +3050,7 @@ export namespace GetNetworkDnsQuery {
   export type Cursor = {
     __typename?: 'CursorType';
 
-    value: string;
+    value?: string | null;
   };
 
   export type PageInfo = {
@@ -2451,6 +3069,7 @@ export namespace GetNetworkTopNFlowQuery {
     sort: NetworkTopNFlowSortField;
     flowTarget: FlowTarget;
     timerange: TimerangeInput;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2552,7 +3171,7 @@ export namespace GetNetworkTopNFlowQuery {
   export type Cursor = {
     __typename?: 'CursorType';
 
-    value: string;
+    value?: string | null;
   };
 
   export type PageInfo = {
@@ -2567,6 +3186,7 @@ export namespace GetOverviewHostQuery {
     sourceId: string;
     timerange: TimerangeInput;
     filterQuery?: string | null;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2597,6 +3217,10 @@ export namespace GetOverviewHostQuery {
     auditbeatProcess?: number | null;
 
     auditbeatUser?: number | null;
+
+    filebeatSystemModule?: number | null;
+
+    winlogbeat?: number | null;
   };
 }
 
@@ -2605,6 +3229,7 @@ export namespace GetOverviewNetworkQuery {
     sourceId: string;
     timerange: TimerangeInput;
     filterQuery?: string | null;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2624,22 +3249,30 @@ export namespace GetOverviewNetworkQuery {
   export type OverviewNetwork = {
     __typename?: 'OverviewNetworkData';
 
-    packetbeatFlow: number;
+    auditbeatSocket?: number | null;
 
-    packetbeatDNS: number;
+    filebeatCisco?: number | null;
 
-    filebeatSuricata: number;
+    filebeatNetflow?: number | null;
+
+    filebeatPanw?: number | null;
+
+    filebeatSuricata?: number | null;
 
     filebeatZeek?: number | null;
 
-    auditbeatSocket?: number | null;
+    packetbeatDNS?: number | null;
+
+    packetbeatFlow?: number | null;
+
+    packetbeatTLS?: number | null;
   };
 }
 
 export namespace SourceQuery {
   export type Variables = {
     sourceId?: string | null;
-    indexTypes?: IndexType[] | null;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2653,43 +3286,13 @@ export namespace SourceQuery {
 
     id: string;
 
-    configuration: Configuration;
-
     status: Status;
-  };
-
-  export type Configuration = {
-    __typename?: 'SourceConfiguration';
-
-    auditbeatAlias: string;
-
-    logAlias: string;
-
-    packetbeatAlias: string;
-
-    winlogbeatAlias: string;
   };
 
   export type Status = {
     __typename?: 'SourceStatus';
 
-    auditbeatIndicesExist: boolean;
-
-    auditbeatAliasExists: boolean;
-
-    auditbeatIndices: string[];
-
-    filebeatIndicesExist: boolean;
-
-    filebeatAliasExists: boolean;
-
-    filebeatIndices: string[];
-
-    winlogbeatIndicesExist: boolean;
-
-    winlogbeatAliasExists: boolean;
-
-    winlogbeatIndices: string[];
+    indicesExist: boolean;
 
     indexFields: IndexFields[];
   };
@@ -2715,11 +3318,135 @@ export namespace SourceQuery {
   };
 }
 
+export namespace GetAllTimeline {
+  export type Variables = {
+    pageInfo: PageInfoTimeline;
+    search?: string | null;
+    sort?: SortTimeline | null;
+    onlyUserFavorite?: boolean | null;
+  };
+
+  export type Query = {
+    __typename?: 'Query';
+
+    getAllTimeline: GetAllTimeline;
+  };
+
+  export type GetAllTimeline = {
+    __typename?: 'ResponseTimelines';
+
+    totalCount?: number | null;
+
+    timeline: (Timeline | null)[];
+  };
+
+  export type Timeline = {
+    __typename?: 'TimelineResult';
+
+    savedObjectId: string;
+
+    description?: string | null;
+
+    favorite?: Favorite[] | null;
+
+    eventIdToNoteIds?: EventIdToNoteIds[] | null;
+
+    notes?: Notes[] | null;
+
+    noteIds?: string[] | null;
+
+    pinnedEventIds?: string[] | null;
+
+    title?: string | null;
+
+    created?: number | null;
+
+    createdBy?: string | null;
+
+    updated?: number | null;
+
+    updatedBy?: string | null;
+
+    version: string;
+  };
+
+  export type Favorite = {
+    __typename?: 'FavoriteTimelineResult';
+
+    fullName?: string | null;
+
+    userName?: string | null;
+
+    favoriteDate?: number | null;
+  };
+
+  export type EventIdToNoteIds = {
+    __typename?: 'NoteResult';
+
+    eventId?: string | null;
+
+    note?: string | null;
+
+    timelineId?: string | null;
+
+    noteId: string;
+
+    created?: number | null;
+
+    createdBy?: string | null;
+
+    timelineVersion?: string | null;
+
+    updated?: number | null;
+
+    updatedBy?: string | null;
+
+    version?: string | null;
+  };
+
+  export type Notes = {
+    __typename?: 'NoteResult';
+
+    eventId?: string | null;
+
+    note?: string | null;
+
+    timelineId?: string | null;
+
+    timelineVersion?: string | null;
+
+    noteId: string;
+
+    created?: number | null;
+
+    createdBy?: string | null;
+
+    updated?: number | null;
+
+    updatedBy?: string | null;
+
+    version?: string | null;
+  };
+}
+
+export namespace DeleteTimelineMutation {
+  export type Variables = {
+    id: string[];
+  };
+
+  export type Mutation = {
+    __typename?: 'Mutation';
+
+    deleteTimeline: boolean;
+  };
+}
+
 export namespace GetTimelineDetailsQuery {
   export type Variables = {
     sourceId: string;
     eventId: string;
     indexName: string;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2761,6 +3488,38 @@ export namespace GetTimelineDetailsQuery {
   };
 }
 
+export namespace PersistTimelineFavoriteMutation {
+  export type Variables = {
+    timelineId?: string | null;
+  };
+
+  export type Mutation = {
+    __typename?: 'Mutation';
+
+    persistFavorite: PersistFavorite;
+  };
+
+  export type PersistFavorite = {
+    __typename?: 'ResponseFavoriteTimeline';
+
+    savedObjectId: string;
+
+    version: string;
+
+    favorite?: Favorite[] | null;
+  };
+
+  export type Favorite = {
+    __typename?: 'FavoriteTimelineResult';
+
+    fullName?: string | null;
+
+    userName?: string | null;
+
+    favoriteDate?: number | null;
+  };
+}
+
 export namespace GetTimelineQuery {
   export type Variables = {
     sourceId: string;
@@ -2768,6 +3527,7 @@ export namespace GetTimelineQuery {
     pagination: PaginationInput;
     sortField: SortField;
     filterQuery?: string | null;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -2805,7 +3565,7 @@ export namespace GetTimelineQuery {
   export type EndCursor = {
     __typename?: 'CursorType';
 
-    value: string;
+    value?: string | null;
 
     tiebreaker?: string | null;
   };
@@ -3437,6 +4197,540 @@ export namespace GetTimelineQuery {
   };
 }
 
+export namespace PersistTimelineNoteMutation {
+  export type Variables = {
+    noteId?: string | null;
+    version?: string | null;
+    note: NoteInput;
+  };
+
+  export type Mutation = {
+    __typename?: 'Mutation';
+
+    persistNote: PersistNote;
+  };
+
+  export type PersistNote = {
+    __typename?: 'ResponseNote';
+
+    code?: number | null;
+
+    message?: string | null;
+
+    note: Note;
+  };
+
+  export type Note = {
+    __typename?: 'NoteResult';
+
+    eventId?: string | null;
+
+    note?: string | null;
+
+    timelineId?: string | null;
+
+    timelineVersion?: string | null;
+
+    noteId: string;
+
+    created?: number | null;
+
+    createdBy?: string | null;
+
+    updated?: number | null;
+
+    updatedBy?: string | null;
+
+    version?: string | null;
+  };
+}
+
+export namespace GetOneTimeline {
+  export type Variables = {
+    id: string;
+  };
+
+  export type Query = {
+    __typename?: 'Query';
+
+    getOneTimeline: GetOneTimeline;
+  };
+
+  export type GetOneTimeline = {
+    __typename?: 'TimelineResult';
+
+    savedObjectId: string;
+
+    columns?: Columns[] | null;
+
+    dataProviders?: DataProviders[] | null;
+
+    dateRange?: DateRange | null;
+
+    description?: string | null;
+
+    eventIdToNoteIds?: EventIdToNoteIds[] | null;
+
+    favorite?: Favorite[] | null;
+
+    kqlMode?: string | null;
+
+    kqlQuery?: KqlQuery | null;
+
+    notes?: Notes[] | null;
+
+    noteIds?: string[] | null;
+
+    pinnedEventIds?: string[] | null;
+
+    pinnedEventsSaveObject?: PinnedEventsSaveObject[] | null;
+
+    title?: string | null;
+
+    sort?: Sort | null;
+
+    created?: number | null;
+
+    createdBy?: string | null;
+
+    updated?: number | null;
+
+    updatedBy?: string | null;
+
+    version: string;
+  };
+
+  export type Columns = {
+    __typename?: 'ColumnHeaderResult';
+
+    aggregatable?: boolean | null;
+
+    category?: string | null;
+
+    columnHeaderType?: string | null;
+
+    description?: string | null;
+
+    example?: string | null;
+
+    indexes?: string[] | null;
+
+    id?: string | null;
+
+    name?: string | null;
+
+    searchable?: boolean | null;
+
+    type?: string | null;
+  };
+
+  export type DataProviders = {
+    __typename?: 'DataProviderResult';
+
+    id?: string | null;
+
+    name?: string | null;
+
+    enabled?: boolean | null;
+
+    excluded?: boolean | null;
+
+    kqlQuery?: string | null;
+
+    queryMatch?: QueryMatch | null;
+
+    and?: And[] | null;
+  };
+
+  export type QueryMatch = {
+    __typename?: 'QueryMatchResult';
+
+    field?: string | null;
+
+    displayField?: string | null;
+
+    value?: string | null;
+
+    displayValue?: string | null;
+
+    operator?: string | null;
+  };
+
+  export type And = {
+    __typename?: 'DataProviderResult';
+
+    id?: string | null;
+
+    name?: string | null;
+
+    enabled?: boolean | null;
+
+    excluded?: boolean | null;
+
+    kqlQuery?: string | null;
+
+    queryMatch?: _QueryMatch | null;
+  };
+
+  export type _QueryMatch = {
+    __typename?: 'QueryMatchResult';
+
+    field?: string | null;
+
+    displayField?: string | null;
+
+    value?: string | null;
+
+    displayValue?: string | null;
+
+    operator?: string | null;
+  };
+
+  export type DateRange = {
+    __typename?: 'DateRangePickerResult';
+
+    start?: number | null;
+
+    end?: number | null;
+  };
+
+  export type EventIdToNoteIds = {
+    __typename?: 'NoteResult';
+
+    eventId?: string | null;
+
+    note?: string | null;
+
+    timelineId?: string | null;
+
+    noteId: string;
+
+    created?: number | null;
+
+    createdBy?: string | null;
+
+    timelineVersion?: string | null;
+
+    updated?: number | null;
+
+    updatedBy?: string | null;
+
+    version?: string | null;
+  };
+
+  export type Favorite = {
+    __typename?: 'FavoriteTimelineResult';
+
+    fullName?: string | null;
+
+    userName?: string | null;
+
+    favoriteDate?: number | null;
+  };
+
+  export type KqlQuery = {
+    __typename?: 'SerializedFilterQueryResult';
+
+    filterQuery?: FilterQuery | null;
+  };
+
+  export type FilterQuery = {
+    __typename?: 'SerializedKueryQueryResult';
+
+    kuery?: Kuery | null;
+
+    serializedQuery?: string | null;
+  };
+
+  export type Kuery = {
+    __typename?: 'KueryFilterQueryResult';
+
+    kind?: string | null;
+
+    expression?: string | null;
+  };
+
+  export type Notes = {
+    __typename?: 'NoteResult';
+
+    eventId?: string | null;
+
+    note?: string | null;
+
+    timelineId?: string | null;
+
+    timelineVersion?: string | null;
+
+    noteId: string;
+
+    created?: number | null;
+
+    createdBy?: string | null;
+
+    updated?: number | null;
+
+    updatedBy?: string | null;
+
+    version?: string | null;
+  };
+
+  export type PinnedEventsSaveObject = {
+    __typename?: 'PinnedEvent';
+
+    pinnedEventId: string;
+
+    eventId?: string | null;
+
+    timelineId?: string | null;
+
+    created?: number | null;
+
+    createdBy?: string | null;
+
+    updated?: number | null;
+
+    updatedBy?: string | null;
+
+    version?: string | null;
+  };
+
+  export type Sort = {
+    __typename?: 'SortTimelineResult';
+
+    columnId?: string | null;
+
+    sortDirection?: string | null;
+  };
+}
+
+export namespace PersistTimelineMutation {
+  export type Variables = {
+    timelineId?: string | null;
+    version?: string | null;
+    timeline: TimelineInput;
+  };
+
+  export type Mutation = {
+    __typename?: 'Mutation';
+
+    persistTimeline: PersistTimeline;
+  };
+
+  export type PersistTimeline = {
+    __typename?: 'ResponseTimeline';
+
+    code?: number | null;
+
+    message?: string | null;
+
+    timeline: Timeline;
+  };
+
+  export type Timeline = {
+    __typename?: 'TimelineResult';
+
+    savedObjectId: string;
+
+    version: string;
+
+    columns?: Columns[] | null;
+
+    dataProviders?: DataProviders[] | null;
+
+    description?: string | null;
+
+    favorite?: Favorite[] | null;
+
+    kqlMode?: string | null;
+
+    kqlQuery?: KqlQuery | null;
+
+    title?: string | null;
+
+    dateRange?: DateRange | null;
+
+    sort?: Sort | null;
+
+    created?: number | null;
+
+    createdBy?: string | null;
+
+    updated?: number | null;
+
+    updatedBy?: string | null;
+  };
+
+  export type Columns = {
+    __typename?: 'ColumnHeaderResult';
+
+    aggregatable?: boolean | null;
+
+    category?: string | null;
+
+    columnHeaderType?: string | null;
+
+    description?: string | null;
+
+    example?: string | null;
+
+    indexes?: string[] | null;
+
+    id?: string | null;
+
+    name?: string | null;
+
+    searchable?: boolean | null;
+
+    type?: string | null;
+  };
+
+  export type DataProviders = {
+    __typename?: 'DataProviderResult';
+
+    id?: string | null;
+
+    name?: string | null;
+
+    enabled?: boolean | null;
+
+    excluded?: boolean | null;
+
+    kqlQuery?: string | null;
+
+    queryMatch?: QueryMatch | null;
+
+    and?: And[] | null;
+  };
+
+  export type QueryMatch = {
+    __typename?: 'QueryMatchResult';
+
+    field?: string | null;
+
+    displayField?: string | null;
+
+    value?: string | null;
+
+    displayValue?: string | null;
+
+    operator?: string | null;
+  };
+
+  export type And = {
+    __typename?: 'DataProviderResult';
+
+    id?: string | null;
+
+    name?: string | null;
+
+    enabled?: boolean | null;
+
+    excluded?: boolean | null;
+
+    kqlQuery?: string | null;
+
+    queryMatch?: _QueryMatch | null;
+  };
+
+  export type _QueryMatch = {
+    __typename?: 'QueryMatchResult';
+
+    field?: string | null;
+
+    displayField?: string | null;
+
+    value?: string | null;
+
+    displayValue?: string | null;
+
+    operator?: string | null;
+  };
+
+  export type Favorite = {
+    __typename?: 'FavoriteTimelineResult';
+
+    fullName?: string | null;
+
+    userName?: string | null;
+
+    favoriteDate?: number | null;
+  };
+
+  export type KqlQuery = {
+    __typename?: 'SerializedFilterQueryResult';
+
+    filterQuery?: FilterQuery | null;
+  };
+
+  export type FilterQuery = {
+    __typename?: 'SerializedKueryQueryResult';
+
+    kuery?: Kuery | null;
+
+    serializedQuery?: string | null;
+  };
+
+  export type Kuery = {
+    __typename?: 'KueryFilterQueryResult';
+
+    kind?: string | null;
+
+    expression?: string | null;
+  };
+
+  export type DateRange = {
+    __typename?: 'DateRangePickerResult';
+
+    start?: number | null;
+
+    end?: number | null;
+  };
+
+  export type Sort = {
+    __typename?: 'SortTimelineResult';
+
+    columnId?: string | null;
+
+    sortDirection?: string | null;
+  };
+}
+
+export namespace PersistTimelinePinnedEventMutation {
+  export type Variables = {
+    pinnedEventId?: string | null;
+    eventId: string;
+    timelineId?: string | null;
+  };
+
+  export type Mutation = {
+    __typename?: 'Mutation';
+
+    persistPinnedEventOnTimeline?: PersistPinnedEventOnTimeline | null;
+  };
+
+  export type PersistPinnedEventOnTimeline = {
+    __typename?: 'PinnedEvent';
+
+    pinnedEventId: string;
+
+    eventId?: string | null;
+
+    timelineId?: string | null;
+
+    timelineVersion?: string | null;
+
+    created?: number | null;
+
+    createdBy?: string | null;
+
+    updated?: number | null;
+
+    updatedBy?: string | null;
+
+    version?: string | null;
+  };
+}
+
 export namespace GetTlsQuery {
   export type Variables = {
     sourceId: string;
@@ -3446,6 +4740,7 @@ export namespace GetTlsQuery {
     pagination: PaginationInput;
     sort: TlsSortField;
     timerange: TimerangeInput;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -3499,7 +4794,7 @@ export namespace GetTlsQuery {
   export type Cursor = {
     __typename?: 'CursorType';
 
-    value: string;
+    value?: string | null;
   };
 
   export type PageInfo = {
@@ -3515,6 +4810,7 @@ export namespace GetUncommonProcessesQuery {
     timerange: TimerangeInput;
     pagination: PaginationInput;
     filterQuery?: string | null;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -3588,7 +4884,7 @@ export namespace GetUncommonProcessesQuery {
   export type Cursor = {
     __typename?: 'CursorType';
 
-    value: string;
+    value?: string | null;
   };
 
   export type PageInfo = {
@@ -3607,6 +4903,7 @@ export namespace GetUsersQuery {
     pagination: PaginationInput;
     sort: UsersSortField;
     timerange: TimerangeInput;
+    defaultIndex: string[];
   };
 
   export type Query = {
@@ -3664,12 +4961,32 @@ export namespace GetUsersQuery {
   export type Cursor = {
     __typename?: 'CursorType';
 
-    value: string;
+    value?: string | null;
   };
 
   export type PageInfo = {
     __typename?: 'PageInfo';
 
     activePage?: number | null;
+  };
+}
+
+export namespace KpiHostChartFields {
+  export type Fragment = {
+    __typename?: 'KpiHostHistogramData';
+
+    x?: string | null;
+
+    y?: number | null;
+  };
+}
+
+export namespace KpiNetworkChartFields {
+  export type Fragment = {
+    __typename?: 'KpiNetworkHistogramData';
+
+    x?: string | null;
+
+    y?: number | null;
   };
 }

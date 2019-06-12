@@ -5,11 +5,14 @@
  */
 
 import { uniq } from 'lodash';
-import { ContextFunction, Datatable, Render } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { Datatable, Render } from '../types';
+import { getFunctionHelp } from '../../strings';
 
 interface Arguments {
   filterColumn: string;
   valueColumn: string;
+  filterGroup: string;
 }
 
 interface Return {
@@ -17,12 +20,14 @@ interface Return {
   choices: any;
 }
 
-export function dropdownControl(): ContextFunction<
+export function dropdownControl(): ExpressionFunction<
   'dropdownControl',
   Datatable,
   Arguments,
   Render<Return>
 > {
+  const { help, args: argHelp } = getFunctionHelp().dropdownControl;
+
   return {
     name: 'dropdownControl',
     aliases: [],
@@ -30,18 +35,24 @@ export function dropdownControl(): ContextFunction<
     context: {
       types: ['datatable'],
     },
-    help: 'Configure a drop down filter control element',
+    help,
     args: {
       filterColumn: {
         types: ['string'],
-        help: 'The column or field to attach the filter to',
+        required: true,
+        help: argHelp.filterColumn,
       },
       valueColumn: {
         types: ['string'],
-        help: 'The datatable column from which to extract the unique values for the drop down',
+        required: true,
+        help: argHelp.valueColumn,
+      },
+      filterGroup: {
+        types: ['string'],
+        help: argHelp.filterGroup,
       },
     },
-    fn: (context, { valueColumn, filterColumn }) => {
+    fn: (context, { valueColumn, filterColumn, filterGroup }) => {
       let choices = [];
 
       if (context.rows[0][valueColumn]) {
@@ -56,6 +67,7 @@ export function dropdownControl(): ContextFunction<
         value: {
           column,
           choices,
+          filterGroup,
         },
       };
     },

@@ -6,95 +6,90 @@
 
 // @ts-ignore no @typed def
 import inlineStyle from 'inline-style';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
 import { openSans } from '../../../common/lib/fonts';
-import {
-  CSSStyle,
-  FontFamily,
-  FontWeight,
-  NullContextFunction,
-  Style,
-  TextAlignment,
-  FONT_WEIGHTS,
-  TEXT_ALIGNMENTS,
-} from '../types';
+import { getFunctionHelp, getFunctionErrors } from '../../strings';
+import { CSSStyle, FontFamily, FontWeight, Style, TextAlignment, TEXT_ALIGNMENTS } from '../types';
 
 interface Arguments {
   align: TextAlignment;
-  color: string | null;
+  color: string;
   family: FontFamily;
   italic: boolean;
-  lHeight: number;
+  lHeight: number | null;
   size: number;
   underline: boolean;
   weight: FontWeight;
 }
 
-export function font(): NullContextFunction<'font', Arguments, Style> {
+export function font(): ExpressionFunction<'font', null, Arguments, Style> {
+  const { help, args: argHelp } = getFunctionHelp().font;
+  const errors = getFunctionErrors().font;
+
   return {
     name: 'font',
     aliases: [],
     type: 'style',
-    help: 'Create a font style',
+    help,
     context: {
       types: ['null'],
     },
     args: {
       align: {
         default: 'left',
-        help: 'Horizontal text alignment',
+        help: argHelp.align,
         options: TEXT_ALIGNMENTS,
         types: ['string'],
       },
       color: {
-        help: 'Text color',
-        types: ['string', 'null'],
+        help: argHelp.color,
+        types: ['string'],
       },
       family: {
         default: `"${openSans.value}"`,
-        help: 'An acceptable CSS web font string',
+        help: argHelp.family,
         types: ['string'],
       },
       italic: {
         default: false,
-        help: 'Italicize, true or false',
+        help: argHelp.italic,
         options: [true, false],
         types: ['boolean'],
       },
       lHeight: {
         aliases: ['lineHeight'],
-        help: 'Line height (px)',
-        types: ['number'],
+        help: argHelp.lHeight,
+        types: ['number', 'null'],
       },
       size: {
-        default: 14,
-        help: 'Font size (px)',
         types: ['number'],
+        default: 14,
+        help: argHelp.size,
       },
       underline: {
         default: false,
-        help: 'Underline the text, true or false',
+        help: argHelp.underline,
         options: [true, false],
         types: ['boolean'],
       },
       weight: {
         default: 'normal',
-        help:
-          'Set the font weight, e.g. normal, bold, bolder, lighter, 100, 200, 300, 400, 500, 600, 700, 800, 900',
-        options: FONT_WEIGHTS,
+        help: argHelp.weight,
+        options: Object.values(FontWeight),
         types: ['string'],
       },
     },
     fn: (_context, args) => {
-      if (!FONT_WEIGHTS.includes(args.weight)) {
-        throw new Error(`Invalid font weight: '${args.weight}'`);
+      if (!Object.values(FontWeight).includes(args.weight)) {
+        throw errors.invalidFontWeight(args.weight);
       }
       if (!TEXT_ALIGNMENTS.includes(args.align)) {
-        throw new Error(`Invalid text alignment: '${args.align}'`);
+        throw errors.invalidTextAlignment(args.align);
       }
 
       // the line height shouldn't ever be lower than the size, and apply as a
       // pixel setting
-      const lineHeight = args.lHeight ? `${args.lHeight}px` : 1;
+      const lineHeight = args.lHeight != null ? `${args.lHeight}px` : '1';
 
       const spec: CSSStyle = {
         fontFamily: args.family,

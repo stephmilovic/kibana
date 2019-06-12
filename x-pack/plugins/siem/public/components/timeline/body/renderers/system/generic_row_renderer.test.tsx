@@ -14,8 +14,10 @@ import { mockBrowserFields } from '../../../../../containers/source/mock';
 import { Ecs } from '../../../../../graphql/types';
 import { mockTimelineData, TestProviders } from '../../../../../mock';
 import { RowRenderer } from '../row_renderer';
-
-import { createGenericFileRowRenderer, createGenericSystemRowRenderer } from '.';
+import {
+  createGenericSystemRowRenderer,
+  createGenericFileRowRenderer,
+} from './generic_row_renderer';
 
 describe('GenericRowRenderer', () => {
   describe('#createGenericSystemRowRenderer', () => {
@@ -37,7 +39,7 @@ describe('GenericRowRenderer', () => {
         browserFields,
         data: system,
         width: 100,
-        children: <span>some children</span>,
+        children: <span>{'some children'}</span>,
       });
 
       const wrapper = shallow(<span>{children}</span>);
@@ -67,7 +69,7 @@ describe('GenericRowRenderer', () => {
         browserFields: mockBrowserFields,
         data: system,
         width: 100,
-        children: <span>some children </span>,
+        children: <span>{'some children '}</span>,
       });
       const wrapper = mount(
         <TestProviders>
@@ -101,7 +103,7 @@ describe('GenericRowRenderer', () => {
         browserFields,
         data: systemFile,
         width: 100,
-        children: <span>some children</span>,
+        children: <span>{'some children'}</span>,
       });
 
       const wrapper = shallow(<span>{children}</span>);
@@ -130,7 +132,7 @@ describe('GenericRowRenderer', () => {
         browserFields: mockBrowserFields,
         data: systemFile,
         width: 100,
-        children: <span>some children </span>,
+        children: <span>{'some children '}</span>,
       });
       const wrapper = mount(
         <TestProviders>

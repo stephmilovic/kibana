@@ -9,6 +9,8 @@ import React from 'react';
 import { Query } from 'react-apollo';
 import { connect } from 'react-redux';
 
+import chrome from 'ui/chrome';
+import { DEFAULT_INDEX_KEY } from '../../../common/constants';
 import { GetUncommonProcessesQuery, PageInfo, UncommonProcessesEdges } from '../../graphql/types';
 import { generateTablePaginationOptions } from '../../components/load_more_table/helpers';
 import { hostsModel, hostsSelectors, inputsModel, State } from '../../store';
@@ -70,6 +72,7 @@ class UncommonProcessesComponentQuery extends QueryTemplate<
           },
           pagination: generateTablePaginationOptions(activePage, limit),
           filterQuery: createFilter(filterQuery),
+          defaultIndex: chrome.getUiSettingsClient().get(DEFAULT_INDEX_KEY),
         }}
       >
         {({ data, loading, fetchMore, refetch }) => {

@@ -9,10 +9,10 @@ import { FrameworkAdapter, FrameworkRequest } from '../framework';
 
 import { ElasticsearchHostsAdapter, formatHostEdgesData } from './elasticsearch_adapter';
 import {
-  mockGetHostDetailsOptions,
-  mockGetHostDetailsRequest,
-  mockGetHostDetailsResponse,
-  mockGetHostDetailsResult,
+  mockGetHostOverviewOptions,
+  mockGetHostOverviewRequest,
+  mockGetHostOverviewResponse,
+  mockGetHostOverviewResult,
   mockGetHostLastFirstSeenOptions,
   mockGetHostLastFirstSeenRequest,
   mockGetHostLastFirstSeenResponse,
@@ -150,6 +150,7 @@ describe('hosts elasticsearch_adapter', () => {
       exposeStaticDir: jest.fn(),
       registerGraphQLEndpoint: jest.fn(),
       getIndexPatternsService: jest.fn(),
+      getSavedObjectsService: jest.fn(),
     };
     jest.doMock('../framework', () => ({ callWithRequest: mockCallWithRequest }));
 
@@ -163,25 +164,26 @@ describe('hosts elasticsearch_adapter', () => {
     });
   });
 
-  describe('#getHostDetails', () => {
+  describe('#getHostOverview', () => {
     const mockCallWithRequest = jest.fn();
-    mockCallWithRequest.mockResolvedValue(mockGetHostDetailsResponse);
+    mockCallWithRequest.mockResolvedValue(mockGetHostOverviewResponse);
     const mockFramework: FrameworkAdapter = {
       version: 'mock',
       callWithRequest: mockCallWithRequest,
       exposeStaticDir: jest.fn(),
       registerGraphQLEndpoint: jest.fn(),
       getIndexPatternsService: jest.fn(),
+      getSavedObjectsService: jest.fn(),
     };
     jest.doMock('../framework', () => ({ callWithRequest: mockCallWithRequest }));
 
     test('Happy Path', async () => {
       const EsHosts = new ElasticsearchHostsAdapter(mockFramework);
-      const data: HostItem = await EsHosts.getHostDetails(
-        mockGetHostDetailsRequest as FrameworkRequest,
-        mockGetHostDetailsOptions
+      const data: HostItem = await EsHosts.getHostOverview(
+        mockGetHostOverviewRequest as FrameworkRequest,
+        mockGetHostOverviewOptions
       );
-      expect(data).toEqual(mockGetHostDetailsResult);
+      expect(data).toEqual(mockGetHostOverviewResult);
     });
   });
 
@@ -194,6 +196,7 @@ describe('hosts elasticsearch_adapter', () => {
       exposeStaticDir: jest.fn(),
       registerGraphQLEndpoint: jest.fn(),
       getIndexPatternsService: jest.fn(),
+      getSavedObjectsService: jest.fn(),
     };
     jest.doMock('../framework', () => ({ callWithRequest: mockCallWithRequest }));
 

@@ -5,33 +5,44 @@
  */
 
 import turf from 'turf';
+import React from 'react';
 import { AbstractLayer } from './layer';
 import { VectorStyle } from './styles/vector_style';
 import { LeftInnerJoin } from './joins/left_inner_join';
-import { FEATURE_ID_PROPERTY_NAME, SOURCE_DATA_ID_ORIGIN } from '../../../common/constants';
+import { FEATURE_ID_PROPERTY_NAME, SOURCE_DATA_ID_ORIGIN, GEO_JSON_TYPE } from '../../../common/constants';
 import _ from 'lodash';
 import { JoinTooltipProperty } from './tooltips/join_tooltip_property';
 import { isRefreshOnlyQuery } from './util/is_refresh_only_query';
+import { EuiIcon } from '@elastic/eui';
+import { i18n } from '@kbn/i18n';
 
 const EMPTY_FEATURE_COLLECTION = {
   type: 'FeatureCollection',
   features: []
 };
 
-
 const CLOSED_SHAPE_MB_FILTER = [
   'any',
-  ['==', ['geometry-type'], 'Polygon'],
-  ['==', ['geometry-type'], 'MultiPolygon']
+  ['==', ['geometry-type'], GEO_JSON_TYPE.POLYGON],
+  ['==', ['geometry-type'], GEO_JSON_TYPE.MULTI_POLYGON]
 ];
 
 const ALL_SHAPE_MB_FILTER = [
   'any',
-  ['==', ['geometry-type'], 'Polygon'],
-  ['==', ['geometry-type'], 'MultiPolygon'],
-  ['==', ['geometry-type'], 'LineString'],
-  ['==', ['geometry-type'], 'MultiLineString']
+  ['==', ['geometry-type'], GEO_JSON_TYPE.POLYGON],
+  ['==', ['geometry-type'], GEO_JSON_TYPE.MULTI_POLYGON],
+  ['==', ['geometry-type'], GEO_JSON_TYPE.LINE_STRING],
+  ['==', ['geometry-type'], GEO_JSON_TYPE.MULTI_LINE_STRING]
 ];
+
+
+let idCounter = 0;
+function generateNumericalId() {
+  const newId = idCounter < Number.MAX_SAFE_INTEGER ? idCounter : 0;
+  idCounter = newId + 1;
+  return newId;
+}
+
 
 export class VectorLayer extends AbstractLayer {
 
@@ -78,16 +89,40 @@ export class VectorLayer extends AbstractLayer {
     });
   }
 
-  getIcon() {
-    return this._style.getIcon();
+  getCustomIconAndTooltipContent() {
+    const sourceDataRequest = this.getSourceDataRequest();
+    const featureCollection = sourceDataRequest ? sourceDataRequest.getData() : null;
+    if (!featureCollection || featureCollection.features.length === 0) {
+      return {
+        icon: (
+          <EuiIcon
+            size="m"
+            color="subdued"
+            type="minusInCircle"
+          />
+        ),
+        tooltipContent: i18n.translate('xpack.maps.vectorLayer.noResultsFoundTooltip', {
+          defaultMessage: `No results found.`
+        })
+      };
+    }
+
+    return {
+      icon: this._style.getIcon(),
+      tooltipContent: this._source.getSourceTooltipContent(sourceDataRequest)
+    };
   }
 
   getLayerTypeIconName() {
     return 'vector';
   }
 
-  getTOCDetails() {
-    return this._style.getTOCDetails();
+  hasLegendDetails() {
+    return this._style.getDynamicPropertiesArray().length > 0;
+  }
+
+  getLegendDetails() {
+    return this._style.getLegendDetails();
   }
 
   _getBoundsBasedOnData() {
@@ -155,7 +190,7 @@ export class VectorLayer extends AbstractLayer {
     return this._dataRequests.find(dataRequest => dataRequest.getDataId() === sourceDataId);
   }
 
-  async _canSkipSourceUpdate(source, sourceDataId, searchFilters) {
+  async _canSkipSourceUpdate(source, sourceDataId, nextMeta) {
 
     const timeAware = await source.isTimeAware();
     const refreshTimerAware = await source.isRefreshTimerAware();
@@ -180,24 +215,24 @@ export class VectorLayer extends AbstractLayer {
     if (!sourceDataRequest) {
       return false;
     }
-    const meta = sourceDataRequest.getMeta();
-    if (!meta) {
+    const prevMeta = sourceDataRequest.getMeta();
+    if (!prevMeta) {
       return false;
     }
 
     let updateDueToTime = false;
     if (timeAware) {
-      updateDueToTime = !_.isEqual(meta.timeFilters, searchFilters.timeFilters);
+      updateDueToTime = !_.isEqual(prevMeta.timeFilters, nextMeta.timeFilters);
     }
 
     let updateDueToRefreshTimer = false;
-    if (refreshTimerAware && searchFilters.refreshTimerLastTriggeredAt) {
-      updateDueToRefreshTimer = !_.isEqual(meta.refreshTimerLastTriggeredAt, searchFilters.refreshTimerLastTriggeredAt);
+    if (refreshTimerAware && nextMeta.refreshTimerLastTriggeredAt) {
+      updateDueToRefreshTimer = !_.isEqual(prevMeta.refreshTimerLastTriggeredAt, nextMeta.refreshTimerLastTriggeredAt);
     }
 
     let updateDueToFields = false;
     if (isFieldAware) {
-      updateDueToFields = !_.isEqual(meta.fieldNames, searchFilters.fieldNames);
+      updateDueToFields = !_.isEqual(prevMeta.fieldNames, nextMeta.fieldNames);
     }
 
     let updateDueToQuery = false;
@@ -205,24 +240,26 @@ export class VectorLayer extends AbstractLayer {
     let updateDueToLayerQuery = false;
     let updateDueToApplyGlobalQuery = false;
     if (isQueryAware) {
-      updateDueToApplyGlobalQuery = meta.applyGlobalQuery !== searchFilters.applyGlobalQuery;
-      updateDueToLayerQuery = !_.isEqual(meta.layerQuery, searchFilters.layerQuery);
-      if (searchFilters.applyGlobalQuery) {
-        updateDueToQuery = !_.isEqual(meta.query, searchFilters.query);
-        updateDueToFilters = !_.isEqual(meta.filters, searchFilters.filters);
+      updateDueToApplyGlobalQuery = prevMeta.applyGlobalQuery !== nextMeta.applyGlobalQuery;
+      updateDueToLayerQuery = !_.isEqual(prevMeta.layerQuery, nextMeta.layerQuery);
+      if (nextMeta.applyGlobalQuery) {
+        updateDueToQuery = !_.isEqual(prevMeta.query, nextMeta.query);
+        updateDueToFilters = !_.isEqual(prevMeta.filters, nextMeta.filters);
       } else {
         // Global filters and query are not applied to layer search request so no re-fetch required.
         // Exception is "Refresh" query.
-        updateDueToQuery = isRefreshOnlyQuery(meta.query, searchFilters.query);
+        updateDueToQuery = isRefreshOnlyQuery(prevMeta.query, nextMeta.query);
       }
     }
 
     let updateDueToPrecisionChange = false;
     if (isGeoGridPrecisionAware) {
-      updateDueToPrecisionChange = !_.isEqual(meta.geogridPrecision, searchFilters.geogridPrecision);
+      updateDueToPrecisionChange = !_.isEqual(prevMeta.geogridPrecision, nextMeta.geogridPrecision);
     }
 
-    const updateDueToExtentChange = this.updateDueToExtent(source, meta, searchFilters);
+    const updateDueToExtentChange = this.updateDueToExtent(source, prevMeta, nextMeta);
+
+    const updateDueToSourceMetaChange = !_.isEqual(prevMeta.sourceMeta, nextMeta.sourceMeta);
 
     return !updateDueToTime
       && !updateDueToRefreshTimer
@@ -232,7 +269,8 @@ export class VectorLayer extends AbstractLayer {
       && !updateDueToFilters
       && !updateDueToLayerQuery
       && !updateDueToApplyGlobalQuery
-      && !updateDueToPrecisionChange;
+      && !updateDueToPrecisionChange
+      && !updateDueToSourceMetaChange;
   }
 
   async _syncJoin({ join, startLoading, stopLoading, onLoadError, dataFilters }) {
@@ -278,7 +316,6 @@ export class VectorLayer extends AbstractLayer {
     }
   }
 
-
   async _syncJoins({ startLoading, stopLoading, onLoadError, dataFilters }) {
     const joinSyncs = this.getValidJoins().map(async join => {
       return this._syncJoin({ join, startLoading, stopLoading, onLoadError, dataFilters });
@@ -302,6 +339,7 @@ export class VectorLayer extends AbstractLayer {
       geogridPrecision: this._source.getGeoGridPrecision(dataFilters.zoom),
       layerQuery: this.getQuery(),
       applyGlobalQuery: this.getApplyGlobalQuery(),
+      sourceMeta: this._source.getSyncMeta(),
     };
   }
 
@@ -337,11 +375,12 @@ export class VectorLayer extends AbstractLayer {
     }
   }
 
-
   _assignIdsToFeatures(featureCollection) {
     for (let i = 0; i < featureCollection.features.length; i++) {
       const feature = featureCollection.features[i];
-      feature.properties[FEATURE_ID_PROPERTY_NAME] = (typeof feature.id === 'string' || typeof feature.id === 'number')  ? feature.id : i;
+      const id = generateNumericalId();
+      feature.properties[FEATURE_ID_PROPERTY_NAME] = id;
+      feature.id = id;
     }
   }
 
@@ -379,23 +418,23 @@ export class VectorLayer extends AbstractLayer {
   }
 
   _syncFeatureCollectionWithMb(mbMap) {
-    const mbGeoJSONSource = mbMap.getSource(this.getId());
 
+    const mbGeoJSONSource = mbMap.getSource(this.getId());
     const featureCollection = this._getSourceFeatureCollection();
+    const featureCollectionOnMap = AbstractLayer.getBoundDataForSource(mbMap, this.getId());
+
     if (!featureCollection) {
+      if (featureCollectionOnMap) {
+        this._style.clearFeatureState(featureCollectionOnMap, mbMap, this.getId());
+      }
       mbGeoJSONSource.setData(EMPTY_FEATURE_COLLECTION);
       return;
     }
 
-    const dataBoundToMap = AbstractLayer.getBoundDataForSource(mbMap, this.getId());
-    if (featureCollection !== dataBoundToMap) {
+    if (featureCollection !== featureCollectionOnMap) {
       mbGeoJSONSource.setData(featureCollection);
     }
-
-    const shouldRefresh = this._style.addScaledPropertiesBasedOnStyle(featureCollection);
-    if (shouldRefresh) {
-      mbGeoJSONSource.setData(featureCollection);
-    }
+    this._style.setFeatureState(featureCollection, mbMap, this.getId());
   }
 
   _setMbPointsProperties(mbMap) {

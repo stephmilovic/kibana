@@ -5,18 +5,22 @@
  */
 
 import { sortBy } from 'lodash';
-import { ContextFunction, Datatable } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { Datatable } from '../types';
+import { getFunctionHelp } from '../../strings';
 
 interface Arguments {
   by: string;
   reverse: boolean;
 }
 
-export function sort(): ContextFunction<'sort', Datatable, Arguments, Datatable> {
+export function sort(): ExpressionFunction<'sort', Datatable, Arguments, Datatable> {
+  const { help, args: argHelp } = getFunctionHelp().sort;
+
   return {
     name: 'sort',
     type: 'datatable',
-    help: 'Sorts a datatable on a column',
+    help,
     context: {
       types: ['datatable'],
     },
@@ -25,14 +29,13 @@ export function sort(): ContextFunction<'sort', Datatable, Arguments, Datatable>
         types: ['string'],
         aliases: ['_', 'column'],
         multi: false, // TODO: No reason you couldn't.
-        help:
-          'The column to sort on. If column is not specified, the datatable will be sorted on the first column.',
+        help: argHelp.by,
       },
       reverse: {
         types: ['boolean'],
-        help:
-          'Reverse the sort order. If reverse is not specified, the datatable will be sorted in ascending order.',
+        help: argHelp.reverse,
         options: [true, false],
+        default: false,
       },
     },
     fn: (context, args) => {

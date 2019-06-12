@@ -42,6 +42,7 @@ const authenticationsTests: KbnTestProvider = ({ getService }) => {
               limit: 1,
               cursor: null,
             },
+            defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
           },
         })
         .then(resp => {
@@ -68,6 +69,7 @@ const authenticationsTests: KbnTestProvider = ({ getService }) => {
               limit: 2,
               cursor: '1',
             },
+            defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
           },
         })
         .then(resp => {

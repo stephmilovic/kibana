@@ -3,38 +3,49 @@
  * or more contributor license agreements. Licensed under the Elastic License;
  * you may not use this file except in compliance with the Elastic License.
  */
-import { ContextFunction } from '../types';
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
+import { getFunctionHelp, getFunctionErrors } from '../../strings';
+
+export enum Operation {
+  EQ = 'eq',
+  GT = 'gt',
+  GTE = 'gte',
+  LT = 'lt',
+  LTE = 'lte',
+  NE = 'ne',
+  NEQ = 'neq',
+}
 
 interface Arguments {
-  op: 'eq' | 'ne' | 'lt' | 'gt' | 'lte' | 'gte';
+  op: Operation;
   to: Context;
 }
 
 type Context = boolean | number | string | null;
 
-export function compare(): ContextFunction<'compare', Context, Arguments, boolean> {
+export function compare(): ExpressionFunction<'compare', Context, Arguments, boolean> {
+  const { help, args: argHelp } = getFunctionHelp().compare;
+  const errors = getFunctionErrors().compare;
+
   return {
     name: 'compare',
-    help:
-      'Compare the input to something else to determine true or false. Usually used in combination with `{if}`. This only works with primitive types, such as number, string, and boolean.',
+    help,
     aliases: ['condition'],
     type: 'boolean',
     context: {
-      types: ['null', 'string', 'number', 'boolean'],
+      types: ['string', 'number', 'boolean', 'null'],
     },
     args: {
       op: {
         aliases: ['_'],
         types: ['string'],
         default: 'eq',
-        help:
-          'The operator to use in the comparison: ' +
-          ' eq (equal), ne (not equal), lt (less than), gt (greater than), lte (less than equal), gte (greater than eq)',
-        options: ['eq', 'ne', 'lt', 'gt', 'lte', 'gte'],
+        help: argHelp.op,
+        options: Object.values(Operation),
       },
       to: {
         aliases: ['this', 'b'],
-        help: 'The value to compare the context to, usually returned by a subexpression',
+        help: argHelp.to,
       },
     },
     fn: (context, args) => {
@@ -43,36 +54,37 @@ export function compare(): ContextFunction<'compare', Context, Arguments, boolea
       const typesMatch = typeof a === typeof b;
 
       switch (op) {
-        case 'eq':
+        case Operation.EQ:
           return a === b;
-        case 'ne':
+        case Operation.NE:
+        case Operation.NEQ:
           return a !== b;
-        case 'lt':
+        case Operation.LT:
           if (typesMatch) {
             // @ts-ignore #35433 This is a wonky comparison for nulls
             return a < b;
           }
           return false;
-        case 'lte':
+        case Operation.LTE:
           if (typesMatch) {
             // @ts-ignore #35433 This is a wonky comparison for nulls
             return a <= b;
           }
           return false;
-        case 'gt':
+        case Operation.GT:
           if (typesMatch) {
             // @ts-ignore #35433 This is a wonky comparison for nulls
             return a > b;
           }
           return false;
-        case 'gte':
+        case Operation.GTE:
           if (typesMatch) {
             // @ts-ignore #35433 This is a wonky comparison for nulls
             return a >= b;
           }
           return false;
         default:
-          throw new Error(`Invalid compare operator: '${op}'. Use eq, ne, lt, gt, lte, or gte.`);
+          throw errors.invalidCompareOperator(op, Object.values(Operation).join(', '));
       }
     },
   };

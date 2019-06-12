@@ -4,18 +4,19 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { isNumber } from 'lodash/fp';
 import * as React from 'react';
 import { pure } from 'recompose';
 
+import { isNumber } from 'lodash/fp';
+import { EuiToolTip, EuiFlexItem, EuiFlexGroup } from '@elastic/eui';
 import { Duration, EVENT_DURATION_FIELD_NAME } from '../../../duration';
+
 import { getOrEmptyTagFromValue } from '../../../empty_value';
 import { FormattedDate } from '../../../formatted_date';
 import { FormattedIp } from '../../../formatted_ip';
 import { Port, PORT_NAMES } from '../../../port';
 
-export const DATE_FIELD_TYPE = 'date';
-export const IP_FIELD_TYPE = 'ip';
+import { DATE_FIELD_TYPE, IP_FIELD_TYPE, MESSAGE_FIELD_NAME } from './constants';
 
 export const FormattedFieldValue = pure<{
   eventId: string;
@@ -42,6 +43,25 @@ export const FormattedFieldValue = pure<{
   } else if (fieldName === EVENT_DURATION_FIELD_NAME) {
     return (
       <Duration contextId={contextId} eventId={eventId} fieldName={fieldName} value={`${value}`} />
+    );
+  } else if (fieldName === MESSAGE_FIELD_NAME && value != null && value !== '') {
+    return (
+      <EuiToolTip
+        position="left"
+        data-test-subj="message-tool-tip"
+        content={
+          <EuiFlexGroup direction="column" gutterSize="none">
+            <EuiFlexItem grow={false}>
+              <span>{fieldName}</span>
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <span>{value}</span>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        }
+      >
+        <>{value}</>
+      </EuiToolTip>
     );
   } else {
     return getOrEmptyTagFromValue(value);

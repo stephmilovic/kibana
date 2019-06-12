@@ -4,38 +4,42 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { EuiSpacer } from '@elastic/eui';
+import { EuiHorizontalRule, EuiSpacer } from '@elastic/eui';
 import { isEmpty } from 'lodash/fp';
 import React from 'react';
 import { connect } from 'react-redux';
+import { StickyContainer } from 'react-sticky';
 import { pure } from 'recompose';
-import chrome, { Breadcrumb } from 'ui/chrome';
+import { Breadcrumb } from 'ui/chrome';
 import { StaticIndexPattern } from 'ui/index_patterns';
 
 import { ESTermQuery } from '../../../common/typed_json';
-import { EmptyPage } from '../../components/empty_page';
+import { FiltersGlobal } from '../../components/filters_global';
+import { HeaderPage } from '../../components/header_page';
+import { LastEventTime } from '../../components/last_event_time';
 import { getHostsUrl, HostComponentProps } from '../../components/link_to/redirect_to_hosts';
 import { EventsTable, UncommonProcessTable } from '../../components/page/hosts';
 import { AuthenticationTable } from '../../components/page/hosts/authentications_table';
-import { HostSummary } from '../../components/page/hosts/host_summary';
+import { HostOverview } from '../../components/page/hosts/host_overview';
 import { manageQuery } from '../../components/page/manage_query';
 import { AuthenticationsQuery } from '../../containers/authentications';
 import { EventsQuery } from '../../containers/events';
 import { GlobalTime } from '../../containers/global_time';
-import { HostDetailsByNameQuery } from '../../containers/hosts/details';
+import { HostOverviewByNameQuery } from '../../containers/hosts/overview';
 import { indicesExistOrDataTemporarilyUnavailable, WithSource } from '../../containers/source';
 import { UncommonProcessesQuery } from '../../containers/uncommon_processes';
-import { IndexType } from '../../graphql/types';
+import { LastEventIndexKey } from '../../graphql/types';
 import { convertKueryToElasticSearchQuery, escapeQueryValue } from '../../lib/keury';
 import { hostsModel, hostsSelectors, State } from '../../store';
 
+import { HostsEmptyPage } from './hosts_empty_page';
 import { HostsKql } from './kql';
 import * as i18n from './translations';
+import { UrlStateContainer } from '../../components/url_state';
 
-const basePath = chrome.getBasePath();
 const type = hostsModel.HostsType.details;
 
-const HostSummaryManage = manageQuery(HostSummary);
+const HostOverviewManage = manageQuery(HostOverview);
 const AuthenticationTableManage = manageQuery(AuthenticationTable);
 const UncommonProcessTableManage = manageQuery(UncommonProcessTable);
 const EventsTableManage = manageQuery(EventsTable);
@@ -53,33 +57,43 @@ const HostDetailsComponent = pure<HostDetailsComponentProps>(
     },
     filterQueryExpression,
   }) => (
-    <WithSource sourceId="default" indexTypes={[IndexType.AUDITBEAT]}>
-      {({ auditbeatIndicesExist, indexPattern }) =>
-        indicesExistOrDataTemporarilyUnavailable(auditbeatIndicesExist) ? (
-          <>
-            <HostsKql indexPattern={indexPattern} type={type} />
+    <WithSource sourceId="default">
+      {({ indicesExist, indexPattern }) =>
+        indicesExistOrDataTemporarilyUnavailable(indicesExist) ? (
+          <StickyContainer>
+            <FiltersGlobal>
+              <HostsKql indexPattern={indexPattern} type={type} />
+              <UrlStateContainer indexPattern={indexPattern} />
+            </FiltersGlobal>
+
+            <HeaderPage
+              subtitle={
+                <LastEventTime indexKey={LastEventIndexKey.hostDetails} hostName={hostName} />
+              }
+              title={hostName}
+            />
 
             <GlobalTime>
               {({ to, from, setQuery }) => (
                 <>
-                  <HostDetailsByNameQuery
+                  <HostOverviewByNameQuery
                     sourceId="default"
                     hostName={hostName}
                     startDate={from}
                     endDate={to}
                   >
-                    {({ hostDetails, loading, id, refetch }) => (
-                      <HostSummaryManage
+                    {({ hostOverview, loading, id, refetch }) => (
+                      <HostOverviewManage
                         id={id}
                         refetch={refetch}
                         setQuery={setQuery}
-                        data={hostDetails}
+                        data={hostOverview}
                         loading={loading}
                       />
                     )}
-                  </HostDetailsByNameQuery>
+                  </HostOverviewByNameQuery>
 
-                  <EuiSpacer />
+                  <EuiHorizontalRule />
 
                   <AuthenticationsQuery
                     sourceId="default"
@@ -152,14 +166,13 @@ const HostDetailsComponent = pure<HostDetailsComponentProps>(
                 </>
               )}
             </GlobalTime>
-          </>
+          </StickyContainer>
         ) : (
-          <EmptyPage
-            title={i18n.NO_AUDITBEAT_INDICES}
-            message={i18n.LETS_ADD_SOME}
-            actionLabel={i18n.SETUP_INSTRUCTIONS}
-            actionUrl={`${basePath}/app/kibana#/home/tutorial_directory/security`}
-          />
+          <>
+            <HeaderPage title={hostName} />
+
+            <HostsEmptyPage />
+          </>
         )
       }
     </WithSource>
@@ -177,7 +190,7 @@ export const HostDetails = connect(makeMapStateToProps)(HostDetailsComponent);
 
 export const getBreadcrumbs = (hostId: string): Breadcrumb[] => [
   {
-    text: i18n.HOSTS,
+    text: i18n.PAGE_TITLE,
     href: getHostsUrl(),
   },
   {
@@ -196,7 +209,7 @@ const getFilterQuery = (
       : ''
     : convertKueryToElasticSearchQuery(
         `${filterQueryExpression} ${
-          hostName ? `and host.name: ${escapeQueryValue(hostName)}` : ''
+          hostName ? `and host.name: "${escapeQueryValue(hostName)}"` : ''
         }`,
         indexPattern
       );

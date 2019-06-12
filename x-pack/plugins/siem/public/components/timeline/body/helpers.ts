@@ -3,19 +3,23 @@
  * or more contributor license agreements. Licensed under the Elastic License;
  * you may not use this file except in compliance with the Elastic License.
  */
-import { isEmpty, noop } from 'lodash/fp';
+import { get, isEmpty, noop } from 'lodash/fp';
 
+import { BrowserFields } from '../../../containers/source';
 import { Ecs } from '../../../graphql/types';
 import { OnPinEvent, OnUnPinEvent } from '../events';
 
+import { ColumnHeader } from './column_headers/column_header';
 import * as i18n from './translations';
 
 /** The (fixed) width of the Actions column */
-export const ACTIONS_COLUMN_WIDTH = 150; // px;
+export const ACTIONS_COLUMN_WIDTH = 115; // px;
 /** The default minimum width of a column (when a width for the column type is not specified) */
 export const DEFAULT_COLUMN_MIN_WIDTH = 180; // px
 /** The default minimum width of a column of type `date` */
 export const DEFAULT_DATE_COLUMN_MIN_WIDTH = 240; // px
+
+export const DEFAULT_TIMELINE_WIDTH = 1100; // px
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const omitTypenameAndEmpty = (k: string, v: any): any | undefined =>
@@ -68,3 +72,21 @@ export const getPinOnClick = ({
 
 export const getColumnWidthFromType = (type: string): number =>
   type !== 'date' ? DEFAULT_COLUMN_MIN_WIDTH : DEFAULT_DATE_COLUMN_MIN_WIDTH;
+
+/** Enriches the column headers with field details from the specified browserFields */
+export const getColumnHeaders = (
+  headers: ColumnHeader[],
+  browserFields: BrowserFields
+): ColumnHeader[] => {
+  return headers.map(header => {
+    const splitHeader = header.id.split('.'); // source.geo.city_name -> [source, geo, city_name]
+
+    return {
+      ...header,
+      ...get(
+        [splitHeader.length > 1 ? splitHeader[0] : 'base', 'fields', header.id],
+        browserFields
+      ),
+    };
+  });
+};

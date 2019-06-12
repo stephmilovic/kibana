@@ -16,7 +16,7 @@ import { Actions } from '../actions';
 import { ColumnHeader } from '../column_headers/column_header';
 import { DataDrivenColumns } from '../data_driven_columns';
 import { eventHasNotes, eventIsPinned, getPinOnClick } from '../helpers';
-import { ColumnRenderer } from '../renderers';
+import { ColumnRenderer } from '../renderers/column_renderer';
 
 interface Props {
   _id: string;
@@ -65,7 +65,6 @@ export class EventColumnView extends React.PureComponent<Props> {
       toggleShowNotes,
       updateNote,
     } = this.props;
-
     return (
       <EuiFlexGroup data-test-subj="event-column-view" gutterSize="none">
         <EuiFlexItem data-test-subj="actions-column-item" grow={false}>
@@ -91,6 +90,7 @@ export class EventColumnView extends React.PureComponent<Props> {
               onUnPinEvent,
               pinnedEventIds,
             })}
+            showCheckboxes={false}
             showNotes={showNotes}
             toggleShowNotes={toggleShowNotes}
             updateNote={updateNote}

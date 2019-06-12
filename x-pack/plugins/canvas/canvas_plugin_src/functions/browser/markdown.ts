@@ -4,14 +4,16 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
+import { ExpressionFunction } from 'src/legacy/core_plugins/interpreter/public';
 // @ts-ignore untyped local
 import { Handlebars } from '../../../common/lib/handlebars';
-import { ContextFunction, Datatable, Render, Style } from '../types';
+import { Datatable, Render, Style } from '../types';
+import { getFunctionHelp } from '../../strings';
 
 type Context = Datatable | null;
 
 interface Arguments {
-  expression: string[];
+  content: string[];
   font: Style;
 }
 
@@ -20,32 +22,33 @@ interface Return {
   font: Style;
 }
 
-export function markdown(): ContextFunction<'markdown', Context, Arguments, Render<Return>> {
+export function markdown(): ExpressionFunction<'markdown', Context, Arguments, Render<Return>> {
+  const { help, args: argHelp } = getFunctionHelp().markdown;
+
   return {
     name: 'markdown',
     aliases: [],
     type: 'render',
-    help:
-      'An element for rendering markdown text. Great for single numbers, metrics or paragraphs of text.',
+    help,
     context: {
       types: ['datatable', 'null'],
     },
     args: {
-      expression: {
-        aliases: ['_'],
+      content: {
+        aliases: ['_', 'expression'],
         types: ['string'],
-        help: 'A markdown expression. You can pass this multiple times to achieve concatenation',
+        help: argHelp.content,
         default: '""',
         multi: true,
       },
       font: {
         types: ['style'],
-        help: 'Font settings. Technically, you can add other styles in here as well',
+        help: argHelp.font,
         default: '{font}',
       },
     },
     fn: (context, args) => {
-      const compileFunctions = args.expression.map(str =>
+      const compileFunctions = args.content.map(str =>
         Handlebars.compile(String(str), { knownHelpersOnly: true })
       );
       const ctx = {

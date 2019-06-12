@@ -47,6 +47,7 @@ const networkTopNFlowTests: KbnTestProvider = ({ getService }) => {
                 limit: 10,
                 cursor: null,
               },
+              defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
             },
           })
           .then(resp => {
@@ -80,6 +81,7 @@ const networkTopNFlowTests: KbnTestProvider = ({ getService }) => {
                 limit: 10,
                 cursor: null,
               },
+              defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
             },
           })
           .then(resp => {
@@ -113,6 +115,7 @@ const networkTopNFlowTests: KbnTestProvider = ({ getService }) => {
                 limit: 10,
                 cursor: null,
               },
+              defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
             },
           })
           .then(resp => {
@@ -143,6 +146,7 @@ const networkTopNFlowTests: KbnTestProvider = ({ getService }) => {
                 limit: 10,
                 cursor: null,
               },
+              defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
             },
           })
           .then(resp => {
@@ -173,6 +177,7 @@ const networkTopNFlowTests: KbnTestProvider = ({ getService }) => {
                 limit: 10,
                 cursor: null,
               },
+              defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
             },
           })
           .then(resp => {
@@ -203,6 +208,7 @@ const networkTopNFlowTests: KbnTestProvider = ({ getService }) => {
                 limit: 20,
                 cursor: 10,
               },
+              defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
             },
           })
           .then(resp => {
@@ -241,6 +247,7 @@ const networkTopNFlowTests: KbnTestProvider = ({ getService }) => {
                 cursor: null,
                 activePage: 0,
               },
+              defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
             },
           })
           .then(resp => {
@@ -271,6 +278,7 @@ const networkTopNFlowTests: KbnTestProvider = ({ getService }) => {
                 cursor: null,
                 activePage: 0,
               },
+              defaultIndex: ['auditbeat-*', 'filebeat-*', 'packetbeat-*', 'winlogbeat-*'],
             },
           })
           .then(resp => {

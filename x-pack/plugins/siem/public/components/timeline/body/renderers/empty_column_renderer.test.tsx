@@ -10,10 +10,10 @@ import { cloneDeep } from 'lodash/fp';
 import React from 'react';
 
 import { TimelineNonEcsData } from '../../../../graphql/types';
-import { defaultHeaders, mockTimelineData } from '../../../../mock';
+import { defaultHeaders, mockTimelineData, TestProviders } from '../../../../mock';
 import { getEmptyValue } from '../../../empty_value';
-
-import { deleteItemIdx, emptyColumnRenderer, findItem } from '.';
+import { deleteItemIdx, findItem } from './helpers';
+import { emptyColumnRenderer } from './empty_column_renderer';
 
 describe('empty_column_renderer', () => {
   let mockDatum: TimelineNonEcsData[];
@@ -61,7 +61,12 @@ describe('empty_column_renderer', () => {
       values: null,
       field: defaultHeaders.find(h => h.id === 'source.ip')!,
     });
-    const wrapper = mount(<span>{emptyColumn}</span>);
+    const wrapper = mount(
+      <TestProviders>
+        <span>{emptyColumn}</span>
+      </TestProviders>
+    );
+
     expect(wrapper.text()).toEqual(getEmptyValue());
   });
 });
