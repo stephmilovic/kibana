@@ -82,6 +82,7 @@ import {
 } from './helpers';
 
 import { TimelineState, EMPTY_TIMELINE_BY_ID } from './types';
+import { SerializedFilterQuery } from '../model';
 
 export const initialTimelineState: TimelineState = {
   timelineById: EMPTY_TIMELINE_BY_ID,
@@ -211,13 +212,31 @@ export const timelineReducer = reducerWithInitialState(initialTimelineState)
       },
     },
   }))
-  .case(updateTimeline, (state, { id, timeline }) => ({
-    ...state,
-    timelineById: {
-      ...state.timelineById,
-      [id]: timeline,
-    },
-  }))
+  .case(updateTimeline, (state, { id, timeline }) => {
+    const kqlQueryObject = timeline.dataProviders.reduce((acc, provider) => {
+      if (provider.kqlQuery && provider.kqlQuery.kuery) {
+        return provider.kqlQuery;
+      }
+      return acc;
+    }, {});
+    return {
+      ...state,
+      timelineById: {
+        ...state.timelineById,
+        [id]:
+          kqlQueryObject && kqlQueryObject.kuery
+            ? {
+                ...timeline,
+                kqlQuery: {
+                  filterQuery: kqlQueryObject,
+                  filterQueryDraft: kqlQueryObject.kuery,
+                },
+                kqlMode: 'search',
+              }
+            : timeline,
+      },
+    };
+  })
   .case(unPinEvent, (state, { id, eventId }) => ({
     ...state,
     timelineById: unPinTimelineEvent({ id, eventId, timelineById: state.timelineById }),

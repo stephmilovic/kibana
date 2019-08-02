@@ -6,6 +6,8 @@
 
 /** Represents the Timeline data providers */
 
+import { SerializedFilterQuery } from '../../../store';
+
 /** The `is` operator in a KQL query */
 export const IS_OPERATOR = ':';
 
@@ -41,7 +43,7 @@ export interface DataProvider {
   /**
    * Return the KQL query who have been added by user
    */
-  kqlQuery: string;
+  kqlQuery?: SerializedFilterQuery;
   /**
    * Returns a query properties that, when executed, returns the data for this provider
    */

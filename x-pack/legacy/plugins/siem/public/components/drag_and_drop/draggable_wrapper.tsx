@@ -22,6 +22,8 @@ import { DataProvider } from '../timeline/data_providers/data_provider';
 import { TruncatableText } from '../truncatable_text';
 
 import { getDraggableId, getDroppableId } from './helpers';
+import { timelineActions } from '../../store/timeline';
+import { SerializedFilterQuery } from '../../store';
 
 // As right now, we do not know what we want there, we will keep it as a placeholder
 export const DragEffects = styled.div``;
@@ -44,6 +46,10 @@ interface OwnProps {
 }
 
 interface DispatchProps {
+  applyKqlFilterQuery: ActionCreator<{
+    id: string;
+    filterQuery: SerializedFilterQuery;
+  }>;
   registerProvider?: ActionCreator<{
     provider: DataProvider;
   }>;
@@ -67,8 +73,10 @@ class DraggableWrapperComponent extends React.Component<Props> {
       : true;
 
   public componentDidMount() {
-    const { dataProvider, registerProvider } = this.props;
-
+    const { applyKqlFilterQuery, dataProvider, registerProvider } = this.props;
+    // if (dataProvider && dataProvider.kqlQuery && dataProvider.kqlQuery.serializedQuery) {
+    //   applyKqlFilterQuery({ id: dataProvider.id, filterQuery: dataProvider.kqlQuery });
+    // }
     registerProvider!({ provider: dataProvider });
   }
 
@@ -132,5 +140,6 @@ export const DraggableWrapper = connect(
   {
     registerProvider: dragAndDropActions.registerProvider,
     unRegisterProvider: dragAndDropActions.unRegisterProvider,
+    applyKqlFilterQuery: timelineActions.applyKqlFilterQuery,
   }
 )(DraggableWrapperComponent);

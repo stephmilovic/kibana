@@ -64,7 +64,13 @@ export const getNetworkTopNFlowColumns = (
                 id,
                 name: ip,
                 excluded: false,
-                kqlQuery: `( destination.ip: ${ip} )`, // this shit still aint working dand d00d
+                kqlQuery: {
+                  kuery: {
+                    expression: `destination.ip: "${ip}"`,
+                    kind: 'kuery',
+                  },
+                  serializedQuery: `{"bool":{"should":[{"match_phrase":{"destination.ip":"${ip}"}}],"minimum_should_match":1}}`,
+                },
                 queryMatch: { field: 'source.ip', value: ip, operator: IS_OPERATOR },
               }
             : {
