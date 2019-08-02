@@ -6,14 +6,14 @@
 
 /** Represents the Timeline data providers */
 
-/** The `is` operator in a KQL query */
-export const IS_OPERATOR = ':';
-
-/** The `exists` operator in a KQL query */
-export const EXISTS_OPERATOR = ':*';
-
 /** The operator applied to a field */
 export type QueryOperator = ':' | ':*';
+
+/** The `is` operator in a KQL query */
+export const IS_OPERATOR: QueryOperator = ':';
+
+/** The `exists` operator in a KQL query */
+export const EXISTS_OPERATOR: QueryOperator = ':*';
 
 export interface QueryMatch {
   field: string;
@@ -50,6 +50,11 @@ export interface DataProvider {
    * Additional query clauses that are ANDed with this query to narrow results
    */
   and: DataProvidersAnd[];
+  /**
+   * Additional query clauses that are ORed with this query to expand results
+   */
+  or?: DataProvidersOr[];
 }
 
 export type DataProvidersAnd = Pick<DataProvider, Exclude<keyof DataProvider, 'and'>>;
+export type DataProvidersOr = Pick<DataProvider, Exclude<keyof DataProvider, 'or'>>;

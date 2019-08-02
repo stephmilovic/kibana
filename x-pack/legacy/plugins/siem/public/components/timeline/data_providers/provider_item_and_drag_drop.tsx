@@ -21,6 +21,7 @@ import {
 
 import { DataProvider } from './data_provider';
 import { ProviderItemAnd } from './provider_item_and';
+import { ProviderItemOr } from './provider_item_or';
 
 import * as i18n from './translations';
 import { BrowserFields } from '../../../containers/source';
@@ -112,6 +113,17 @@ export const ProviderItemAndDragDrop = pure<ProviderItemDropProps>(
         <ProviderItemAnd
           browserFields={browserFields}
           dataProvidersAnd={dataProvider.and}
+          providerId={dataProvider.id}
+          onChangeDataProviderKqlQuery={onChangeDataProviderKqlQuery}
+          onDataProviderEdited={onDataProviderEdited}
+          onDataProviderRemoved={onDataProviderRemoved}
+          onToggleDataProviderEnabled={onToggleDataProviderEnabled}
+          onToggleDataProviderExcluded={onToggleDataProviderExcluded}
+          timelineId={timelineId}
+        />
+        <ProviderItemOr
+          browserFields={browserFields}
+          dataProvidersOr={dataProvider.or}
           providerId={dataProvider.id}
           onChangeDataProviderKqlQuery={onChangeDataProviderKqlQuery}
           onDataProviderEdited={onDataProviderEdited}

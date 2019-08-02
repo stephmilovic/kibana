@@ -57,6 +57,7 @@ const SavedDataProviderRuntimeType = runtimeTypes.partial({
   kqlQuery: unionWithNullType(runtimeTypes.string),
   queryMatch: unionWithNullType(SavedDataProviderQueryMatchBasicRuntimeType),
   and: unionWithNullType(runtimeTypes.array(SavedDataProviderQueryMatchRuntimeType)),
+  or: unionWithNullType(runtimeTypes.array(SavedDataProviderQueryMatchRuntimeType)),
 });
 
 /*

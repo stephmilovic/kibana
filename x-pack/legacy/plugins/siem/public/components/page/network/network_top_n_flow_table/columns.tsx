@@ -60,11 +60,21 @@ export const getNetworkTopNFlowColumns = (
           flowTarget === FlowTarget.unified
             ? {
                 and: [],
+                or: [
+                  {
+                    enabled: true,
+                    id,
+                    name: ip,
+                    excluded: false,
+                    kqlQuery: '',
+                    queryMatch: { field: 'destination.ip', value: ip, operator: IS_OPERATOR },
+                  },
+                ],
                 enabled: true,
                 id,
                 name: ip,
                 excluded: false,
-                kqlQuery: `( destination.ip: ${ip} )`, // this shit still aint working dand d00d
+                kqlQuery: '',
                 queryMatch: { field: 'source.ip', value: ip, operator: IS_OPERATOR },
               }
             : {

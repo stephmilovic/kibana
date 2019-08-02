@@ -70,6 +70,7 @@ export const timelineSchema = gql`
     kqlQuery: String
     queryMatch: QueryMatchInput
     and: [DataProviderInput!]
+    or: [DataProviderInput!]
   }
 
   input KueryFilterQueryInput {

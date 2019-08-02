@@ -9688,6 +9688,20 @@
               }
             },
             "defaultValue": null
+          },
+          {
+            "name": "or",
+            "description": "",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "INPUT_OBJECT", "name": "DataProviderInput", "ofType": null }
+              }
+            },
+            "defaultValue": null
           }
         ],
         "interfaces": null,

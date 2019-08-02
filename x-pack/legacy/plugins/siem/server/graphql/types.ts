@@ -1729,6 +1729,8 @@ export interface DataProviderInput {
   queryMatch?: QueryMatchInput | null;
 
   and?: DataProviderInput[] | null;
+
+  or?: DataProviderInput[] | null;
 }
 
 export interface QueryMatchInput {

@@ -125,6 +125,44 @@ export const timelineSavedObjectMappings: {
               },
             },
           },
+          or: {
+            properties: {
+              id: {
+                type: 'keyword',
+              },
+              name: {
+                type: 'text',
+              },
+              enabled: {
+                type: 'boolean',
+              },
+              excluded: {
+                type: 'boolean',
+              },
+              kqlQuery: {
+                type: 'text',
+              },
+              queryMatch: {
+                properties: {
+                  field: {
+                    type: 'text',
+                  },
+                  displayField: {
+                    type: 'text',
+                  },
+                  value: {
+                    type: 'text',
+                  },
+                  displayValue: {
+                    type: 'text',
+                  },
+                  operator: {
+                    type: 'text',
+                  },
+                },
+              },
+            },
+          },
         },
       },
       description: {
