@@ -8,7 +8,6 @@ import { EuiButton, EuiFlexGroup, EuiFlexItem, EuiPage, EuiPageBody } from '@ela
 import { FormattedMessage } from '@kbn/i18n/react';
 import * as React from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
-import { pure } from 'recompose';
 import styled from 'styled-components';
 import chrome from 'ui/chrome';
 
@@ -31,6 +30,8 @@ import { WithSource } from '../../containers/source';
 import { MlPopover } from '../../components/ml_popover/ml_popover';
 import { MlHostConditionalContainer } from '../../components/ml/conditional_links/ml_host_conditional_container';
 import { MlNetworkConditionalContainer } from '../../components/ml/conditional_links/ml_network_conditional_container';
+import { UseUrlState } from '../../components/url_state';
+import { useGlobalLoading } from '../../utils/use_global_loading';
 
 const WrappedByAutoSizer = styled.div`
   height: 100%;
@@ -74,112 +75,119 @@ const calculateFlyoutHeight = ({
   windowHeight: number;
 }): number => Math.max(0, windowHeight - globalHeaderSize);
 
-export const HomePage = pure(() => (
-  <AutoSizer detectAnyWindowResize={true} content>
-    {({ measureRef, windowMeasurement: { height: windowHeight = 0 } }) => (
-      <WrappedByAutoSizer data-test-subj="wrapped-by-auto-sizer" innerRef={measureRef}>
-        <Page data-test-subj="pageContainer">
-          <HelpMenu />
-
-          <WithSource sourceId="default">
-            {({ browserFields, indexPattern }) => (
-              <DragDropContextWrapper browserFields={browserFields}>
-                <AutoSaveWarningMsg />
-                <Flyout
-                  flyoutHeight={calculateFlyoutHeight({
-                    globalHeaderSize: globalHeaderHeightPx,
-                    windowHeight,
-                  })}
-                  headerHeight={flyoutHeaderHeight}
-                  timelineId="timeline-1"
-                  usersViewing={usersViewing}
-                >
-                  <StatefulTimeline
-                    flyoutHeaderHeight={flyoutHeaderHeight}
+export const HomePage = React.memo(() => {
+  const isGlobalInitializing = useGlobalLoading();
+  return (
+    <AutoSizer detectAnyWindowResize={true} content>
+      {({ measureRef, windowMeasurement: { height: windowHeight = 0 } }) => (
+        <WrappedByAutoSizer data-test-subj="wrapped-by-auto-sizer" innerRef={measureRef}>
+          <Page data-test-subj="pageContainer">
+            <HelpMenu />
+            <WithSource sourceId="default">
+              {({ browserFields, indexPattern }) => (
+                <DragDropContextWrapper browserFields={browserFields}>
+                  <UseUrlState isInitializing={isGlobalInitializing} indexPattern={indexPattern} />
+                  <AutoSaveWarningMsg />
+                  <Flyout
                     flyoutHeight={calculateFlyoutHeight({
                       globalHeaderSize: globalHeaderHeightPx,
                       windowHeight,
                     })}
-                    id="timeline-1"
-                  />
-                </Flyout>
-
-                <EuiPageBody>
-                  <NavGlobal>
-                    <EuiFlexGroup alignItems="center" gutterSize="m" justifyContent="spaceBetween">
-                      <EuiFlexItem>
-                        <SiemNavigation />
-                      </EuiFlexItem>
-
-                      <EuiFlexItem grow={false}>
-                        <EuiFlexGroup
-                          alignItems="center"
-                          gutterSize="m"
-                          responsive={false}
-                          wrap={true}
-                        >
-                          <EuiFlexItem grow={false}>
-                            <MlPopover />
-                          </EuiFlexItem>
-
-                          <EuiFlexItem grow={false}>
-                            <EuiButton
-                              data-test-subj="add-data"
-                              href="kibana#home/tutorial_directory/siem"
-                              iconType="plusInCircle"
-                            >
-                              <FormattedMessage
-                                id="xpack.siem.global.addData"
-                                defaultMessage="Add data"
-                              />
-                            </EuiButton>
-                          </EuiFlexItem>
-                        </EuiFlexGroup>
-                      </EuiFlexItem>
-                    </EuiFlexGroup>
-                  </NavGlobal>
-
-                  <Switch>
-                    <Redirect from="/" exact={true} to="/overview" />
-                    <Route
-                      path="/overview"
-                      render={props => (
-                        <PageRoute
-                          {...props}
-                          component={Overview}
-                          title={i18n.translate('xpack.siem.pages.home.overviewTitle', {
-                            defaultMessage: 'Overview',
-                          })}
-                        />
-                      )}
+                    headerHeight={flyoutHeaderHeight}
+                    timelineId="timeline-1"
+                    usersViewing={usersViewing}
+                  >
+                    <StatefulTimeline
+                      flyoutHeaderHeight={flyoutHeaderHeight}
+                      flyoutHeight={calculateFlyoutHeight({
+                        globalHeaderSize: globalHeaderHeightPx,
+                        windowHeight,
+                      })}
+                      id="timeline-1"
                     />
-                    <Route path="/hosts" component={HostsContainer} />
-                    <Route path="/network" component={NetworkContainer} />
-                    <Route
-                      path="/timelines"
-                      render={props => (
-                        <PageRoute
-                          {...props}
-                          component={Timelines}
-                          title={i18n.translate('xpack.siem.pages.home.timelinesTitle', {
-                            defaultMessage: 'Timelines',
-                          })}
-                        />
-                      )}
-                    />
-                    <Route path="/link-to" component={LinkToPage} />
-                    <Route path="/ml-hosts" component={MlHostConditionalContainer} />
-                    <Route path="/ml-network" component={MlNetworkConditionalContainer} />
-                    <Route component={NotFoundPage} />
-                  </Switch>
-                </EuiPageBody>
-              </DragDropContextWrapper>
-            )}
-          </WithSource>
-        </Page>
-      </WrappedByAutoSizer>
-    )}
-  </AutoSizer>
-));
+                  </Flyout>
+
+                  <EuiPageBody>
+                    <NavGlobal>
+                      <EuiFlexGroup
+                        alignItems="center"
+                        gutterSize="m"
+                        justifyContent="spaceBetween"
+                      >
+                        <EuiFlexItem>
+                          <SiemNavigation />
+                        </EuiFlexItem>
+
+                        <EuiFlexItem grow={false}>
+                          <EuiFlexGroup
+                            alignItems="center"
+                            gutterSize="m"
+                            responsive={false}
+                            wrap={true}
+                          >
+                            <EuiFlexItem grow={false}>
+                              <MlPopover />
+                            </EuiFlexItem>
+
+                            <EuiFlexItem grow={false}>
+                              <EuiButton
+                                data-test-subj="add-data"
+                                href="kibana#home/tutorial_directory/siem"
+                                iconType="plusInCircle"
+                              >
+                                <FormattedMessage
+                                  id="xpack.siem.global.addData"
+                                  defaultMessage="Add data"
+                                />
+                              </EuiButton>
+                            </EuiFlexItem>
+                          </EuiFlexGroup>
+                        </EuiFlexItem>
+                      </EuiFlexGroup>
+                    </NavGlobal>
+
+                    <Switch>
+                      <Redirect from="/" exact={true} to="/overview" />
+                      <Route
+                        path="/overview"
+                        render={props => (
+                          <PageRoute
+                            {...props}
+                            component={Overview}
+                            title={i18n.translate('xpack.siem.pages.home.overviewTitle', {
+                              defaultMessage: 'Overview',
+                            })}
+                          />
+                        )}
+                      />
+                      <Route path="/hosts" component={HostsContainer} />
+                      <Route path="/network" component={NetworkContainer} />
+                      <Route
+                        path="/timelines"
+                        render={props => (
+                          <PageRoute
+                            {...props}
+                            component={Timelines}
+                            title={i18n.translate('xpack.siem.pages.home.timelinesTitle', {
+                              defaultMessage: 'Timelines',
+                            })}
+                          />
+                        )}
+                      />
+                      <Route path="/link-to" component={LinkToPage} />
+                      <Route path="/ml-hosts" component={MlHostConditionalContainer} />
+                      <Route path="/ml-network" component={MlNetworkConditionalContainer} />
+                      <Route component={NotFoundPage} />
+                    </Switch>
+                  </EuiPageBody>
+                </DragDropContextWrapper>
+              )}
+            </WithSource>
+          </Page>
+        </WrappedByAutoSizer>
+      )}
+    </AutoSizer>
+  );
+});
 
 HomePage.displayName = 'HomePage';
