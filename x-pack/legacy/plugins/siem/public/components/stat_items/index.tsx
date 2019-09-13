@@ -48,6 +48,7 @@ StatValue.displayName = 'StatValue';
 
 interface StatItem {
   key: string;
+  statKey: string;
   description?: string;
   value: number | undefined | null;
   color?: string;
@@ -173,11 +174,12 @@ export const useKpiMatrixStatus = (
           areaChart: stat.enableAreaChart ? addValueToAreaChart(stat.fields, data) : undefined,
           barChart: stat.enableBarChart ? addValueToBarChart(stat.fields, data) : undefined,
           fields: addValueToFields(stat.fields, data),
+          from,
           id,
           key: `kpi-summary-${stat.key}`,
-          from,
-          to,
           narrowDateRange,
+          statKey: `${stat.key}`,
+          to,
         };
       })
     );
@@ -198,6 +200,7 @@ export const StatItemsComponent = React.memo<StatItemsProps>(
     grow,
     id,
     index,
+    statKey,
     to,
     narrowDateRange,
   }) => {
@@ -211,7 +214,7 @@ export const StatItemsComponent = React.memo<StatItemsProps>(
       areaChart.length &&
       areaChart.every(item => item.value != null && item.value.length > 0);
     return (
-      <FlexItem grow={grow}>
+      <FlexItem grow={grow} data-test-subj={`stat-${statKey}`}>
         <EuiPanel onMouseEnter={() => setIsHover(true)} onMouseLeave={() => setIsHover(false)}>
           <EuiFlexGroup gutterSize={'none'}>
             <EuiFlexItem>

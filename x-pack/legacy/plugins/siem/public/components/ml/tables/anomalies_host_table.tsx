@@ -63,7 +63,7 @@ export const AnomaliesHostTable = React.memo<AnomaliesHostTableProps>(
       return null;
     } else {
       return (
-        <Panel loading={{ loading }}>
+        <Panel loading={{ loading }} data-test-table-loading={`${loading}`}>
           <HeaderPanel
             subtitle={`${i18n.SHOWING}: ${pagination.totalItemCount.toLocaleString()} ${i18n.UNIT(
               pagination.totalItemCount

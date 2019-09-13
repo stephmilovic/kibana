@@ -37,7 +37,7 @@ const HostsBodyComponent = memo<HostsBodyComponentProps>(
       <WithSource sourceId="default">
         {({ indicesExist, indexPattern }) =>
           indicesExistOrDataTemporarilyUnavailable(indicesExist) ? (
-            <>
+            <span data-test-subj={'host-table-wrapper'}>
               {children({
                 deleteQuery,
                 endDate: to,
@@ -57,7 +57,7 @@ const HostsBodyComponent = memo<HostsBodyComponentProps>(
                   });
                 },
               })}
-            </>
+            </span>
           ) : null
         }
       </WithSource>

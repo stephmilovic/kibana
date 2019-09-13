@@ -223,7 +223,7 @@ export const PaginatedTable = memo<SiemTables>(
     return (
       <Panel
         data-test-subj={dataTestSubj}
-        data-test-state={`${dataTestSubj}-${loading}`}
+        data-test-table-loading={`${loading}`}
         loading={{ loading }}
         onMouseEnter={() => setShowInspect(true)}
         onMouseLeave={() => setShowInspect(false)}

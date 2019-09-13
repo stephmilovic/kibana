@@ -25,6 +25,7 @@ import { Criteria, ItemsPerRow, PaginatedTable, SortingBasicTable } from '../../
 
 import { getDomainsColumns } from './columns';
 import * as i18n from './translations';
+
 const tableType = networkModel.IpDetailsTableType.domains;
 
 interface OwnProps {
@@ -117,6 +118,7 @@ class DomainsTableComponent extends React.PureComponent<DomainsTableProps> {
           type,
           DomainsTableId
         )}
+        dataTestSubj={`table-${tableType}`}
         showMorePagesIndicator={showMorePagesIndicator}
         headerCount={totalCount}
         headerSupplement={

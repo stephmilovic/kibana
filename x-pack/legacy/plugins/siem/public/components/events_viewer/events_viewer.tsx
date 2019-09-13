@@ -144,7 +144,11 @@ export const EventsViewer = React.memo<Props>(
                         totalCount={totalCount}
                       />
 
-                      <div data-test-subj="events-container" style={{ width: `${width}px` }}>
+                      <div
+                        data-test-subj="events-container"
+                        data-test-table-loading={`${loading}`}
+                        style={{ width: `${width}px` }}
+                      >
                         <ManageTimelineContext loading={loading} width={width}>
                           <TimelineRefetch
                             id={id}
