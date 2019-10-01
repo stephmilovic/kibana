@@ -139,7 +139,7 @@ export const AutoSizer = React.memo<AutoSizerProps>(
           content: contentMeasurementNow,
           window: windowMeasurementNow,
         });
-        forceUpdate();
+        // forceUpdate();
         if (onResize) {
           onResize({
             bounds: boundsMeasurementNow,
