@@ -42,23 +42,32 @@ const useForceUpdate = () => {
   }, [dispatch]);
   return memoizedDispatch;
 };
+
 export const AutoSizer = React.memo<AutoSizerProps>(
   ({ bounds = false, children, content = true, detectAnyWindowResize, onResize }) => {
     const element = useRef<HTMLElement | null>(null);
     const resizeObserver = useRef<ResizeObserver | null>(null);
     const windowWidth = useRef(-1);
-    const boundsMeasurement = useRef<Measurement>({
+    const [boundsMeasurement, setBoundsMeasurement] = useState<Measurement>({
       height: 0,
       width: 0,
     });
-    const contentMeasurement = useRef<Measurement>({
+    const [contentMeasurement, setContentMeasurement] = useState<Measurement>({
       height: 0,
       width: 0,
     });
-    const windowMeasurement = useRef<Measurement>({
+    const [windowMeasurement, setWindowMeasurement] = useState<Measurement>({
       height: 0,
       width: 0,
     });
+    const memoizedSetMeasurement = useCallback(
+      (measurement: { bounds: Measurement; window: Measurement; content: Measurement }): void => {
+        setBoundsMeasurement(Object.create(measurement.bounds));
+        setContentMeasurement(Object.create(measurement.content));
+        setWindowMeasurement(Object.create(measurement.window));
+      },
+      [setBoundsMeasurement, setContentMeasurement, setWindowMeasurement]
+    );
     const forceUpdate = useForceUpdate();
 
     const storeRef = (htmlElement: HTMLElement | null) => {
@@ -84,7 +93,7 @@ export const AutoSizer = React.memo<AutoSizerProps>(
             height: element.current.getBoundingClientRect().height,
             width: element.current.getBoundingClientRect().width,
           }
-        : boundsMeasurement.current;
+        : boundsMeasurement;
 
       const windowMeasurementNow: Measurement = {
         width: window.innerWidth,
@@ -110,12 +119,12 @@ export const AutoSizer = React.memo<AutoSizerProps>(
               height: entry.contentRect.height,
               width: entry.contentRect.width,
             }
-          : contentMeasurement.current;
+          : contentMeasurement;
 
       if (
-        isEqual(boundsMeasurementNow, boundsMeasurement.current) &&
-        isEqual(contentMeasurementNow, contentMeasurement.current) &&
-        isEqual(windowMeasurementNow, windowMeasurement.current)
+        isEqual(boundsMeasurementNow, boundsMeasurement) &&
+        isEqual(contentMeasurementNow, contentMeasurement) &&
+        isEqual(windowMeasurementNow, windowMeasurement)
       ) {
         return;
       }
@@ -125,9 +134,11 @@ export const AutoSizer = React.memo<AutoSizerProps>(
           return;
         }
 
-        boundsMeasurement.current = boundsMeasurementNow;
-        contentMeasurement.current = contentMeasurementNow;
-        windowMeasurement.current = windowMeasurementNow;
+        memoizedSetMeasurement({
+          bounds: boundsMeasurementNow,
+          content: contentMeasurementNow,
+          window: windowMeasurementNow,
+        });
         forceUpdate();
         if (onResize) {
           onResize({
@@ -161,11 +172,11 @@ export const AutoSizer = React.memo<AutoSizerProps>(
         }
       };
     }, []);
-
+    element.current && element.current.className === 'sc-cHSUfg iMwfCi' && console.log('RENDER', { windowMeasurementState: windowMeasurement})
     return children({
-      bounds: boundsMeasurement.current,
-      content: contentMeasurement.current,
-      windowMeasurement: windowMeasurement.current,
+      bounds: boundsMeasurement,
+      content: contentMeasurement,
+      windowMeasurement,
       measureRef: storeRef,
     });
   }
