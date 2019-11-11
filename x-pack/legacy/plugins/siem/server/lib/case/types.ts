@@ -5,7 +5,7 @@
  */
 
 import * as runtimeTypes from 'io-ts';
-import { unionWithNullType } from '../framework';
+import { createEnumType, unionWithNullType } from '../framework';
 
 const User = runtimeTypes.type({
   id: runtimeTypes.string,
@@ -20,6 +20,11 @@ const Comment = runtimeTypes.partial({
   user: User,
 });
 
+enum CaseState {
+  open = 'open',
+  closed = 'closed',
+}
+
 const Case = runtimeTypes.intersection([
   runtimeTypes.type({
     creation_date: runtimeTypes.string,
@@ -28,7 +33,7 @@ const Case = runtimeTypes.intersection([
     last_edit_date: runtimeTypes.string,
     name: runtimeTypes.string,
     reporter: User,
-    state: runtimeTypes.string,
+    state: createEnumType<CaseState>(CaseState, 'CaseState'),
     type: runtimeTypes.string,
   }),
   runtimeTypes.partial({

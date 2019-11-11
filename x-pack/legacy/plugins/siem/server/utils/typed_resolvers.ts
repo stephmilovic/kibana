@@ -109,3 +109,21 @@ export type ChildResolverOf<Resolver_, ParentResolver> = ResolverWithParent<
 
 export const unionWithNullType = <T extends runtimeTypes.Mixed>(type: T) =>
   runtimeTypes.union([type, runtimeTypes.null]);
+// EnumType Class
+
+export class EnumType<A> extends runtimeTypes.Type<A> {
+  public readonly _tag: 'EnumType' = 'EnumType';
+  public enumObject!: object;
+  constructor(e: object, name?: string) {
+    super(
+      name || 'enum',
+      (u): u is A => Object.values(this.enumObject).some(v => v === u),
+      (u, c) => (this.is(u) ? runtimeTypes.success(u) : runtimeTypes.failure(u, c)),
+      runtimeTypes.identity
+    );
+    this.enumObject = e;
+  }
+}
+
+// simple helper function
+export const createEnumType = <T>(e: object, name?: string) => new EnumType<T>(e, name);
