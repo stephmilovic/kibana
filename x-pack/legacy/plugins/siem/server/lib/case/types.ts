@@ -3,7 +3,7 @@
  * or more contributor license agreements. Licensed under the Elastic License;
  * you may not use this file except in compliance with the Elastic License.
  */
-
+/* eslint-disable @typescript-eslint/no-empty-interface */
 import * as runtimeTypes from 'io-ts';
 import { createEnumType, unionWithNullType } from '../framework';
 
@@ -20,12 +20,12 @@ const Comment = runtimeTypes.partial({
   user: User,
 });
 
-enum CaseState {
+export enum CaseState {
   open = 'open',
   closed = 'closed',
 }
 
-const Case = runtimeTypes.intersection([
+export const CaseRuntime = runtimeTypes.intersection([
   runtimeTypes.type({
     creation_date: runtimeTypes.string,
     description: runtimeTypes.string,
@@ -42,3 +42,5 @@ const Case = runtimeTypes.intersection([
     tags: unionWithNullType(runtimeTypes.array(runtimeTypes.string)),
   }),
 ]);
+
+export interface Case extends runtimeTypes.TypeOf<typeof CaseRuntime> {}
