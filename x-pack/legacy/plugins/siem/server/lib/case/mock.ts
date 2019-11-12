@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { Case, CaseState } from './types';
+import { Case, CaseState } from './routes/schema';
 
 export const mockCase: Case = {
   creation_date: '2019-08-05T20:52:51.583Z',

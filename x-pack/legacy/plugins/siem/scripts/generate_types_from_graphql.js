@@ -15,8 +15,8 @@ const GRAPHQL_GLOBS = [
   join('common', 'graphql', '**', '*.gql_query.ts{,x}'),
 ];
 const OUTPUT_INTROSPECTION_PATH = resolve('public', 'graphql', 'introspection.json');
-const OUTPUT_CLIENT_TYPES_PATH = resolve('public', 'graphql', 'types.ts');
-const OUTPUT_SERVER_TYPES_PATH = resolve('server', 'graphql', 'types.ts');
+const OUTPUT_CLIENT_TYPES_PATH = resolve('public', 'graphql', 'schema.ts');
+const OUTPUT_SERVER_TYPES_PATH = resolve('server', 'graphql', 'schema.ts');
 const SCHEMA_PATH = resolve(__dirname, 'combined_schema.ts');
 
 async function main() {

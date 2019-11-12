@@ -5,7 +5,7 @@
  */
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import * as runtimeTypes from 'io-ts';
-import { createEnumType, unionWithNullType } from '../framework';
+import { createEnumType, unionWithNullType } from '../../framework';
 
 const User = runtimeTypes.type({
   id: runtimeTypes.string,

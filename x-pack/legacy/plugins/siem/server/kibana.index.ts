@@ -55,6 +55,17 @@ export const initServerWithKibana = (kbnServer: Server) => {
     deleteSignalsRoute(kbnServer);
     findSignalsRoute(kbnServer);
   }
+  if (
+    kbnServer.config().has('xpack.case.enabled') &&
+    kbnServer.config().get('xpack.case.enabled') === true
+  ) {
+    logger.info('Detected feature flags for case and enabling case management API endpoints');
+    createSignalsRoute(kbnServer);
+    readSignalsRoute(kbnServer);
+    updateSignalsRoute(kbnServer);
+    deleteSignalsRoute(kbnServer);
+    findSignalsRoute(kbnServer);
+  }
   logger.info('Plugin done initializing');
 
   const xpackMainPlugin = kbnServer.plugins.xpack_main;
