@@ -21,8 +21,10 @@ import { readSignalsRoute } from './lib/detection_engine/routes/read_signals_rou
 import { findSignalsRoute } from './lib/detection_engine/routes/find_signals_route';
 import { deleteSignalsRoute } from './lib/detection_engine/routes/delete_signals_route';
 import { updateSignalsRoute } from './lib/detection_engine/routes/update_signals_route';
+import { createCaseRoute } from './lib/case/routes/create_case_route';
 
 const APP_ID = 'siem';
+const CASE_ENABLED = true;
 
 export const amMocking = (): boolean => process.env.INGEST_MOCKS === 'true';
 
@@ -55,16 +57,9 @@ export const initServerWithKibana = (kbnServer: Server) => {
     deleteSignalsRoute(kbnServer);
     findSignalsRoute(kbnServer);
   }
-  if (
-    kbnServer.config().has('xpack.case.enabled') &&
-    kbnServer.config().get('xpack.case.enabled') === true
-  ) {
+  if (CASE_ENABLED) {
     logger.info('Detected feature flags for case and enabling case management API endpoints');
-    createSignalsRoute(kbnServer);
-    readSignalsRoute(kbnServer);
-    updateSignalsRoute(kbnServer);
-    deleteSignalsRoute(kbnServer);
-    findSignalsRoute(kbnServer);
+    createCaseRoute(kbnServer);
   }
   logger.info('Plugin done initializing');
 
@@ -102,4 +97,5 @@ export const initServerWithKibana = (kbnServer: Server) => {
       },
     },
   });
+
 };

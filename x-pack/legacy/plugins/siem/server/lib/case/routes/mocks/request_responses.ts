@@ -4,12 +4,14 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { createCase, CaseState } from './routes/schema';
+import { ServerInjectOptions } from 'hapi';
+import { CaseState } from '../schema';
 
-export const mockCase: createCase = {
+const testIndex = '.case-test-cool';
+export const typicalCasePayload = {
   creation_date: '2019-08-05T20:52:51.583Z',
   description: 'This is a brand new case of a bad meanie defacing data',
-  id: 'case-jyyvppav1tj69d00628097g1',
+  id: '4',
   last_edit_date: '2019-08-06T20:52:51.583Z',
   name: 'Super Bad Security Issue',
   reporter: {
@@ -38,3 +40,23 @@ export const mockCase: createCase = {
   ],
   tags: ['defacement'],
 };
+
+const typicalCaseCreatedResponse = {
+  _index: testIndex,
+  _id: '4',
+  _version: 1,
+  result: 'created',
+  _shards: {
+    total: 2,
+    successful: 1,
+    failed: 0,
+  },
+  _seq_no: 3,
+  _primary_term: 1,
+};
+
+export const createCaseRequest = (): ServerInjectOptions => ({
+  method: 'PUT',
+  url: '/api/siem/signals',
+  payload: typicalCasePayload,
+});

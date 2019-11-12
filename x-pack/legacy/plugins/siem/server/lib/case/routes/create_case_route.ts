@@ -5,13 +5,13 @@
  */
 
 import Hapi from 'hapi';
-import { isFunction } from 'lodash/fp';
-import { createSignals } from '../alerts/create_case';
+
 import { CaseRequest } from './types';
-import { Case } from './schema';
+import { createCaseSchema } from './schema';
+import { callApi } from '../http';
 
 export const createCreateCaseRoute: Hapi.ServerRoute = {
-  method: 'POST',
+  method: 'PUT',
   path: '/api/siem/case',
   options: {
     tags: ['access:case-all'],
@@ -19,62 +19,28 @@ export const createCreateCaseRoute: Hapi.ServerRoute = {
       options: {
         abortEarly: false,
       },
-      payload: Case,
+      payload: createCaseSchema,
     },
   },
   async handler(request: CaseRequest, headers) {
-    const {
-      description,
-      enabled,
-      filter,
-      from,
-      query,
-      language,
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      saved_id: savedId,
-      filters,
-      id,
-      index,
-      interval,
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      max_case: maxCase,
-      name,
-      severity,
-      size,
-      to,
-      type,
-      references,
-    } = request.payload;
 
-    const alertsClient = isFunction(request.getAlertsClient) ? request.getAlertsClient() : null;
-    const actionsClient = isFunction(request.getActionsClient) ? request.getActionsClient() : null;
+    console.log('ISOLATEIT', request.server.newPlatform);
 
-    if (!alertsClient || !actionsClient) {
+    const http = request.server.newPlatform.setup.core.http;
+
+    // NOTE: I think I'm going to need this
+    // const actionsClient = isFunction(request.getActionsClient) ? request.getActionsClient() : null;
+
+    if (!request.payload.id || !http) {
       return headers.response().code(404);
     }
+    await callApi(http, request);
 
-    return createCase({
-      alertsClient,
-      actionsClient,
-      description,
-      enabled,
-      filter,
-      from,
-      query,
-      language,
-      savedId,
-      filters,
-      id,
-      index,
-      interval,
-      maxCase,
-      name,
-      severity,
-      size,
-      to,
-      type,
-      references,
-    });
+    // await callApi({
+    //   method: 'GET',
+    //   pathname: `.case-test.2/_doc/${id}`,
+    //   body: request.payload,
+    // });
   },
 };
 

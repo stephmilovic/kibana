@@ -5,6 +5,7 @@
  */
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import * as runtimeTypes from 'io-ts';
+import Joi from 'joi';
 import { createEnumType, unionWithNullType } from '../../framework';
 
 const User = runtimeTypes.type({
@@ -25,22 +26,47 @@ export enum CaseState {
   closed = 'closed',
 }
 
-export const CaseRuntime = runtimeTypes.intersection([
-  runtimeTypes.type({
-    creation_date: runtimeTypes.string,
-    description: runtimeTypes.string,
-    id: runtimeTypes.string,
-    last_edit_date: runtimeTypes.string,
-    name: runtimeTypes.string,
-    reporter: User,
-    state: createEnumType<CaseState>(CaseState, 'CaseState'),
-    type: runtimeTypes.string,
-  }),
-  runtimeTypes.partial({
-    assignees: unionWithNullType(runtimeTypes.array(User)),
-    comments: unionWithNullType(runtimeTypes.array(Comment)),
-    tags: unionWithNullType(runtimeTypes.array(runtimeTypes.string)),
-  }),
-]);
+/* eslint-disable @typescript-eslint/camelcase */
 
-export interface Case extends runtimeTypes.TypeOf<typeof CaseRuntime> {}
+const user = Joi.object({
+  id: Joi.string().required(),
+  name: Joi.string(),
+});
+
+const creation_date = Joi.string();
+const last_edit_date = Joi.string();
+const description = Joi.string();
+const id = Joi.string();
+
+const comment = Joi.object({
+  id: id.required(),
+  comment: description.required(),
+  creation_date,
+  last_edit_date,
+  user: user.required(),
+});
+
+const assignees = Joi.array().items(user);
+const comments = Joi.array().items(comment);
+const name = Joi.string().required();
+const reporter = user.required();
+const state = Joi.string().valid('open', 'closed');
+const tags = Joi.array()
+  .items(Joi.string())
+  .unique();
+const type = Joi.string();
+/* eslint-enable @typescript-eslint/camelcase */
+
+export const createCaseSchema = Joi.object({
+  assignees: assignees.default([]),
+  comments: comments.default([]),
+  creation_date: creation_date.required(),
+  description: description.required(),
+  id: id.required(),
+  last_edit_date: last_edit_date.required(),
+  name: name.required(),
+  reporter: reporter.required(),
+  state: state.required(),
+  tags: tags.default([]),
+  type: type.required(),
+});

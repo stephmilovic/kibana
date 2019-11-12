@@ -4,16 +4,33 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { isString } from 'lodash';
+import { isString, startsWith } from 'lodash';
 import LRU from 'lru-cache';
 import hash from 'object-hash';
-import { HttpServiceBase, HttpFetchOptions } from 'kibana/public';
+import { HttpServiceSetup, HttpServiceBase, HttpFetchOptions } from 'kibana/public';
 
 export type FetchOptions = HttpFetchOptions & {
   pathname: string;
   forceCache?: boolean;
   method?: string;
 };
+
+function fetchOptionsWithDebug(fetchOptions: FetchOptions) {
+  const debugEnabled =
+    sessionStorage.getItem('apm_debug') === 'true' && startsWith(fetchOptions.pathname, '/api/apm');
+
+  if (!debugEnabled) {
+    return fetchOptions;
+  }
+
+  return {
+    ...fetchOptions,
+    query: {
+      ...fetchOptions.query,
+      _debug: true,
+    },
+  };
+}
 
 const cache = new LRU<string, any>({ max: 100, maxAge: 1000 * 60 * 60 });
 
@@ -33,14 +50,9 @@ export async function callApi<T = void>(
     return cacheResponse;
   }
 
-  const { pathname, method = 'get', ...options } = fetchOptions;
+  const { pathname, method = 'get', ...options } = fetchOptionsWithDebug(fetchOptions);
 
-  const lowercaseMethod = method.toLowerCase() as
-    | 'get'
-    | 'post'
-    | 'put'
-    | 'delete'
-    | 'patch';
+  const lowercaseMethod = method.toLowerCase() as 'get' | 'post' | 'put' | 'delete' | 'patch';
 
   const res = await http[lowercaseMethod](pathname, options);
 
@@ -58,15 +70,12 @@ function isCachable(fetchOptions: FetchOptions) {
     return true;
   }
 
-  if (
-    !(fetchOptions.query && fetchOptions.query.start && fetchOptions.query.end)
-  ) {
+  if (!(fetchOptions.query && fetchOptions.query.start && fetchOptions.query.end)) {
     return false;
   }
 
   return (
-    isString(fetchOptions.query.end) &&
-    new Date(fetchOptions.query.end).getTime() < Date.now()
+    isString(fetchOptions.query.end) && new Date(fetchOptions.query.end).getTime() < Date.now()
   );
 }
 

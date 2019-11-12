@@ -6,8 +6,32 @@
 
 import Hapi from 'hapi';
 
-import { Case } from './schema';
+interface User {
+  id: string;
+  name: string;
+}
+interface Comment {
+  id: string;
+  comment: string;
+  creation_date: string;
+  last_edit_date: string;
+  user: User;
+}
+
+export interface CaseRequestParams {
+  assignees: User[];
+  comments: Comment[];
+  creation_date: string;
+  description: string;
+  id: string;
+  last_edit_date: string;
+  name: string;
+  reporter: User;
+  state: string;
+  tags: string[];
+  type: string;
+}
 
 export interface CaseRequest extends Hapi.Request {
-  payload: Case;
+  payload: CaseRequestParams;
 }
