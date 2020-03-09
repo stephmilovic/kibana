@@ -17,7 +17,7 @@ import {
   throwErrors,
   CommentResponse,
   CommentResponseRt,
-} from '../../../../../../plugins/case/common/api';
+} from '../../../../../../plugins/cases/common/api';
 import { ToasterErrors } from '../../hooks/api/throw_if_not_ok';
 import { AllCases, Case } from './types';
 

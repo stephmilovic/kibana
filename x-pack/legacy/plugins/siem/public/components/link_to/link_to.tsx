@@ -21,10 +21,10 @@ import { RedirectToNetworkPage } from './redirect_to_network';
 import { RedirectToOverviewPage } from './redirect_to_overview';
 import { RedirectToTimelinesPage } from './redirect_to_timelines';
 import {
-  RedirectToCasePage,
+  RedirectToCasesPage,
   RedirectToCreatePage,
   RedirectToConfigureCasesPage,
-} from './redirect_to_case';
+} from './redirect_to_cases';
 import { DetectionEngineTab } from '../../pages/detection_engine/types';
 
 interface LinkToPageProps {
@@ -39,7 +39,7 @@ export const LinkToPage = React.memo<LinkToPageProps>(({ match }) => (
     />
     <Route
       exact
-      component={RedirectToCasePage}
+      component={RedirectToCasesPage}
       path={`${match.url}/:pageName(${SiemPageName.cases})`}
     />
     <Route
@@ -53,7 +53,7 @@ export const LinkToPage = React.memo<LinkToPageProps>(({ match }) => (
       path={`${match.url}/:pageName(${SiemPageName.cases})/configure`}
     />
     <Route
-      component={RedirectToCasePage}
+      component={RedirectToCasesPage}
       path={`${match.url}/:pageName(${SiemPageName.cases})/:detailName`}
     />
     <Route

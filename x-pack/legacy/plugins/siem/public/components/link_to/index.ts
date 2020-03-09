@@ -15,10 +15,10 @@ export { getNetworkUrl, getIPDetailsUrl, RedirectToNetworkPage } from './redirec
 export { getTimelinesUrl, RedirectToTimelinesPage } from './redirect_to_timelines';
 export {
   getCaseDetailsUrl,
-  getCaseUrl,
+  getCasesUrl,
   getCreateCaseUrl,
   getConfigureCasesUrl,
-  RedirectToCasePage,
+  RedirectToCasesPage,
   RedirectToCreatePage,
   RedirectToConfigureCasesPage,
-} from './redirect_to_case';
+} from './redirect_to_cases';

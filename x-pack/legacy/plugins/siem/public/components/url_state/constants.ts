@@ -7,7 +7,7 @@
 export enum CONSTANTS {
   appQuery = 'query',
   caseDetails = 'cases.details',
-  casePage = 'cases.page',
+  casesPage = 'cases.page',
   detectionsPage = 'detections.page',
   filters = 'filters',
   hostsDetails = 'hosts.details',

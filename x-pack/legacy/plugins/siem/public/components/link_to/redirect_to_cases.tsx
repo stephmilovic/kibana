@@ -13,7 +13,7 @@ export type CaseComponentProps = RouteComponentProps<{
   detailName: string;
 }>;
 
-export const RedirectToCasePage = ({
+export const RedirectToCasesPage = ({
   match: {
     params: { detailName },
   },
@@ -30,7 +30,7 @@ export const RedirectToConfigureCasesPage = () => (
 
 const baseCaseUrl = `#/link-to/${SiemPageName.cases}`;
 
-export const getCaseUrl = () => baseCaseUrl;
+export const getCasesUrl = () => baseCaseUrl;
 export const getCaseDetailsUrl = (detailName: string) => `${baseCaseUrl}/${detailName}`;
 export const getCreateCaseUrl = () => `${baseCaseUrl}/create`;
 export const getConfigureCasesUrl = () => `${baseCaseUrl}/configure`;

@@ -10,7 +10,7 @@ import {
   getNetworkUrl,
   getTimelinesUrl,
   getHostsUrl,
-  getCaseUrl,
+  getCasesUrl,
 } from '../../components/link_to';
 import * as i18n from './translations';
 import { SiemPageName, SiemNavTab } from './types';
@@ -54,7 +54,7 @@ export const navTabs: SiemNavTab = {
   [SiemPageName.cases]: {
     id: SiemPageName.cases,
     name: i18n.CASES,
-    href: getCaseUrl(),
+    href: getCasesUrl(),
     disabled: false,
     urlKey: 'cases',
   },

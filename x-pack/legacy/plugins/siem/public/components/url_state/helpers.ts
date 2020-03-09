@@ -137,7 +137,7 @@ export const getCurrentLocation = (
     if (detailName != null) {
       return CONSTANTS.caseDetails;
     }
-    return CONSTANTS.casePage;
+    return CONSTANTS.casesPage;
   }
   return CONSTANTS.unknown;
 };

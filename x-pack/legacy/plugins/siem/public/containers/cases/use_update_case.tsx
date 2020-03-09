@@ -6,7 +6,7 @@
 
 import { useReducer, useCallback } from 'react';
 
-import { CaseRequest } from '../../../../../../plugins/case/common/api';
+import { CaseRequest } from '../../../../../../plugins/cases/common/api';
 import { useStateToaster } from '../../components/toasters';
 import { errorToToaster } from '../../components/ml/api/error_to_toaster';
 

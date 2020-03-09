@@ -66,9 +66,9 @@ describe('SIEM Navigation', () => {
       {
         detailName: undefined,
         navTabs: {
-          case: {
+          cases: {
             disabled: false,
-            href: '#/link-to/case',
+            href: '#/link-to/cases',
             id: 'cases',
             name: 'Cases',
             urlKey: 'cases',
@@ -159,7 +159,7 @@ describe('SIEM Navigation', () => {
         detailName: undefined,
         filters: [],
         navTabs: {
-          case: {
+          cases: {
             disabled: false,
             href: '#/link-to/cases',
             id: 'cases',

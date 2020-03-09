@@ -11,10 +11,10 @@ import { Create } from './components/create';
 import { SpyRoute } from '../../utils/route/spy_routes';
 import { CaseHeaderPage } from './components/case_header_page';
 import * as i18n from './translations';
-import { getCaseUrl } from '../../components/link_to';
+import { getCasesUrl } from '../../components/link_to';
 
 const backOptions = {
-  href: getCaseUrl(),
+  href: getCasesUrl(),
   text: i18n.BACK_TO_ALL,
 };
 

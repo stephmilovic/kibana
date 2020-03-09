@@ -20,7 +20,7 @@ import styled, { css } from 'styled-components';
 import * as i18n from './translations';
 import { Case } from '../../../../containers/cases/types';
 import { FormattedRelativePreferenceDate } from '../../../../components/formatted_date';
-import { getCaseUrl } from '../../../../components/link_to';
+import { getCasesUrl } from '../../../../components/link_to';
 import { HeaderPage } from '../../../../components/header_page';
 import { EditableTitle } from '../../../../components/header_page/editable_title';
 import { PropertyActions } from '../property_actions';
@@ -136,7 +136,7 @@ export const CaseComponent = React.memo<CaseProps>(({ caseId, initialData }) => 
       <MyWrapper>
         <HeaderPage
           backOptions={{
-            href: getCaseUrl(),
+            href: getCasesUrl(),
             text: i18n.BACK_TO_ALL,
           }}
           data-test-subj="case-view-title"

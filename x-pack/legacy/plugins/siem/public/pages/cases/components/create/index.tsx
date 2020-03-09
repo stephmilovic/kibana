@@ -15,7 +15,7 @@ import {
 import styled, { css } from 'styled-components';
 import { Redirect } from 'react-router-dom';
 
-import { CaseRequest } from '../../../../../../../../plugins/case/common/api';
+import { CaseRequest } from '../../../../../../../../plugins/cases/common/api';
 import { Field, Form, getUseField, useForm, UseField } from '../../../../shared_imports';
 import { usePostCase } from '../../../../containers/cases/use_post_case';
 import { schema } from './schema';
