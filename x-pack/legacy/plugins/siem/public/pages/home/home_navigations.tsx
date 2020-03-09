@@ -51,11 +51,11 @@ export const navTabs: SiemNavTab = {
     disabled: false,
     urlKey: 'timeline',
   },
-  [SiemPageName.case]: {
-    id: SiemPageName.case,
-    name: i18n.CASE,
+  [SiemPageName.cases]: {
+    id: SiemPageName.cases,
+    name: i18n.CASES,
     href: getCaseUrl(),
     disabled: false,
-    urlKey: 'case',
+    urlKey: 'cases',
   },
 };

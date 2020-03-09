@@ -13,7 +13,7 @@ import { CasesPage } from './case';
 import { CreateCasePage } from './create_case';
 import { ConfigureCasesPage } from './configure_cases';
 
-const casesPagePath = `/:pageName(${SiemPageName.case})`;
+const casesPagePath = `/:pageName(${SiemPageName.cases})`;
 const caseDetailsPagePath = `${casesPagePath}/:detailName`;
 const createCasePagePath = `${casesPagePath}/create`;
 const configureCasesPagePath = `${casesPagePath}/configure`;

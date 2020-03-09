@@ -11,7 +11,7 @@ import { APP_NAME } from '../../../../common/constants';
 import { StartServices } from '../../../plugin';
 import { getBreadcrumbs as getHostDetailsBreadcrumbs } from '../../../pages/hosts/details/utils';
 import { getBreadcrumbs as getIPDetailsBreadcrumbs } from '../../../pages/network/ip_details';
-import { getBreadcrumbs as getCaseDetailsBreadcrumbs } from '../../../pages/case/utils';
+import { getBreadcrumbs as getCaseDetailsBreadcrumbs } from '../../../pages/cases/utils';
 import { getBreadcrumbs as getDetectionRulesBreadcrumbs } from '../../../pages/detection_engine/rules/utils';
 import { SiemPageName } from '../../../pages/home/types';
 import { RouteSpyState, HostRouteSpyState, NetworkRouteSpyState } from '../../../utils/route/types';
@@ -45,7 +45,7 @@ const isHostsRoutes = (spyState: RouteSpyState): spyState is HostRouteSpyState =
   spyState != null && spyState.pageName === SiemPageName.hosts;
 
 const isCaseRoutes = (spyState: RouteSpyState): spyState is RouteSpyState =>
-  spyState != null && spyState.pageName === SiemPageName.case;
+  spyState != null && spyState.pageName === SiemPageName.cases;
 
 const isDetectionsRoutes = (spyState: RouteSpyState) =>
   spyState != null && spyState.pageName === SiemPageName.detections;

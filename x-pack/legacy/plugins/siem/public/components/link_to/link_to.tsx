@@ -40,21 +40,21 @@ export const LinkToPage = React.memo<LinkToPageProps>(({ match }) => (
     <Route
       exact
       component={RedirectToCasePage}
-      path={`${match.url}/:pageName(${SiemPageName.case})`}
+      path={`${match.url}/:pageName(${SiemPageName.cases})`}
     />
     <Route
       exact
       component={RedirectToCreatePage}
-      path={`${match.url}/:pageName(${SiemPageName.case})/create`}
+      path={`${match.url}/:pageName(${SiemPageName.cases})/create`}
     />
     <Route
       exact
       component={RedirectToConfigureCasesPage}
-      path={`${match.url}/:pageName(${SiemPageName.case})/configure`}
+      path={`${match.url}/:pageName(${SiemPageName.cases})/configure`}
     />
     <Route
       component={RedirectToCasePage}
-      path={`${match.url}/:pageName(${SiemPageName.case})/:detailName`}
+      path={`${match.url}/:pageName(${SiemPageName.cases})/:detailName`}
     />
     <Route
       component={RedirectToHostsPage}

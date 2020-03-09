@@ -134,7 +134,7 @@ export const HomePage: React.FC = () => {
                     <MlNetworkConditionalContainer location={location} url={match.url} />
                   )}
                 />
-                <Route path={`/:pageName(${SiemPageName.case})`}>
+                <Route path={`/:pageName(${SiemPageName.cases})`}>
                   <Case />
                 </Route>
                 <Route render={() => <NotFoundPage />} />

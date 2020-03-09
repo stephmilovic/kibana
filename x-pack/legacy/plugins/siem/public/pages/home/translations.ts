@@ -26,6 +26,6 @@ export const TIMELINES = i18n.translate('xpack.siem.navigation.timelines', {
   defaultMessage: 'Timelines',
 });
 
-export const CASE = i18n.translate('xpack.siem.navigation.case', {
+export const CASES = i18n.translate('xpack.siem.navigation.cases', {
   defaultMessage: 'Cases',
 });

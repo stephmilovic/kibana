@@ -9,7 +9,7 @@ import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { SiemPageName } from '../../pages/home/types';
 
-const hideTimelineForRoutes = [`/${SiemPageName.case}/configure`];
+const hideTimelineForRoutes = [`/${SiemPageName.cases}/configure`];
 
 export const useShowTimeline = () => {
   const currentLocation = useLocation();

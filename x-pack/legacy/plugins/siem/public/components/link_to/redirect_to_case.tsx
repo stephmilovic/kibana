@@ -19,16 +19,16 @@ export const RedirectToCasePage = ({
   },
 }: CaseComponentProps) => (
   <RedirectWrapper
-    to={detailName ? `/${SiemPageName.case}/${detailName}` : `/${SiemPageName.case}`}
+    to={detailName ? `/${SiemPageName.cases}/${detailName}` : `/${SiemPageName.cases}`}
   />
 );
 
-export const RedirectToCreatePage = () => <RedirectWrapper to={`/${SiemPageName.case}/create`} />;
+export const RedirectToCreatePage = () => <RedirectWrapper to={`/${SiemPageName.cases}/create`} />;
 export const RedirectToConfigureCasesPage = () => (
-  <RedirectWrapper to={`/${SiemPageName.case}/configure`} />
+  <RedirectWrapper to={`/${SiemPageName.cases}/configure`} />
 );
 
-const baseCaseUrl = `#/link-to/${SiemPageName.case}`;
+const baseCaseUrl = `#/link-to/${SiemPageName.cases}`;
 
 export const getCaseUrl = () => baseCaseUrl;
 export const getCaseDetailsUrl = (detailName: string) => `${baseCaseUrl}/${detailName}`;

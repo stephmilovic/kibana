@@ -67,11 +67,11 @@ export const Create = React.memo(() => {
   }, [form]);
 
   if (caseData != null && caseData.id) {
-    return <Redirect to={`/${SiemPageName.case}/${caseData.id}`} />;
+    return <Redirect to={`/${SiemPageName.cases}/${caseData.id}`} />;
   }
 
   if (isCancel) {
-    return <Redirect to={`/${SiemPageName.case}`} />;
+    return <Redirect to={`/${SiemPageName.cases}`} />;
   }
 
   return (
