@@ -5,7 +5,7 @@
  */
 
 import { CaseProps } from '../index';
-import { Case } from '../../../../../containers/case/types';
+import { Case } from '../../../../../containers/cases/types';
 
 export const caseProps: CaseProps = {
   caseId: '3c4ddcc0-4e99-11ea-9290-35d05cb55c15',

@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import styled from 'styled-components';
 
 import { CommentRequest } from '../../../../../../../../plugins/case/common/api';
-import { usePostComment } from '../../../../containers/case/use_post_comment';
+import { usePostComment } from '../../../../containers/cases/use_post_comment';
 import { MarkdownEditorForm } from '../../../../components/markdown_editor/form';
 import { Form, useForm, UseField } from '../../../../shared_imports';
 import * as i18n from '../../translations';

@@ -18,19 +18,19 @@ import {
 
 import styled, { css } from 'styled-components';
 import * as i18n from './translations';
-import { Case } from '../../../../containers/case/types';
+import { Case } from '../../../../containers/cases/types';
 import { FormattedRelativePreferenceDate } from '../../../../components/formatted_date';
 import { getCaseUrl } from '../../../../components/link_to';
 import { HeaderPage } from '../../../../components/header_page';
 import { EditableTitle } from '../../../../components/header_page/editable_title';
 import { PropertyActions } from '../property_actions';
 import { TagList } from '../tag_list';
-import { useGetCase } from '../../../../containers/case/use_get_case';
+import { useGetCase } from '../../../../containers/cases/use_get_case';
 import { UserActionTree } from '../user_action_tree';
 import { UserList } from '../user_list';
-import { useUpdateCase } from '../../../../containers/case/use_update_case';
+import { useUpdateCase } from '../../../../containers/cases/use_update_case';
 import { WrapperPage } from '../../../../components/wrapper_page';
-import { getTypedPayload } from '../../../../containers/case/utils';
+import { getTypedPayload } from '../../../../containers/cases/utils';
 import { WhitePageWrapper } from '../wrappers';
 
 interface Props {

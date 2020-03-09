@@ -7,8 +7,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import * as i18n from '../case_view/translations';
 
-import { Case } from '../../../../containers/case/types';
-import { useUpdateComment } from '../../../../containers/case/use_update_comment';
+import { Case } from '../../../../containers/cases/types';
+import { useUpdateComment } from '../../../../containers/cases/use_update_comment';
 import { UserActionItem } from './user_action_item';
 import { UserActionMarkdown } from './user_action_markdown';
 import { AddComment } from '../add_comment';

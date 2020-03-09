@@ -10,7 +10,7 @@ import moment from 'moment-timezone';
 import { AllCases } from './';
 import { TestProviders } from '../../../../mock';
 import { useGetCasesMockState } from './__mock__';
-import * as apiHook from '../../../../containers/case/use_get_cases';
+import * as apiHook from '../../../../containers/cases/use_get_cases';
 
 describe('AllCases', () => {
   const setFilters = jest.fn();

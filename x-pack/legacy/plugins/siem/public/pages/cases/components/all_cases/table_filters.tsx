@@ -15,8 +15,8 @@ import {
 } from '@elastic/eui';
 import * as i18n from './translations';
 
-import { FilterOptions } from '../../../../containers/case/types';
-import { useGetTags } from '../../../../containers/case/use_get_tags';
+import { FilterOptions } from '../../../../containers/cases/types';
+import { useGetTags } from '../../../../containers/cases/use_get_tags';
 import { FilterPopover } from '../../../../components/filter_popover';
 
 interface CasesTableFiltersProps {

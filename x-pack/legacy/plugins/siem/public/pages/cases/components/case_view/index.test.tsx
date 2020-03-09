@@ -7,7 +7,7 @@
 import React from 'react';
 import { mount } from 'enzyme';
 import { CaseComponent } from './';
-import * as apiHook from '../../../../containers/case/use_update_case';
+import * as apiHook from '../../../../containers/cases/use_update_case';
 import { caseProps, data } from './__mock__';
 import { TestProviders } from '../../../../mock';
 

@@ -5,10 +5,10 @@
  */
 import { DefaultItemIconButtonAction } from '@elastic/eui/src/components/basic_table/action_types';
 import { Dispatch } from 'react';
-import { Case } from '../../../../containers/case/types';
+import { Case } from '../../../../containers/cases/types';
 
 import * as i18n from './translations';
-import { UpdateCase } from '../../../../containers/case/use_get_cases';
+import { UpdateCase } from '../../../../containers/cases/use_get_cases';
 
 interface GetActions {
   caseStatus: string;

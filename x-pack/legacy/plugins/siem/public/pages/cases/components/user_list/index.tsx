@@ -14,7 +14,7 @@ import {
   EuiFlexItem,
 } from '@elastic/eui';
 import styled, { css } from 'styled-components';
-import { ElasticUser } from '../../../../containers/case/types';
+import { ElasticUser } from '../../../../containers/cases/types';
 
 interface UserListProps {
   headline: string;

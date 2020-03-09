@@ -22,9 +22,9 @@ import styled, { css } from 'styled-components';
 import * as i18n from './translations';
 
 import { getCasesColumns } from './columns';
-import { Case, FilterOptions, SortFieldCase } from '../../../../containers/case/types';
+import { Case, FilterOptions, SortFieldCase } from '../../../../containers/cases/types';
 
-import { useGetCases } from '../../../../containers/case/use_get_cases';
+import { useGetCases } from '../../../../containers/cases/use_get_cases';
 import { EuiBasicTableOnChange } from '../../../detection_engine/rules/types';
 import { Panel } from '../../../../components/panel';
 import { CasesTableFilters } from './table_filters';

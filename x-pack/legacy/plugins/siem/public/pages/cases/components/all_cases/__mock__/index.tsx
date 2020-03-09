@@ -4,8 +4,8 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { SortFieldCase } from '../../../../../containers/case/types';
-import { UseGetCasesState } from '../../../../../containers/case/use_get_cases';
+import { SortFieldCase } from '../../../../../containers/cases/types';
+import { UseGetCasesState } from '../../../../../containers/cases/use_get_cases';
 
 export const useGetCasesMockState: UseGetCasesState = {
   data: {

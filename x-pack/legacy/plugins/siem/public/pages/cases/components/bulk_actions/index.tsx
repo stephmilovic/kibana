@@ -7,7 +7,7 @@
 import { EuiContextMenuItem } from '@elastic/eui';
 import React from 'react';
 import * as i18n from './translations';
-import { Case } from '../../../../containers/case/types';
+import { Case } from '../../../../containers/cases/types';
 
 interface GetBulkItems {
   // cases: Case[];

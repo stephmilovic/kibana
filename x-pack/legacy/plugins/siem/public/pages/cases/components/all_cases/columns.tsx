@@ -14,7 +14,7 @@ import {
 import styled from 'styled-components';
 import { DefaultItemIconButtonAction } from '@elastic/eui/src/components/basic_table/action_types';
 import { getEmptyTagValue } from '../../../../components/empty_value';
-import { Case } from '../../../../containers/case/types';
+import { Case } from '../../../../containers/cases/types';
 import { FormattedRelativePreferenceDate } from '../../../../components/formatted_date';
 import { CaseDetailsLink } from '../../../../components/links';
 import { TruncatableText } from '../../../../components/truncatable_text';

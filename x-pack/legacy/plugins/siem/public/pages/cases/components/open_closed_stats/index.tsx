@@ -7,7 +7,7 @@
 import React, { Dispatch, useEffect, useMemo } from 'react';
 import { EuiDescriptionList, EuiLoadingSpinner } from '@elastic/eui';
 import * as i18n from '../all_cases/translations';
-import { CaseCount } from '../../../../containers/case/use_get_cases';
+import { CaseCount } from '../../../../containers/cases/use_get_cases';
 
 export interface Props {
   caseCount: CaseCount;
