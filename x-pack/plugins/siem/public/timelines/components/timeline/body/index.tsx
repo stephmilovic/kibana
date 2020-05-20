@@ -29,7 +29,8 @@ import { Events } from './events';
 import { ColumnRenderer } from './renderers/column_renderer';
 import { RowRenderer } from './renderers/row_renderer';
 import { Sort } from './sort';
-import { useTimelineTypeContext } from '../timeline_context';
+import { TimelineTypeContextProps, useTimelineTypeContext } from '../timeline_context';
+import { useTimelineActions } from '../use_timeline_actions';
 
 export interface BodyProps {
   addNoteToEvent: AddNoteToEvent;
@@ -37,22 +38,23 @@ export interface BodyProps {
   columnHeaders: ColumnHeaderOptions[];
   columnRenderers: ColumnRenderer[];
   data: TimelineItem[];
+  eventIdToNoteIds: Readonly<Record<string, string[]>>;
   getNotesByIds: (noteIds: string[]) => Note[];
   height?: number;
   id: string;
   isEventViewer?: boolean;
   isSelectAllChecked: boolean;
-  eventIdToNoteIds: Readonly<Record<string, string[]>>;
   loadingEventIds: Readonly<string[]>;
+  manageTimelineContext: TimelineTypeContextProps;
   onColumnRemoved: OnColumnRemoved;
   onColumnResized: OnColumnResized;
   onColumnSorted: OnColumnSorted;
-  onRowSelected: OnRowSelected;
-  onSelectAll: OnSelectAll;
   onFilterChange: OnFilterChange;
   onPinEvent: OnPinEvent;
-  onUpdateColumns: OnUpdateColumns;
+  onRowSelected: OnRowSelected;
+  onSelectAll: OnSelectAll;
   onUnPinEvent: OnUnPinEvent;
+  onUpdateColumns: OnUpdateColumns;
   pinnedEventIds: Readonly<Record<string, boolean>>;
   rowRenderers: RowRenderer[];
   selectedEventIds: Readonly<Record<string, TimelineNonEcsData[]>>;
@@ -77,6 +79,7 @@ export const Body = React.memo<BodyProps>(
     isEventViewer = false,
     isSelectAllChecked,
     loadingEventIds,
+     manageTimelineContext,
     onColumnRemoved,
     onColumnResized,
     onColumnSorted,
@@ -94,8 +97,9 @@ export const Body = React.memo<BodyProps>(
     toggleColumn,
     updateNote,
   }) => {
+
     const containerElementRef = useRef<HTMLDivElement>(null);
-    const timelineTypeContext = useTimelineTypeContext();
+    const timelineTypeContext = manageTimelineContext;
     const additionalActionWidth = useMemo(
       () => timelineTypeContext.timelineActions?.reduce((acc, v) => acc + v.width, 0) ?? 0,
       [timelineTypeContext.timelineActions]
@@ -111,6 +115,7 @@ export const Body = React.memo<BodyProps>(
       [actionsColumnWidth, columnHeaders]
     );
 
+    // console.log('manageTimelineContext body', manageTimelineContext);
     return (
       <>
         <TimelineBody data-test-subj="timeline-body" bodyHeight={height} ref={containerElementRef}>
@@ -147,6 +152,7 @@ export const Body = React.memo<BodyProps>(
               id={id}
               isEventViewer={isEventViewer}
               loadingEventIds={loadingEventIds}
+              manageTimelineContext={timelineTypeContext}
               onColumnResized={onColumnResized}
               onPinEvent={onPinEvent}
               onRowSelected={onRowSelected}

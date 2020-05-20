@@ -46,6 +46,7 @@ import {
   UpdateSignalsStatusProps,
 } from './types';
 import { dispatchUpdateTimeline } from '../../../timelines/components/open_timeline/helpers';
+import { useTimelineActions } from '../../../timelines/components/timeline/use_timeline_actions';
 
 export const SIGNALS_PAGE_TIMELINE_ID = 'signals-page';
 
@@ -281,6 +282,18 @@ export const SignalsTableComponent: React.FC<SignalsTableComponentProps> = ({
     }),
     [additionalActions, canUserCRUD, selectAll]
   );
+
+  // const useItPlease = useTimelineActions({
+  //   type: {
+  //     documentType: i18n.SIGNALS_DOCUMENT_TYPE,
+  //     footerText: i18n.TOTAL_COUNT_OF_SIGNALS,
+  //     loadingText: i18n.LOADING_SIGNALS,
+  //     queryFields: requiredFieldsForActions,
+  //     timelineActions: additionalActions,
+  //     title: i18n.SIGNALS_TABLE_TITLE,
+  //     selectAll: canUserCRUD ? selectAll : false,
+  //   },
+  // });
 
   const headerFilterGroup = useMemo(
     () => <SignalsTableFilterGroup onFilterGroupChanged={onFilterGroupChangedCallback} />,

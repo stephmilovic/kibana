@@ -24,6 +24,7 @@ import { ColumnRenderer } from '../renderers/column_renderer';
 import { RowRenderer } from '../renderers/row_renderer';
 import { StatefulEvent } from './stateful_event';
 import { eventIsPinned } from '../helpers';
+import { TimelineTypeContextProps } from '../../timeline_context';
 
 interface Props {
   actionsColumnWidth: number;
@@ -38,6 +39,7 @@ interface Props {
   id: string;
   isEventViewer?: boolean;
   loadingEventIds: Readonly<string[]>;
+  manageTimelineContext: TimelineTypeContextProps;
   onColumnResized: OnColumnResized;
   onPinEvent: OnPinEvent;
   onRowSelected: OnRowSelected;
@@ -64,6 +66,7 @@ const EventsComponent: React.FC<Props> = ({
   id,
   isEventViewer = false,
   loadingEventIds,
+                                            manageTimelineContext,
   onColumnResized,
   onPinEvent,
   onRowSelected,
@@ -92,6 +95,7 @@ const EventsComponent: React.FC<Props> = ({
         isEventViewer={isEventViewer}
         key={`${event._id}_${event._index}`}
         loadingEventIds={loadingEventIds}
+        manageTimelineContext={manageTimelineContext}
         maxDelay={maxDelay(i)}
         onColumnResized={onColumnResized}
         onPinEvent={onPinEvent}

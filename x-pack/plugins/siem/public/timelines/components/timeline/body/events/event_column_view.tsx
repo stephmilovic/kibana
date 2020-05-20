@@ -17,7 +17,7 @@ import { Actions } from '../actions';
 import { DataDrivenColumns } from '../data_driven_columns';
 import { eventHasNotes, getPinOnClick } from '../helpers';
 import { ColumnRenderer } from '../renderers/column_renderer';
-import { useTimelineTypeContext } from '../../timeline_context';
+import { TimelineTypeContextProps, useTimelineTypeContext } from '../../timeline_context';
 
 interface Props {
   id: string;
@@ -34,6 +34,7 @@ interface Props {
   isEventViewer?: boolean;
   loading: boolean;
   loadingEventIds: Readonly<string[]>;
+  manageTimelineContext: TimelineTypeContextProps;
   onColumnResized: OnColumnResized;
   onEventToggled: () => void;
   onPinEvent: OnPinEvent;
@@ -67,6 +68,7 @@ export const EventColumnView = React.memo<Props>(
     isEventViewer = false,
     loading,
     loadingEventIds,
+     manageTimelineContext,
     onColumnResized,
     onEventToggled,
     onPinEvent,
@@ -79,7 +81,8 @@ export const EventColumnView = React.memo<Props>(
     toggleShowNotes,
     updateNote,
   }) => {
-    const timelineTypeContext = useTimelineTypeContext();
+    const timelineTypeContext = manageTimelineContext;
+    // console.log('manageTimelineContext event_column_view', manageTimelineContext);
 
     const additionalActions = useMemo<JSX.Element[]>(() => {
       return (

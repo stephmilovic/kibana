@@ -33,6 +33,7 @@ import { getEventType } from '../helpers';
 import { NoteCards } from '../../../notes/note_cards';
 import { useEventDetailsWidthContext } from '../../../../../common/components/events_viewer/event_details_width_context';
 import { EventColumnView } from './event_column_view';
+import { TimelineTypeContextProps } from '../../timeline_context';
 
 interface Props {
   actionsColumnWidth: number;
@@ -46,6 +47,7 @@ interface Props {
   getNotesByIds: (noteIds: string[]) => Note[];
   isEventViewer?: boolean;
   loadingEventIds: Readonly<string[]>;
+  manageTimelineContext: TimelineTypeContextProps;
   maxDelay?: number;
   onColumnResized: OnColumnResized;
   onPinEvent: OnPinEvent;
@@ -112,6 +114,7 @@ const StatefulEventComponent: React.FC<Props> = ({
   isEventViewer = false,
   isEventPinned = false,
   loadingEventIds,
+  manageTimelineContext,
   maxDelay = 0,
   onColumnResized,
   onPinEvent,
@@ -186,6 +189,7 @@ const StatefulEventComponent: React.FC<Props> = ({
     return <SkeletonRow cellCount={columnCount} />;
   }
 
+  // console.log('manageTimelineContext stateful_event', manageTimelineContext);
   return (
     <VisibilitySensor
       partialVisibility={true}
@@ -225,6 +229,7 @@ const StatefulEventComponent: React.FC<Props> = ({
                     isEventViewer={isEventViewer}
                     loading={loading}
                     loadingEventIds={loadingEventIds}
+                    manageTimelineContext={manageTimelineContext}
                     onColumnResized={onColumnResized}
                     onEventToggled={onToggleExpanded}
                     onPinEvent={onPinEvent}
