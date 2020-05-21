@@ -17,7 +17,7 @@ import { useKibana } from '../../../common/lib/kibana';
 import { ColumnHeaderOptions, KqlMode, EventType } from '../../../timelines/store/timeline/model';
 import { defaultHeaders } from './body/column_headers/default_headers';
 import { Sort } from './body/sort';
-import { StatefulBody } from './body/stateful_body';
+import { Body } from './body';
 import { DataProvider } from './data_providers/data_provider';
 import {
   OnChangeItemsPerPage,
@@ -227,10 +227,11 @@ export const TimelineComponent: React.FC<Props> = ({
                 data-test-subj="eui-flyout-body"
                 className="timeline-flyout-body"
               >
-                <StatefulBody
+                <Body
                   browserFields={browserFields}
                   data={events}
                   id={id}
+                  loading={loading}
                   sort={sort}
                   toggleColumn={toggleColumn}
                 />

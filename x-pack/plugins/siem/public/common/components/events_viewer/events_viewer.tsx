@@ -18,7 +18,7 @@ import { ColumnHeaderOptions, KqlMode } from '../../../timelines/store/timeline/
 import { HeaderSection } from '../header_section';
 import { defaultHeaders } from '../../../timelines/components/timeline/body/column_headers/default_headers';
 import { Sort } from '../../../timelines/components/timeline/body/sort';
-import { StatefulBody } from '../../../timelines/components/timeline/body/stateful_body';
+import { Body } from '../../../timelines/components/timeline/body';
 import { DataProvider } from '../../../timelines/components/timeline/data_providers/data_provider';
 import { OnChangeItemsPerPage } from '../../../timelines/components/timeline/events';
 import { Footer, footerHeight } from '../../../timelines/components/timeline/footer';
@@ -176,7 +176,7 @@ const EventsViewerComponent: React.FC<Props> = ({
                       refetch={refetch}
                     />
 
-                    <StatefulBody
+                    <Body
                       browserFields={browserFields}
                       data={events.filter(e => !deletedEventIds.includes(e._id))}
                       id={id}

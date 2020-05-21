@@ -6,62 +6,29 @@
 
 import React, { useMemo, useRef } from 'react';
 
+import { noop } from 'lodash/fp';
 import { BrowserFields } from '../../../../common/containers/source';
-import { TimelineItem, TimelineNonEcsData } from '../../../../graphql/types';
-import { Note } from '../../../../common/lib/note';
+import { TimelineItem } from '../../../../graphql/types';
 import { ColumnHeaderOptions } from '../../../../timelines/store/timeline/model';
-import { AddNoteToEvent, UpdateNote } from '../../notes/helpers';
-import {
-  OnColumnRemoved,
-  OnColumnResized,
-  OnColumnSorted,
-  OnFilterChange,
-  OnPinEvent,
-  OnRowSelected,
-  OnSelectAll,
-  OnUnPinEvent,
-  OnUpdateColumns,
-} from '../events';
 import { EventsTable, TimelineBody, TimelineBodyGlobalStyle } from '../styles';
 import { ColumnHeaders } from './column_headers';
 import { getActionsColumnWidth } from './column_headers/helpers';
 import { Events } from './events';
-import { ColumnRenderer } from './renderers/column_renderer';
-import { RowRenderer } from './renderers/row_renderer';
 import { Sort } from './sort';
-import { useTimelineTypeContext } from '../timeline_context';
-import { TimelineActionManager } from '../use_timeline_actions';
+import { TimelineTypeContextProps } from '../use_timeline_actions';
+import { useBodyState } from './use_body_state';
+import { useBodyActions } from './use_body_actions';
 
 export interface BodyProps {
-  addNoteToEvent: AddNoteToEvent;
   browserFields: BrowserFields;
-  columnHeaders: ColumnHeaderOptions[];
-  columnRenderers: ColumnRenderer[];
   data: TimelineItem[];
-  getNotesByIds: (noteIds: string[]) => Note[];
   height?: number;
   id: string;
   isEventViewer?: boolean;
-  isSelectAllChecked: boolean;
-  eventIdToNoteIds: Readonly<Record<string, string[]>>;
-  loadingEventIds: Readonly<string[]>;
-  onColumnRemoved: OnColumnRemoved;
-  onColumnResized: OnColumnResized;
-  onColumnSorted: OnColumnSorted;
-  onRowSelected: OnRowSelected;
-  onSelectAll: OnSelectAll;
-  onFilterChange: OnFilterChange;
-  onPinEvent: OnPinEvent;
-  onUpdateColumns: OnUpdateColumns;
-  onUnPinEvent: OnUnPinEvent;
-  pinnedEventIds: Readonly<Record<string, boolean>>;
-  rowRenderers: RowRenderer[];
-  selectedEventIds: Readonly<Record<string, TimelineNonEcsData[]>>;
-  showCheckboxes: boolean;
+  loading: boolean;
   sort: Sort;
-  timelineActionManager: TimelineActionManager;
   toggleColumn: (column: ColumnHeaderOptions) => void;
-  updateNote: UpdateNote;
+  timelineTypeContext: TimelineTypeContextProps;
 }
 
 /** Renders the timeline body */
@@ -75,8 +42,40 @@ export const Body = React.memo<BodyProps>(
     loading,
     sort,
     toggleColumn,
-    timelineTypeContext,
+    timelineTypeContext: timelineTypeContextToSet,
   }) => {
+    const {
+      columnHeaders,
+      columnRenderers,
+      eventIdToNoteIds,
+      isSelectAllChecked,
+      loadingEventIds,
+      notesById,
+      pinnedEventIds,
+      rowRenderers,
+      selectedEventIds,
+      showCheckboxes,
+      timelineActionManager,
+    } = useBodyState({ id, browserFields, loading, timelineTypeContext: timelineTypeContextToSet });
+    const {
+      getNotesByIds,
+      onAddNoteToEvent,
+      onColumnRemoved,
+      onColumnResized,
+      onColumnSorted,
+      onPinEvent,
+      onRowSelected,
+      onSelectAll,
+      onUnPinEvent,
+      onUpdateColumns,
+      onUpdateNote,
+    } = useBodyActions({
+      data,
+      id,
+      notesById,
+      selectedEventIds,
+      timelineActionManager,
+    });
     const containerElementRef = useRef<HTMLDivElement>(null);
     const timelineTypeContext = timelineActionManager.timelineTypeContextHeyHeyHey;
     const additionalActionWidth = useMemo(
@@ -107,7 +106,7 @@ export const Body = React.memo<BodyProps>(
               onColumnRemoved={onColumnRemoved}
               onColumnResized={onColumnResized}
               onColumnSorted={onColumnSorted}
-              onFilterChange={onFilterChange}
+              onFilterChange={noop} // TODO: this is the callback for column filters, which is out scope for this phase of delivery
               onSelectAll={onSelectAll}
               onUpdateColumns={onUpdateColumns}
               showEventsSelect={false}
@@ -120,7 +119,7 @@ export const Body = React.memo<BodyProps>(
             <Events
               containerElementRef={containerElementRef.current!}
               actionsColumnWidth={actionsColumnWidth}
-              addNoteToEvent={addNoteToEvent}
+              addNoteToEvent={onAddNoteToEvent}
               browserFields={browserFields}
               columnHeaders={columnHeaders}
               columnRenderers={columnRenderers}
@@ -140,7 +139,7 @@ export const Body = React.memo<BodyProps>(
               selectedEventIds={selectedEventIds}
               showCheckboxes={showCheckboxes}
               toggleColumn={toggleColumn}
-              updateNote={updateNote}
+              updateNote={onUpdateNote}
             />
           </EventsTable>
         </TimelineBody>

@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { Note } from '../../../../common/lib/note';
 import { appActions, appSelectors } from '../../../../common/store/app';
 import { AddNoteToEvent, UpdateNote } from '../../notes/helpers';
@@ -22,13 +23,9 @@ import { timelineActions } from '../../../store/timeline';
 import { getEventIdToDataMapping } from './helpers';
 import { TimelineItem, TimelineNonEcsData } from '../../../../graphql/types';
 import {
-  TimelineTypeContextProps,
   TimelineActionManager,
-  useTimelineActions,
 } from '../use_timeline_actions';
 import { NotesById } from '../../../../common/store/app/model';
-import { useKibana } from '../../../../common/lib/kibana';
-import { useDispatch } from 'react-redux';
 
 const {
   addNoteToEvent,
@@ -37,20 +34,18 @@ const {
   pinEvent,
   removeColumn,
   setSelected,
-  setTimelineActions,
   unPinEvent,
   updateColumns,
   updateSort,
 } = timelineActions;
 const { updateNote } = appActions;
 
-interface UseBodyActionsProps {
-  notesById: NotesById;
+interface UseBodyActionsParams {
   data: TimelineItem[];
   id: string;
-  loading: boolean;
-  timelineTypeContext: TimelineTypeContextProps;
+  notesById: NotesById;
   selectedEventIds: Record<string, TimelineNonEcsData[]>;
+  timelineActionManager: TimelineActionManager;
 }
 
 interface UseBodyActions {
@@ -65,28 +60,15 @@ interface UseBodyActions {
   onUnPinEvent: OnUnPinEvent;
   onUpdateColumns: OnUpdateColumns;
   onUpdateNote: UpdateNote;
-  timelineActionManager: TimelineActionManager;
 }
 export const useBodyActions = ({
   data,
   id,
-  loading,
-  timelineTypeContext,
   notesById,
   selectedEventIds,
-}: UseBodyActionsProps): UseBodyActions => {
+  timelineActionManager,
+}: UseBodyActionsParams): UseBodyActions => {
   const dispatch = useDispatch();
-  const { filterManager } = useKibana().services.data.query;
-
-  const timelineActionManager = useTimelineActions({
-    filterManager,
-    isQueryLoading: loading,
-    type: timelineTypeContext,
-  });
-  useEffect(() => {
-    dispatch(setTimelineActions({ id, timelineActionManager }));
-  }, [dispatch, id, timelineActionManager]);
-
   const getNotesByIds = useCallback(
     (noteIds: string[]): Note[] => appSelectors.getNotes(notesById, noteIds),
     [notesById]
@@ -94,28 +76,32 @@ export const useBodyActions = ({
 
   const onAddNoteToEvent: AddNoteToEvent = useCallback(
     ({ eventId, noteId }: { eventId: string; noteId: string }) =>
-      addNoteToEvent!({ id, eventId, noteId }),
-    [id]
+      dispatch(addNoteToEvent!({ id, eventId, noteId })),
+    [dispatch, id]
   );
 
   const onRowSelected: OnRowSelected = useCallback(
     ({ eventIds, isSelected }: { eventIds: string[]; isSelected: boolean }) => {
-      setSelected!({
-        id,
-        eventIds: getEventIdToDataMapping(
-          data,
-          eventIds,
-          timelineActionManager.timelineTypeContextHeyHeyHey.queryFields ?? []
-        ),
-        isSelected,
-        isSelectAllChecked: isSelected && Object.keys(selectedEventIds).length + 1 === data.length,
-      });
+      dispatch(
+        setSelected!({
+          id,
+          eventIds: getEventIdToDataMapping(
+            data,
+            eventIds,
+            timelineActionManager.timelineTypeContextHeyHeyHey.queryFields ?? []
+          ),
+          isSelected,
+          isSelectAllChecked:
+            isSelected && Object.keys(selectedEventIds).length + 1 === data.length,
+        })
+      );
     },
     [
-      setSelected,
-      id,
       data,
+      dispatch,
+      id,
       selectedEventIds,
+      setSelected,
       timelineActionManager.timelineTypeContextHeyHeyHey.queryFields,
     ]
   );
@@ -123,52 +109,64 @@ export const useBodyActions = ({
   const onSelectAll: OnSelectAll = useCallback(
     ({ isSelected }: { isSelected: boolean }) =>
       isSelected
-        ? setSelected!({
-            id,
-            eventIds: getEventIdToDataMapping(
-              data,
-              data.map(event => event._id),
-              timelineActionManager.timelineTypeContextHeyHeyHey.queryFields ?? []
-            ),
-            isSelected,
-            isSelectAllChecked: isSelected,
-          })
-        : clearSelected!({ id }),
+        ? dispatch(
+            setSelected!({
+              id,
+              eventIds: getEventIdToDataMapping(
+                data,
+                data.map(event => event._id),
+                timelineActionManager.timelineTypeContextHeyHeyHey.queryFields ?? []
+              ),
+              isSelected,
+              isSelectAllChecked: isSelected,
+            })
+          )
+        : dispatch(clearSelected!({ id })),
     [
-      setSelected,
       clearSelected,
-      id,
       data,
+      dispatch,
+      id,
+      setSelected,
       timelineActionManager.timelineTypeContextHeyHeyHey.queryFields,
     ]
   );
 
   const onColumnSorted: OnColumnSorted = useCallback(
     sorted => {
-      updateSort!({ id, sort: sorted });
+      dispatch(updateSort!({ id, sort: sorted }));
     },
-    [id]
+    [dispatch, id]
   );
 
   const onColumnRemoved: OnColumnRemoved = useCallback(
-    columnId => removeColumn!({ id, columnId }),
-    [id]
+    columnId => dispatch(removeColumn!({ id, columnId })),
+    [dispatch, id]
   );
 
   const onColumnResized: OnColumnResized = useCallback(
-    ({ columnId, delta }) => applyDeltaToColumnWidth!({ id, columnId, delta }),
-    [id]
+    ({ columnId, delta }) => dispatch(applyDeltaToColumnWidth!({ id, columnId, delta })),
+    [dispatch, id]
   );
 
-  const onPinEvent: OnPinEvent = useCallback(eventId => pinEvent!({ id, eventId }), [id]);
-
-  const onUnPinEvent: OnUnPinEvent = useCallback(eventId => unPinEvent!({ id, eventId }), [id]);
-
-  const onUpdateNote: UpdateNote = useCallback((note: Note) => updateNote!({ note }), []);
-
-  const onUpdateColumns: OnUpdateColumns = useCallback(columns => updateColumns!({ id, columns }), [
+  const onPinEvent: OnPinEvent = useCallback(eventId => dispatch(pinEvent!({ id, eventId })), [
+    dispatch,
     id,
   ]);
+
+  const onUnPinEvent: OnUnPinEvent = useCallback(
+    eventId => dispatch(unPinEvent!({ id, eventId })),
+    [dispatch, id]
+  );
+
+  const onUpdateNote: UpdateNote = useCallback((note: Note) => dispatch(updateNote!({ note })), [
+    dispatch,
+  ]);
+
+  const onUpdateColumns: OnUpdateColumns = useCallback(
+    columns => dispatch(updateColumns!({ id, columns })),
+    [dispatch, id]
+  );
 
   // Sync to timelineActionManager.timelineTypeContextHeyHeyHey.selectAll so parent components can select all events
   useEffect(() => {
@@ -189,6 +187,5 @@ export const useBodyActions = ({
     onUnPinEvent,
     onUpdateNote,
     onUpdateColumns,
-    timelineActionManager,
   };
 };
