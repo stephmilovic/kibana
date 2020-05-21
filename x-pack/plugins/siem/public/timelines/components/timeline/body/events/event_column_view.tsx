@@ -7,6 +7,7 @@
 import React, { useMemo } from 'react';
 import uuid from 'uuid';
 
+import { useSelector } from 'react-redux';
 import { TimelineNonEcsData, Ecs } from '../../../../../graphql/types';
 import { Note } from '../../../../../common/lib/note';
 import { ColumnHeaderOptions } from '../../../../../timelines/store/timeline/model';
@@ -18,6 +19,8 @@ import { DataDrivenColumns } from '../data_driven_columns';
 import { eventHasNotes, getPinOnClick } from '../helpers';
 import { ColumnRenderer } from '../renderers/column_renderer';
 import { useTimelineTypeContext } from '../../timeline_context';
+import { timelineSelectors } from '../../../../store/timeline';
+import { State } from '../../../../store';
 
 interface Props {
   id: string;
@@ -79,7 +82,10 @@ export const EventColumnView = React.memo<Props>(
     toggleShowNotes,
     updateNote,
   }) => {
-    const timelineTypeContext = useTimelineTypeContext();
+    const getTimeline = timelineSelectors.getTimelineByIdSelector();
+    const { timelineActionManager } = useSelector((state: State) => getTimeline(state, timelineId));
+    const timelineTypeContext =
+      timelineActionManager != null ? timelineActionManager.timelineTypeContextHeyHeyHey : {}; // useTimelineTypeContext();
 
     const additionalActions = useMemo<JSX.Element[]>(() => {
       return (
