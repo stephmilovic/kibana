@@ -15,6 +15,7 @@ import {
   TimelineStatus,
 } from '../../../graphql/types';
 import { KueryFilterQuery, SerializedFilterQuery } from '../../../common/store/model';
+import { TimelineActionManager } from '../../components/timeline/use_timeline_actions';
 
 export const DEFAULT_PAGE_COUNT = 2; // Eui Pager will not render unless this is a minimum of 2 pages
 export type KqlMode = 'filter' | 'search';
@@ -118,6 +119,7 @@ export interface TimelineModel {
   isSaving: boolean;
   isLoading: boolean;
   version: string | null;
+  timelineActionManager?: TimelineActionManager;
 }
 
 export type SubsetTimelineModel = Readonly<

@@ -20,6 +20,7 @@ import { timelineDefaults } from './defaults';
 import { ColumnHeaderOptions, KqlMode, TimelineModel, EventType } from './model';
 import { TimelineById, TimelineState } from './types';
 import { TimelineNonEcsData } from '../../../graphql/types';
+import { TimelineActionManager } from '../../components/timeline/use_timeline_actions';
 
 const EMPTY_TIMELINE_BY_ID: TimelineById = {}; // stable reference
 
@@ -52,6 +53,28 @@ export const addTimelineHistory = ({
     [id]: {
       ...timeline,
       historyIds: uniq([...timeline.historyIds, historyId]),
+    },
+  };
+};
+
+interface TimelineActionManagerParams {
+  id: string;
+  timelineActionManager: TimelineActionManager;
+  timelineById: TimelineById;
+}
+
+export const setTimelineActionManager = ({
+  id,
+  timelineActionManager,
+  timelineById,
+}: TimelineActionManagerParams): TimelineById => {
+  const timeline = timelineById[id];
+
+  return {
+    ...timelineById,
+    [id]: {
+      ...timeline,
+      timelineActionManager,
     },
   };
 };

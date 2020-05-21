@@ -26,6 +26,7 @@ import {
   clearEventsLoading,
   setKqlFilterQueryDraft,
   setSelected,
+  setTimelineActions,
   clearSelected,
   showCallOutUnauthorizedMsg,
   showTimeline,
@@ -71,6 +72,7 @@ import {
   setDeletedTimelineEvents,
   setLoadingTimelineEvents,
   setSelectedTimelineEvents,
+  setTimelineActionManager,
   unPinTimelineEvent,
   updateHighlightedDropAndProvider,
   updateKqlFilterQueryDraft,
@@ -301,6 +303,17 @@ export const timelineReducer = reducerWithInitialState(initialTimelineState)
       isSelectAllChecked,
     }),
   }))
+  .case(setTimelineActions, (state, { id, timelineActionManager }) => {
+    console.log('in setTimelineActions reducer', timelineActionManager);
+    return ({
+      ...state,
+      timelineById: setTimelineActionManager({
+        id,
+        timelineActionManager,
+        timelineById: state.timelineById,
+      }),
+    });
+  })
   .case(clearSelected, (state, { id }) => ({
     ...state,
     timelineById: {
