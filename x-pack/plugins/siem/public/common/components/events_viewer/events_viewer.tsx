@@ -6,7 +6,7 @@
 
 import { EuiPanel } from '@elastic/eui';
 import { getOr, isEmpty, union } from 'lodash/fp';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import deepEqual from 'fast-deep-equal';
 
@@ -34,6 +34,7 @@ import {
   Query,
 } from '../../../../../../../src/plugins/data/public';
 import { inputsModel } from '../../store';
+import { useTimelineActionsManager } from '../../../timelines/components/timeline/use_timeline_actions';
 
 const DEFAULT_EVENTS_VIEWER_HEIGHT = 500;
 
@@ -89,7 +90,7 @@ const EventsViewerComponent: React.FC<Props> = ({
   query,
   start,
   sort,
-  timelineTypeContext,
+  timelineTypeContext: timelineTypeContextToSet,
   toggleColumn,
   utilityBar,
 }) => {
@@ -106,6 +107,13 @@ const EventsViewerComponent: React.FC<Props> = ({
     start,
     end,
     isEventViewer: true,
+  });
+
+  const [isQueryLoading, setIsQueryLoading] = useState(false);
+  const { timelineTypeContext } = useTimelineActionsManager({
+    isQueryLoading,
+    type: timelineTypeContextToSet,
+    id,
   });
   const queryFields = useMemo(
     () =>
@@ -146,6 +154,7 @@ const EventsViewerComponent: React.FC<Props> = ({
               refetch,
               totalCount = 0,
             }) => {
+              setIsQueryLoading(loading);
               const totalCountMinusDeleted =
                 totalCount > 0 ? totalCount - deletedEventIds.length : 0;
 

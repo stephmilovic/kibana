@@ -22,8 +22,7 @@ import {
 import { timelineActions } from '../../../store/timeline';
 import { getEventIdToDataMapping } from './helpers';
 import { TimelineItem, TimelineNonEcsData } from '../../../../graphql/types';
-import {
-  TimelineActionManager,
+import {TimelineTypeContextProps,
 } from '../use_timeline_actions';
 import { NotesById } from '../../../../common/store/app/model';
 
@@ -45,7 +44,7 @@ interface UseBodyActionsParams {
   id: string;
   notesById: NotesById;
   selectedEventIds: Record<string, TimelineNonEcsData[]>;
-  timelineActionManager: TimelineActionManager;
+  timelineTypeContext: TimelineTypeContextProps;
 }
 
 interface UseBodyActions {
@@ -66,7 +65,7 @@ export const useBodyActions = ({
   id,
   notesById,
   selectedEventIds,
-  timelineActionManager,
+  timelineTypeContext,
 }: UseBodyActionsParams): UseBodyActions => {
   const dispatch = useDispatch();
   const getNotesByIds = useCallback(
@@ -88,7 +87,7 @@ export const useBodyActions = ({
           eventIds: getEventIdToDataMapping(
             data,
             eventIds,
-            timelineActionManager.timelineTypeContextHeyHeyHey.queryFields ?? []
+            timelineTypeContext.queryFields ?? []
           ),
           isSelected,
           isSelectAllChecked:
@@ -102,7 +101,7 @@ export const useBodyActions = ({
       id,
       selectedEventIds,
       setSelected,
-      timelineActionManager.timelineTypeContextHeyHeyHey.queryFields,
+      timelineTypeContext.queryFields,
     ]
   );
 
@@ -115,7 +114,7 @@ export const useBodyActions = ({
               eventIds: getEventIdToDataMapping(
                 data,
                 data.map(event => event._id),
-                timelineActionManager.timelineTypeContextHeyHeyHey.queryFields ?? []
+                timelineTypeContext.queryFields ?? []
               ),
               isSelected,
               isSelectAllChecked: isSelected,
@@ -128,7 +127,7 @@ export const useBodyActions = ({
       dispatch,
       id,
       setSelected,
-      timelineActionManager.timelineTypeContextHeyHeyHey.queryFields,
+      timelineTypeContext.queryFields,
     ]
   );
 
@@ -168,12 +167,12 @@ export const useBodyActions = ({
     [dispatch, id]
   );
 
-  // Sync to timelineActionManager.timelineTypeContextHeyHeyHey.selectAll so parent components can select all events
+  // Sync to timelineTypeContext.selectAll so parent components can select all events
   useEffect(() => {
-    if (timelineActionManager.timelineTypeContextHeyHeyHey.selectAll) {
+    if (timelineTypeContext.selectAll) {
       onSelectAll({ isSelected: true });
     }
-  }, [timelineActionManager.timelineTypeContextHeyHeyHey.selectAll]); // onSelectAll dependency not necessary
+  }, [timelineTypeContext.selectAll]); // onSelectAll dependency not necessary
 
   return {
     getNotesByIds,

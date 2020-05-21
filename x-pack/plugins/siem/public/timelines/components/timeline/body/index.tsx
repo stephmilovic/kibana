@@ -15,7 +15,6 @@ import { ColumnHeaders } from './column_headers';
 import { getActionsColumnWidth } from './column_headers/helpers';
 import { Events } from './events';
 import { Sort } from './sort';
-import { TimelineTypeContextProps } from '../use_timeline_actions';
 import { useBodyState } from './use_body_state';
 import { useBodyActions } from './use_body_actions';
 
@@ -25,25 +24,13 @@ export interface BodyProps {
   height?: number;
   id: string;
   isEventViewer?: boolean;
-  loading: boolean;
   sort: Sort;
   toggleColumn: (column: ColumnHeaderOptions) => void;
-  timelineTypeContext: TimelineTypeContextProps;
 }
 
 /** Renders the timeline body */
 export const Body = React.memo<BodyProps>(
-  ({
-    browserFields,
-    data,
-    height,
-    id,
-    isEventViewer = false,
-    loading,
-    sort,
-    toggleColumn,
-    timelineTypeContext: timelineTypeContextToSet,
-  }) => {
+  ({ browserFields, data, height, id, isEventViewer = false, sort, toggleColumn }) => {
     const {
       columnHeaders,
       columnRenderers,
@@ -56,7 +43,11 @@ export const Body = React.memo<BodyProps>(
       selectedEventIds,
       showCheckboxes,
       timelineActionManager,
-    } = useBodyState({ id, browserFields, loading, timelineTypeContext: timelineTypeContextToSet });
+    } = useBodyState({ id, browserFields });
+    const timelineTypeContext = useMemo(
+      () => (timelineActionManager ? timelineActionManager.timelineTypeContext : {}),
+      [timelineActionManager]
+    );
     const {
       getNotesByIds,
       onAddNoteToEvent,
@@ -74,10 +65,9 @@ export const Body = React.memo<BodyProps>(
       id,
       notesById,
       selectedEventIds,
-      timelineActionManager,
+      timelineTypeContext,
     });
     const containerElementRef = useRef<HTMLDivElement>(null);
-    const timelineTypeContext = timelineActionManager.timelineTypeContextHeyHeyHey;
     const additionalActionWidth = useMemo(
       () => timelineTypeContext.timelineActions?.reduce((acc, v) => acc + v.width, 0) ?? 0,
       [timelineTypeContext.timelineActions]

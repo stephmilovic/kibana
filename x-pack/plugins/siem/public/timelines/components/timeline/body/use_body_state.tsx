@@ -5,13 +5,12 @@
  */
 
 import memoizeOne from 'memoize-one';
-import { useDispatch, useSelector } from 'react-redux';
-import { useEffect, useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { useMemo } from 'react';
 import { ColumnHeaderOptions, TimelineModel } from '../../../store/timeline/model';
 import { BrowserFields } from '../../../../common/containers/source';
 import { getColumnHeaders } from './column_headers/helpers';
 import { timelineSelectors } from '../../../store/timeline';
-import { timelineActions } from '../../../store/timeline';
 import { appSelectors } from '../../../../common/store/app';
 import { State } from '../../../../common/store';
 import { timelineDefaults } from '../../../store/timeline/defaults';
@@ -20,18 +19,11 @@ import { columnRenderers, rowRenderers } from './renderers';
 import { plainRowRenderer } from './renderers/plain_row_renderer';
 import { RowRenderer } from './renderers/row_renderer';
 import { ColumnRenderer } from './renderers/column_renderer';
-import { useKibana } from '../../../../common/lib/kibana';
-import {
-  TimelineActionManager,
-  TimelineTypeContextProps,
-  useTimelineActions,
-} from '../use_timeline_actions';
+
 export const emptyColumnHeaders: ColumnHeaderOptions[] = [];
 interface UseBodyStateParams {
   browserFields: BrowserFields;
-  loading: boolean;
   id: string;
-  timelineTypeContext: TimelineTypeContextProps;
 }
 
 interface UseBodyState extends TimelineModel {
@@ -39,26 +31,8 @@ interface UseBodyState extends TimelineModel {
   columnRenderers: ColumnRenderer[];
   notesById: NotesById;
   rowRenderers: RowRenderer[];
-  timelineActionManager: TimelineActionManager;
 }
-export const useBodyState = ({
-  browserFields,
-  loading,
-  id,
-  timelineTypeContext,
-}: UseBodyStateParams): UseBodyState => {
-  const dispatch = useDispatch();
-  const { filterManager } = useKibana().services.data.query;
-
-  const timelineActionManager = useTimelineActions({
-    filterManager,
-    isQueryLoading: loading,
-    type: timelineTypeContext,
-  });
-  useEffect(() => {
-    dispatch(timelineActions.setTimelineActions({ id, timelineActionManager }));
-  }, [dispatch, id, timelineActionManager]);
-
+export const useBodyState = ({ browserFields, id }: UseBodyStateParams): UseBodyState => {
   const memoizedColumnHeaders: (
     headers: ColumnHeaderOptions[],
     browserFields: BrowserFields
@@ -84,6 +58,5 @@ export const useBodyState = ({
     columnRenderers,
     notesById,
     rowRenderers: myRowRenderers,
-    timelineActionManager,
   };
 };

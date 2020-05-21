@@ -85,7 +85,7 @@ export const EventColumnView = React.memo<Props>(
     const getTimeline = timelineSelectors.getTimelineByIdSelector();
     const { timelineActionManager } = useSelector((state: State) => getTimeline(state, timelineId));
     const timelineTypeContext =
-      timelineActionManager != null ? timelineActionManager.timelineTypeContextHeyHeyHey : {}; // useTimelineTypeContext();
+      timelineActionManager != null ? timelineActionManager.timelineTypeContext : {}; // useTimelineTypeContext();
 
     const additionalActions = useMemo<JSX.Element[]>(() => {
       return (

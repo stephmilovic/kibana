@@ -231,7 +231,6 @@ export const TimelineComponent: React.FC<Props> = ({
                   browserFields={browserFields}
                   data={events}
                   id={id}
-                  loading={loading}
                   sort={sort}
                   toggleColumn={toggleColumn}
                 />

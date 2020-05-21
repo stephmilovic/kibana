@@ -4,8 +4,11 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 import React, { useEffect, useReducer } from 'react';
+import { useDispatch } from 'react-redux';
 import { FilterManager } from '../../../../../../../src/plugins/data/public/query/filter_manager';
 import { TimelineAction } from './body/actions';
+import { useKibana } from '../../../common/lib/kibana';
+import { timelineActions } from '../../store/timeline';
 
 export interface TimelineTypeContextProps {
   documentType?: string;
@@ -40,7 +43,7 @@ interface ManageTimelineContextProps {
 export interface TimelineActionManager {
   filterManager: FilterManager | undefined;
   isLoading: boolean;
-  timelineTypeContextHeyHeyHey: TimelineTypeContextProps;
+  timelineTypeContext: TimelineTypeContextProps;
 }
 type Action =
   | { type: 'SET_FILTER_MANAGER'; payload: { filterManager: FilterManager; isLoading: boolean } }
@@ -55,7 +58,7 @@ const dataFetchReducer = (state: TimelineActionManager, action: Action): Timelin
     case 'SET_MY_TYPE':
       return {
         ...state,
-        timelineTypeContextHeyHeyHey: action.payload,
+        timelineTypeContext: action.payload,
       };
     default:
       return state;
@@ -70,7 +73,7 @@ export const useTimelineActions = ({
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isLoading: false,
     filterManager,
-    timelineTypeContextHeyHeyHey: type,
+    timelineTypeContext: type,
   });
 
   useEffect(() => {
@@ -82,6 +85,43 @@ export const useTimelineActions = ({
     console.log('SET_MY_TYPE', { ...type, indexToAdd });
     dispatch({ type: 'SET_MY_TYPE', payload: { ...type, indexToAdd } });
   }, [type, indexToAdd]);
-  console.log('useTimelineActions return', state.timelineTypeContextHeyHeyHey);
+  console.log('useTimelineActions return', state.timelineTypeContext);
+  return state;
+};
+
+interface TimelineActionsManagerParams {
+  indexToAdd?: string[] | null;
+  isQueryLoading: boolean;
+  id: string;
+  type?: TimelineTypeContextProps;
+}
+export const useTimelineActionsManager = ({
+  indexToAdd,
+  isQueryLoading,
+  id,
+  type = { ...initTimelineType, indexToAdd },
+}: TimelineActionsManagerParams): TimelineActionManager => {
+  const dispatch = useDispatch();
+  const { filterManager } = useKibana().services.data.query;
+  const [state, dispatchLocal] = useReducer(dataFetchReducer, {
+    isLoading: false,
+    filterManager,
+    timelineTypeContext: type,
+  });
+
+  useEffect(() => {
+    dispatchLocal({
+      type: 'SET_FILTER_MANAGER',
+      payload: { filterManager, isLoading: isQueryLoading },
+    });
+  }, [filterManager, isQueryLoading]);
+
+  useEffect(() => {
+    dispatchLocal({ type: 'SET_MY_TYPE', payload: { ...type, indexToAdd } });
+  }, [type, indexToAdd]);
+
+  useEffect(() => {
+    dispatch(timelineActions.setTimelineActions({ id, timelineActionManager: state }));
+  }, [dispatch, id, state]);
   return state;
 };
