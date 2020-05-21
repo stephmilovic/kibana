@@ -16,12 +16,18 @@ import { KueryFilterQuery, SerializedFilterQuery } from '../../../common/store/t
 
 import { EventType, KqlMode, TimelineModel, ColumnHeaderOptions } from './model';
 import { TimelineNonEcsData } from '../../../graphql/types';
+import { TimelineActionManager } from '../../components/timeline/use_timeline_actions';
 
 const actionCreator = actionCreatorFactory('x-pack/siem/local/timeline');
 
 export const addHistory = actionCreator<{ id: string; historyId: string }>('ADD_HISTORY');
 
 export const addNote = actionCreator<{ id: string; noteId: string }>('ADD_NOTE');
+
+export const setTimelineActions = actionCreator<{
+  id: string;
+  timelineActionManager: TimelineActionManager;
+}>('SET_TIMELINE_ACTIONS');
 
 export const addNoteToEvent = actionCreator<{ id: string; noteId: string; eventId: string }>(
   'ADD_NOTE_TO_EVENT'

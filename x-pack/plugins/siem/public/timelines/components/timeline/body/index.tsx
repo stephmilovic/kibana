@@ -30,6 +30,7 @@ import { ColumnRenderer } from './renderers/column_renderer';
 import { RowRenderer } from './renderers/row_renderer';
 import { Sort } from './sort';
 import { useTimelineTypeContext } from '../timeline_context';
+import { TimelineActionManager } from '../use_timeline_actions';
 
 export interface BodyProps {
   addNoteToEvent: AddNoteToEvent;
@@ -58,6 +59,7 @@ export interface BodyProps {
   selectedEventIds: Readonly<Record<string, TimelineNonEcsData[]>>;
   showCheckboxes: boolean;
   sort: Sort;
+  timelineActionManager: TimelineActionManager;
   toggleColumn: (column: ColumnHeaderOptions) => void;
   updateNote: UpdateNote;
 }
@@ -65,37 +67,18 @@ export interface BodyProps {
 /** Renders the timeline body */
 export const Body = React.memo<BodyProps>(
   ({
-    addNoteToEvent,
     browserFields,
-    columnHeaders,
-    columnRenderers,
     data,
-    eventIdToNoteIds,
-    getNotesByIds,
     height,
     id,
     isEventViewer = false,
-    isSelectAllChecked,
-    loadingEventIds,
-    onColumnRemoved,
-    onColumnResized,
-    onColumnSorted,
-    onRowSelected,
-    onSelectAll,
-    onFilterChange,
-    onPinEvent,
-    onUpdateColumns,
-    onUnPinEvent,
-    pinnedEventIds,
-    rowRenderers,
-    selectedEventIds,
-    showCheckboxes,
+    loading,
     sort,
     toggleColumn,
-    updateNote,
+    timelineTypeContext,
   }) => {
     const containerElementRef = useRef<HTMLDivElement>(null);
-    const timelineTypeContext = useTimelineTypeContext();
+    const timelineTypeContext = timelineActionManager.timelineTypeContextHeyHeyHey;
     const additionalActionWidth = useMemo(
       () => timelineTypeContext.timelineActions?.reduce((acc, v) => acc + v.width, 0) ?? 0,
       [timelineTypeContext.timelineActions]

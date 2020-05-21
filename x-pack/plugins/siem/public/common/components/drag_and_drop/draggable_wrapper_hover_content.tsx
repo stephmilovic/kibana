@@ -7,7 +7,7 @@
 import { EuiButtonIcon, EuiToolTip } from '@elastic/eui';
 import React, { useCallback, useMemo } from 'react';
 import { DraggableId } from 'react-beautiful-dnd';
-
+import { useSelector } from 'react-redux';
 import { getAllFieldsByName, WithSource } from '../../containers/source';
 import { useAddToTimeline } from '../../hooks/use_add_to_timeline';
 import { WithCopyToClipboard } from '../../lib/clipboard/with_copy_to_clipboard';
@@ -15,7 +15,7 @@ import { useKibana } from '../../lib/kibana';
 import { createFilter } from '../add_filter_to_global_search_bar';
 import { useTimelineContext } from '../../../timelines/components/timeline/timeline_context';
 import { StatefulTopN } from '../top_n';
-
+import { State } from '../../../common/store/reducer';
 import { allowTopN } from './helpers';
 import * as i18n from './translations';
 
