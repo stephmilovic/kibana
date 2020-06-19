@@ -22,10 +22,11 @@ interface Props {
   processHashMd5: string | null | undefined;
   processHashSha1: string | null | undefined;
   processHashSha256: string | null | undefined;
+  timelineId?: string;
 }
 
 export const ProcessHash = React.memo<Props>(
-  ({ contextId, eventId, processHashMd5, processHashSha1, processHashSha256 }) => {
+  ({ contextId, eventId, processHashMd5, processHashSha1, processHashSha256, timelineId }) => {
     if (
       isNillEmptyOrNotFinite(processHashSha256) &&
       isNillEmptyOrNotFinite(processHashSha1) &&
@@ -44,6 +45,7 @@ export const ProcessHash = React.memo<Props>(
               field="process.hash.sha256"
               iconType="number"
               value={processHashSha256}
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         )}
@@ -56,6 +58,7 @@ export const ProcessHash = React.memo<Props>(
               field="process.hash.sha1"
               iconType="number"
               value={processHashSha1}
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         )}
@@ -68,6 +71,7 @@ export const ProcessHash = React.memo<Props>(
               field="process.hash.md5"
               iconType="number"
               value={processHashMd5}
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         )}

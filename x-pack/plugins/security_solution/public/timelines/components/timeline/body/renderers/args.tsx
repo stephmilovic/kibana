@@ -14,9 +14,10 @@ interface Props {
   contextId: string;
   eventId: string;
   processTitle: string | null | undefined;
+  timelineId?: string;
 }
 
-export const ArgsComponent = ({ args, contextId, eventId, processTitle }: Props) => {
+export const ArgsComponent = ({ args, contextId, eventId, processTitle, timelineId }: Props) => {
   if (isNillEmptyOrNotFinite(args) && isNillEmptyOrNotFinite(processTitle)) {
     return null;
   }
@@ -31,6 +32,7 @@ export const ArgsComponent = ({ args, contextId, eventId, processTitle }: Props)
               eventId={eventId}
               field="process.args"
               value={arg}
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         ))}
@@ -42,6 +44,7 @@ export const ArgsComponent = ({ args, contextId, eventId, processTitle }: Props)
             eventId={eventId}
             field="process.title"
             value={processTitle}
+            timelineId={timelineId}
           />
         </TokensFlexItem>
       )}

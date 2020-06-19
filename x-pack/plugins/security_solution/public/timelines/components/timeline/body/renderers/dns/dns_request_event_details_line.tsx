@@ -26,6 +26,7 @@ interface Props {
   processExecutable: string | null | undefined;
   processName: string | null | undefined;
   processPid: number | null | undefined;
+  timelineId?: string;
   userDomain: string | null | undefined;
   userName: string | null | undefined;
   winlogEventId: string | null | undefined;
@@ -44,6 +45,7 @@ export const DnsRequestEventDetailsLine = React.memo<Props>(
     processExecutable,
     processName,
     processPid,
+    timelineId,
     userDomain,
     userName,
     winlogEventId,
@@ -55,6 +57,7 @@ export const DnsRequestEventDetailsLine = React.memo<Props>(
             contextId={contextId}
             eventId={id}
             hostName={hostName}
+            timelineId={timelineId}
             userDomain={userDomain}
             userName={userName}
             workingDirectory={undefined}
@@ -70,6 +73,7 @@ export const DnsRequestEventDetailsLine = React.memo<Props>(
                   contextId={contextId}
                   eventId={id}
                   field="dns.question.name"
+                  timelineId={timelineId}
                   value={dnsQuestionName}
                 />
               </TokensFlexItem>
@@ -86,6 +90,7 @@ export const DnsRequestEventDetailsLine = React.memo<Props>(
                   contextId={contextId}
                   eventId={id}
                   field="dns.question.type"
+                  timelineId={timelineId}
                   value={dnsQuestionType}
                 />
               </TokensFlexItem>
@@ -102,6 +107,7 @@ export const DnsRequestEventDetailsLine = React.memo<Props>(
                   contextId={contextId}
                   eventId={id}
                   field="dns.resolved_ip"
+                  timelineId={timelineId}
                   value={dnsResolvedIp}
                 />
               </TokensFlexItem>
@@ -121,6 +127,7 @@ export const DnsRequestEventDetailsLine = React.memo<Props>(
                   contextId={contextId}
                   eventId={id}
                   field="dns.response_code"
+                  timelineId={timelineId}
                   value={dnsResponseCode}
                 />
               </TokensFlexItem>
@@ -143,6 +150,7 @@ export const DnsRequestEventDetailsLine = React.memo<Props>(
               processPid={processPid}
               processName={processName}
               processExecutable={processExecutable}
+              timelineId={timelineId}
             />
           </TokensFlexItem>
 
@@ -154,6 +162,7 @@ export const DnsRequestEventDetailsLine = React.memo<Props>(
                     contextId={contextId}
                     eventId={id}
                     field="event.code"
+                    timelineId={timelineId}
                     value={eventCode}
                   />
                 </TokensFlexItem>
@@ -164,6 +173,7 @@ export const DnsRequestEventDetailsLine = React.memo<Props>(
                     eventId={id}
                     iconType="logoWindows"
                     field="winlog.event_id"
+                    timelineId={timelineId}
                     value={winlogEventId}
                   />
                 </TokensFlexItem>

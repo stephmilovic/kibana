@@ -72,8 +72,9 @@ const GeoFieldValues = React.memo<{
   contextId: string;
   eventId: string;
   fieldName: string;
+  timelineId: string;
   values?: string[] | null;
-}>(({ contextId, eventId, fieldName, values }) =>
+}>(({ contextId, eventId, fieldName, timelineId, values }) =>
   values != null ? (
     <>
       {uniq(values).map((value) => (
@@ -91,6 +92,7 @@ const GeoFieldValues = React.memo<{
                 data-test-subj={fieldName}
                 field={fieldName}
                 id={`geo-field-values-default-draggable-${contextId}-${eventId}-${fieldName}-${value}`}
+                timelineId={timelineId}
                 tooltipContent={fieldName}
                 value={value}
               />
@@ -113,7 +115,7 @@ GeoFieldValues.displayName = 'GeoFieldValues';
  * - `source|destination.geo.city_name`
  */
 export const GeoFields = React.memo<GeoFieldsProps>((props) => {
-  const { contextId, eventId, type } = props;
+  const { contextId, eventId, timelineId, type } = props;
 
   const propNameToFieldName = getGeoFieldPropNameToFieldNameMap(type);
   return (
@@ -124,6 +126,7 @@ export const GeoFields = React.memo<GeoFieldsProps>((props) => {
           eventId={eventId}
           fieldName={geo.fieldName}
           key={geo.fieldName}
+          timelineId={timelineId}
           values={get(geo.prop, props)}
         />
       ))}

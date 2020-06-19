@@ -18,10 +18,11 @@ interface Props {
   eventId: string;
   fileName: string | null | undefined;
   filePath: string | null | undefined;
+  timelineId?: string;
 }
 
 export const FileDraggable = React.memo<Props>(
-  ({ contextId, endgameFileName, endgameFilePath, eventId, fileName, filePath }) => {
+  ({ contextId, endgameFileName, endgameFilePath, eventId, fileName, filePath, timelineId }) => {
     if (
       isNillEmptyOrNotFinite(fileName) &&
       isNillEmptyOrNotFinite(endgameFileName) &&
@@ -44,6 +45,7 @@ export const FileDraggable = React.memo<Props>(
               field="file.name"
               value={fileName}
               iconType="document"
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         ) : !isNillEmptyOrNotFinite(endgameFileName) ? (
@@ -54,6 +56,7 @@ export const FileDraggable = React.memo<Props>(
               field="endgame.file_name"
               value={endgameFileName}
               iconType="document"
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         ) : null}
@@ -72,6 +75,7 @@ export const FileDraggable = React.memo<Props>(
               field="file.path"
               value={filePath}
               iconType="document"
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         ) : !isNillEmptyOrNotFinite(endgameFilePath) ? (
@@ -82,6 +86,7 @@ export const FileDraggable = React.memo<Props>(
               field="endgame.file_path"
               value={endgameFilePath}
               iconType="document"
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         ) : null}

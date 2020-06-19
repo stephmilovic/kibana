@@ -34,7 +34,7 @@ const DraggableWrapperHoverContentComponent: React.FC<Props> = ({
   field,
   onFilterAdded,
   showTopN,
-  timelineId = ACTIVE_TIMELINE_REDUX_ID,
+  timelineId, // = ACTIVE_TIMELINE_REDUX_ID,
   toggleTopN,
   value,
 }) => {
@@ -44,11 +44,13 @@ const DraggableWrapperHoverContentComponent: React.FC<Props> = ({
     kibana.services.data.query.filterManager,
   ]);
   const { getTimelineFilterManager } = useManageTimeline();
-  const filterManager = useMemo(() => getTimelineFilterManager(timelineId) ?? filterManagerBackup, [
-    timelineId,
-    getTimelineFilterManager,
-    filterManagerBackup,
-  ]);
+  const filterManager = useMemo(
+    () =>
+      timelineId
+        ? getTimelineFilterManager(timelineId) ?? filterManagerBackup
+        : filterManagerBackup,
+    [timelineId, getTimelineFilterManager, filterManagerBackup]
+  );
   const filterForValue = useCallback(() => {
     const filter =
       value?.length === 0 ? createFilter(field, undefined) : createFilter(field, value);

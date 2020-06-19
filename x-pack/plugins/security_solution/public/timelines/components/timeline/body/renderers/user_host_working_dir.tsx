@@ -19,6 +19,7 @@ interface Props {
   userNameField?: string;
   hostName: string | null | undefined;
   hostNameSeparator?: string;
+  timelineId?: string;
   workingDirectory: string | null | undefined;
 }
 
@@ -28,6 +29,7 @@ export const UserHostWorkingDir = React.memo<Props>(
     eventId,
     hostName,
     hostNameSeparator = '@',
+    timelineId,
     userDomain,
     userDomainField = 'user.domain',
     userName,
@@ -43,6 +45,7 @@ export const UserHostWorkingDir = React.memo<Props>(
             field={userNameField}
             value={userName}
             iconType="user"
+            timelineId={timelineId}
           />
         </TokensFlexItem>
 
@@ -61,6 +64,7 @@ export const UserHostWorkingDir = React.memo<Props>(
                 eventId={eventId}
                 field={userDomainField}
                 value={userDomain}
+                timelineId={timelineId}
               />
             </TokensFlexItem>
           </>
@@ -75,6 +79,7 @@ export const UserHostWorkingDir = React.memo<Props>(
           contextId={contextId}
           eventId={eventId}
           hostName={hostName}
+          timelineId={timelineId}
           workingDirectory={workingDirectory}
         />
       </>

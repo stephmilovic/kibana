@@ -14,33 +14,38 @@ interface Props {
   eventId: string;
   sshSignature: string | null | undefined;
   sshMethod: string | null | undefined;
+  timelineId?: string;
 }
 
-export const AuthSsh = React.memo<Props>(({ contextId, eventId, sshSignature, sshMethod }) => (
-  <>
-    {sshSignature != null && (
-      <TokensFlexItem grow={false} component="span">
-        <DraggableBadge
-          contextId={contextId}
-          eventId={eventId}
-          field="system.audit.package.name"
-          value={sshSignature}
-          iconType="document"
-        />
-      </TokensFlexItem>
-    )}
-    {sshMethod != null && (
-      <TokensFlexItem grow={false} component="span">
-        <DraggableBadge
-          contextId={contextId}
-          eventId={eventId}
-          field="system.audit.package.version"
-          value={sshMethod}
-          iconType="document"
-        />
-      </TokensFlexItem>
-    )}
-  </>
-));
+export const AuthSsh = React.memo<Props>(
+  ({ contextId, eventId, sshSignature, sshMethod, timelineId }) => (
+    <>
+      {sshSignature != null && (
+        <TokensFlexItem grow={false} component="span">
+          <DraggableBadge
+            contextId={contextId}
+            eventId={eventId}
+            field="system.audit.package.name"
+            value={sshSignature}
+            iconType="document"
+            timelineId={timelineId}
+          />
+        </TokensFlexItem>
+      )}
+      {sshMethod != null && (
+        <TokensFlexItem grow={false} component="span">
+          <DraggableBadge
+            contextId={contextId}
+            eventId={eventId}
+            field="system.audit.package.version"
+            value={sshMethod}
+            iconType="document"
+            timelineId={timelineId}
+          />
+        </TokensFlexItem>
+      )}
+    </>
+  )
+);
 
 AuthSsh.displayName = 'AuthSsh';

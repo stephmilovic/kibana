@@ -69,9 +69,10 @@ const NonDecoratedIpComponent: React.FC<{
   contextId: string;
   eventId: string;
   fieldName: string;
+  timelineId: string;
   truncate?: boolean;
   value: string | object | null | undefined;
-}> = ({ contextId, eventId, fieldName, truncate, value }) => (
+}> = ({ contextId, eventId, fieldName, timelineId, truncate, value }) => (
   <DraggableWrapper
     dataProvider={getDataProvider({ contextId, eventId, fieldName, address: value })}
     key={`non-decorated-ip-draggable-wrapper-${getUniqueId({
@@ -91,6 +92,7 @@ const NonDecoratedIpComponent: React.FC<{
         getOrEmptyTagFromValue(tryStringify(value))
       )
     }
+    timelineId={timelineId}
     truncate={truncate}
   />
 );
@@ -102,8 +104,9 @@ const AddressLinksComponent: React.FC<{
   contextId: string;
   eventId: string;
   fieldName: string;
+  timelineId: string;
   truncate?: boolean;
-}> = ({ addresses, contextId, eventId, fieldName, truncate }) => (
+}> = ({ addresses, contextId, eventId, fieldName, timelineId, truncate }) => (
   <>
     {uniq(addresses).map((address) => (
       <DraggableWrapper
@@ -125,6 +128,7 @@ const AddressLinksComponent: React.FC<{
             <IPDetailsLink data-test-subj="ip-details" ip={address} />
           )
         }
+        timelineId={timelineId}
         truncate={truncate}
       />
     ))}
@@ -137,9 +141,10 @@ const FormattedIpComponent: React.FC<{
   contextId: string;
   eventId: string;
   fieldName: string;
+  timelineId: string;
   truncate?: boolean;
   value: string | object | null | undefined;
-}> = ({ contextId, eventId, fieldName, truncate, value }) => {
+}> = ({ contextId, eventId, fieldName, timelineId, truncate, value }) => {
   if (isString(value) && !isEmpty(value)) {
     try {
       const addresses = JSON.parse(value);
@@ -150,6 +155,7 @@ const FormattedIpComponent: React.FC<{
             contextId={contextId}
             eventId={eventId}
             fieldName={fieldName}
+            timelineId={timelineId}
             truncate={truncate}
           />
         );
@@ -165,6 +171,7 @@ const FormattedIpComponent: React.FC<{
         contextId={contextId}
         eventId={eventId}
         fieldName={fieldName}
+        timelineId={timelineId}
         truncate={truncate}
       />
     );
@@ -174,6 +181,7 @@ const FormattedIpComponent: React.FC<{
         contextId={contextId}
         eventId={eventId}
         fieldName={fieldName}
+        timelineId={timelineId}
         truncate={truncate}
         value={value}
       />

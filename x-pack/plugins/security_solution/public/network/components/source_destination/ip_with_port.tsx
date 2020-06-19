@@ -26,7 +26,8 @@ const PortWithSeparator = React.memo<{
   eventId: string;
   port?: string | null;
   portFieldName: string;
-}>(({ contextId, eventId, port, portFieldName }) => {
+  timelineId: string;
+}>(({ contextId, eventId, port, portFieldName, timelineId }) => {
   return port != null ? (
     <EuiFlexGroup gutterSize="none">
       <EuiFlexItem grow={false}>
@@ -38,6 +39,7 @@ const PortWithSeparator = React.memo<{
           data-test-subj="port"
           eventId={eventId}
           fieldName={portFieldName}
+          timelineId={timelineId}
           value={port}
         />
       </EuiFlexItem>
@@ -58,7 +60,8 @@ export const IpWithPort = React.memo<{
   ipFieldName: string;
   port?: string | null;
   portFieldName: string;
-}>(({ contextId, eventId, ip, ipFieldName, port, portFieldName }) => (
+  timelineId: string;
+}>(({ contextId, eventId, ip, ipFieldName, port, portFieldName, timelineId }) => (
   <EuiFlexGroup gutterSize="none">
     <EuiFlexItem grow={false}>
       <Ip
@@ -66,6 +69,7 @@ export const IpWithPort = React.memo<{
         data-test-subj="ip"
         eventId={eventId}
         fieldName={ipFieldName}
+        timelineId={timelineId}
         value={ip}
       />
     </EuiFlexItem>
@@ -75,6 +79,7 @@ export const IpWithPort = React.memo<{
         eventId={eventId}
         port={port}
         portFieldName={portFieldName}
+        timelineId={timelineId}
       />
     </EuiFlexItem>
   </EuiFlexGroup>

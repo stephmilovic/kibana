@@ -29,12 +29,14 @@ export const Port = React.memo<{
   contextId: string;
   eventId: string;
   fieldName: string;
+  timelineId: string;
   value: string | undefined | null;
-}>(({ contextId, eventId, fieldName, value }) => (
+}>(({ contextId, eventId, fieldName, timelineId, value }) => (
   <DefaultDraggable
     data-test-subj="port"
     field={fieldName}
     id={`port-default-draggable-${contextId}-${eventId}-${fieldName}-${value}`}
+    timelineId={timelineId}
     tooltipContent={fieldName}
     value={value}
   >

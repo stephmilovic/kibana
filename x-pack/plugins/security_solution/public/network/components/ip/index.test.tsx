@@ -14,18 +14,22 @@ import { Ip } from '.';
 
 describe('Port', () => {
   const mount = useMountAppended();
-
+  const defaultProps = {
+    contextId: 'test',
+    eventId: 'abcd',
+    fieldName: 'destination.ip',
+    timelineId: 'timeline-1',
+    value: '10.1.2.3',
+  };
   test('renders correctly against snapshot', () => {
-    const wrapper = shallow(
-      <Ip contextId="test" eventId="abcd" fieldName="destination.ip" value="10.1.2.3" />
-    );
+    const wrapper = shallow(<Ip {...defaultProps} />);
     expect(wrapper).toMatchSnapshot();
   });
 
   test('it renders the the ip address', () => {
     const wrapper = mount(
       <TestProviders>
-        <Ip contextId="test" eventId="abcd" fieldName="destination.ip" value="10.1.2.3" />
+        <Ip {...defaultProps} />
       </TestProviders>
     );
 
@@ -35,7 +39,7 @@ describe('Port', () => {
   test('it hyperlinks to the network/ip page', () => {
     const wrapper = mount(
       <TestProviders>
-        <Ip contextId="test" eventId="abcd" fieldName="destination.ip" value="10.1.2.3" />
+        <Ip {...defaultProps} />
       </TestProviders>
     );
 

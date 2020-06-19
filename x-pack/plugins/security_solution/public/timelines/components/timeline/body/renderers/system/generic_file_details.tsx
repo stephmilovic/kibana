@@ -58,6 +58,7 @@ interface Props {
   sshSignature: string | null | undefined;
   sshMethod: string | null | undefined;
   text: string | null | undefined;
+  timelineId?: string;
   userDomain: string | null | undefined;
   userName: string | null | undefined;
   workingDirectory: string | null | undefined;
@@ -94,6 +95,7 @@ export const SystemGenericFileLine = React.memo<Props>(
     showMessage,
     sshSignature,
     sshMethod,
+    timelineId,
     text,
     userDomain,
     userName,
@@ -108,6 +110,7 @@ export const SystemGenericFileLine = React.memo<Props>(
           userName={userName}
           workingDirectory={workingDirectory}
           hostName={hostName}
+          timelineId={timelineId}
         />
         <TokensFlexItem grow={false} component="span">
           {text}
@@ -119,6 +122,7 @@ export const SystemGenericFileLine = React.memo<Props>(
           eventId={id}
           fileName={fileName}
           filePath={filePath}
+          timelineId={timelineId}
         />
         {showVia(eventAction) && (
           <TokensFlexItem data-test-subj="via" grow={false} component="span">
@@ -134,14 +138,22 @@ export const SystemGenericFileLine = React.memo<Props>(
             processPid={processPid}
             processName={processName}
             processExecutable={processExecutable}
+            timelineId={timelineId}
           />
         </TokensFlexItem>
-        <Args args={args} contextId={contextId} eventId={id} processTitle={processTitle} />
+        <Args
+          args={args}
+          contextId={contextId}
+          eventId={id}
+          processTitle={processTitle}
+          timelineId={timelineId}
+        />
         <ExitCodeDraggable
           contextId={contextId}
           endgameExitCode={endgameExitCode}
           eventId={id}
           text={i18n.WITH_EXIT_CODE}
+          timelineId={timelineId}
         />
         {!isProcessStoppedOrTerminationEvent(eventAction) && (
           <ParentProcessDraggable
@@ -150,6 +162,7 @@ export const SystemGenericFileLine = React.memo<Props>(
             eventId={id}
             processPpid={processPpid}
             text={i18n.VIA_PARENT_PROCESS}
+            timelineId={timelineId}
           />
         )}
         {outcome != null && (
@@ -164,6 +177,7 @@ export const SystemGenericFileLine = React.memo<Props>(
             field="event.outcome"
             queryValue={outcome}
             value={outcome}
+            timelineId={timelineId}
           />
         </TokensFlexItem>
         <AuthSsh
@@ -171,6 +185,7 @@ export const SystemGenericFileLine = React.memo<Props>(
           eventId={id}
           sshSignature={sshSignature}
           sshMethod={sshMethod}
+          timelineId={timelineId}
         />
         <Package
           contextId={contextId}
@@ -178,6 +193,7 @@ export const SystemGenericFileLine = React.memo<Props>(
           packageName={packageName}
           packageSummary={packageSummary}
           packageVersion={packageVersion}
+          timelineId={timelineId}
         />
       </EuiFlexGroup>
       <ProcessHash
@@ -186,6 +202,7 @@ export const SystemGenericFileLine = React.memo<Props>(
         processHashMd5={processHashMd5}
         processHashSha1={processHashSha1}
         processHashSha256={processHashSha256}
+        timelineId={timelineId}
       />
 
       {message != null && showMessage && (
@@ -286,6 +303,7 @@ export const SystemGenericFileDetails = React.memo<GenericDetailsProps>(
           showMessage={showMessage}
           sshSignature={sshSignature}
           sshMethod={sshMethod}
+          timelineId={timelineId}
           outcome={outcome}
         />
         <EuiSpacer size="s" />

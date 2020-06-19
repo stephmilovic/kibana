@@ -37,6 +37,7 @@ interface Props {
   sshMethod: string | null | undefined;
   sshSignature: string | null | undefined;
   text: string | null | undefined;
+  timelineId?: string;
   userDomain: string | null | undefined;
   userName: string | null | undefined;
   workingDirectory: string | null | undefined;
@@ -57,6 +58,7 @@ export const SystemGenericLine = React.memo<Props>(
     processExecutable,
     sshSignature,
     sshMethod,
+    timelineId,
     text,
     userDomain,
     userName,
@@ -70,6 +72,7 @@ export const SystemGenericLine = React.memo<Props>(
           userDomain={userDomain}
           userName={userName}
           hostName={hostName}
+          timelineId={timelineId}
           workingDirectory={workingDirectory}
         />
         <TokensFlexItem grow={false} component="span">
@@ -174,6 +177,7 @@ export const SystemGenericDetails = React.memo<GenericDetailsProps>(
           processName={processName}
           sshMethod={sshMethod}
           sshSignature={sshSignature}
+          timelineId={timelineId}
           text={text}
           userDomain={userDomain}
           userName={userName}

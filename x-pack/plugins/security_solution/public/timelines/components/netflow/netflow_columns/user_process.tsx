@@ -22,8 +22,9 @@ export const UserProcess = React.memo<{
   contextId: string;
   eventId: string;
   processName?: string[] | null;
+  timelineId: string;
   userName?: string[] | null;
-}>(({ contextId, eventId, processName, userName }) => (
+}>(({ contextId, eventId, processName, timelineId, userName }) => (
   <EuiFlexGroup
     alignItems="flexStart"
     data-test-subj="user-process"
@@ -40,6 +41,7 @@ export const UserProcess = React.memo<{
               eventId={eventId}
               field={USER_NAME_FIELD_NAME}
               value={user}
+              timelineId={timelineId}
               iconType="user"
             />
           </EuiFlexItem>
@@ -55,6 +57,7 @@ export const UserProcess = React.memo<{
               eventId={eventId}
               field={PROCESS_NAME_FIELD_NAME}
               value={process}
+              timelineId={timelineId}
               iconType="console"
             />
           </EuiFlexItem>

@@ -91,6 +91,7 @@ const getSourceDestinationInstance = () => (
     sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
     sourcePackets={asArrayIfExists(get(SOURCE_PACKETS_FIELD_NAME, getMockNetflowData()))}
     sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
+    timelineId="timeline-1"
     transport={asArrayIfExists(get(NETWORK_TRANSPORT_FIELD_NAME, getMockNetflowData()))}
   />
 );

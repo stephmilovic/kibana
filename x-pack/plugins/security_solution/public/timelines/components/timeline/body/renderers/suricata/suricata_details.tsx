@@ -38,6 +38,7 @@ export const SuricataDetails = React.memo<{
           id={data._id}
           signature={signature}
           signatureId={signatureId}
+          timelineId={timelineId}
         />
         <SuricataRefs signatureId={signatureId} />
         <EuiSpacer size="s" />

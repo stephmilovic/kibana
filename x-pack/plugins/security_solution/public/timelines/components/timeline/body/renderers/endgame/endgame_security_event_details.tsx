@@ -68,6 +68,7 @@ export const EndgameSecurityEventDetails = React.memo<Props>(({ data, contextId,
         processExecutable={processExecutable}
         processName={processName}
         processPid={processPid}
+        timelineId={timelineId}
         userDomain={userDomain}
         userName={userName}
         winlogEventId={winlogEventId}

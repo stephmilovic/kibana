@@ -19,12 +19,14 @@ export const Bytes = React.memo<{
   contextId: string;
   eventId: string;
   fieldName: string;
+  timelineId: stringl;
   value?: string | null;
-}>(({ contextId, eventId, fieldName, value }) => (
+}>(({ contextId, eventId, fieldName, timelineId, value }) => (
   <DefaultDraggable
     id={`bytes-default-draggable-${contextId}-${eventId}-${fieldName}-${value}`}
     name={name}
     field={fieldName}
+    timelineId={timelineId}
     tooltipContent={null}
     value={value}
   >

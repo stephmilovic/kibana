@@ -30,7 +30,7 @@ import {
   RULE_REFERENCE_FIELD_NAME,
   SIGNAL_RULE_NAME_FIELD_NAME,
 } from './constants';
-import { renderRuleName, renderEventModule, renderRulReference } from './formatted_field_helpers';
+import { renderRuleName, renderEventModule, renderRuleReference } from './formatted_field_helpers';
 
 // simple black-list to prevent dragging and dropping fields such as message name
 const columnNamesNotDraggable = [MESSAGE_FIELD_NAME];
@@ -42,15 +42,27 @@ const FormattedFieldValueComponent: React.FC<{
   fieldName: string;
   fieldType: string;
   truncate?: boolean;
+  timelineId: string;
   value: string | number | undefined | null;
   linkValue?: string | null | undefined;
-}> = ({ contextId, eventId, fieldFormat, fieldName, fieldType, truncate, value, linkValue }) => {
+}> = ({
+  contextId,
+  eventId,
+  fieldFormat,
+  fieldName,
+  fieldType,
+  timelineId,
+  truncate,
+  value,
+  linkValue,
+}) => {
   if (fieldType === IP_FIELD_TYPE) {
     return (
       <FormattedIp
         eventId={eventId}
         contextId={contextId}
         fieldName={fieldName}
+        timelineId={timelineId}
         value={!isNumber(value) ? value : String(value)}
       />
     );
@@ -59,6 +71,7 @@ const FormattedFieldValueComponent: React.FC<{
       <DefaultDraggable
         field={fieldName}
         id={`event-details-value-default-draggable-${contextId}-${eventId}-${fieldName}-${value}`}
+        timelineId={timelineId}
         tooltipContent={null}
         value={`${value}`}
       >
@@ -67,11 +80,23 @@ const FormattedFieldValueComponent: React.FC<{
     );
   } else if (PORT_NAMES.some((portName) => fieldName === portName)) {
     return (
-      <Port contextId={contextId} eventId={eventId} fieldName={fieldName} value={`${value}`} />
+      <Port
+        contextId={contextId}
+        eventId={eventId}
+        fieldName={fieldName}
+        timelineId={timelineId}
+        value={`${value}`}
+      />
     );
   } else if (fieldName === EVENT_DURATION_FIELD_NAME) {
     return (
-      <Duration contextId={contextId} eventId={eventId} fieldName={fieldName} value={`${value}`} />
+      <Duration
+        contextId={contextId}
+        eventId={eventId}
+        fieldName={fieldName}
+        timelineId={timelineId}
+        value={`${value}`}
+      />
     );
   } else if (fieldName === HOST_NAME_FIELD_NAME) {
     const hostname = `${value}`;
@@ -80,6 +105,7 @@ const FormattedFieldValueComponent: React.FC<{
       <DefaultDraggable
         field={fieldName}
         id={`event-details-value-default-draggable-${contextId}-${eventId}-${fieldName}-${value}`}
+        timelineId={timelineId}
         tooltipContent={value}
         value={value}
       >
@@ -92,14 +118,36 @@ const FormattedFieldValueComponent: React.FC<{
     );
   } else if (fieldFormat === BYTES_FORMAT) {
     return (
-      <Bytes contextId={contextId} eventId={eventId} fieldName={fieldName} value={`${value}`} />
+      <Bytes
+        contextId={contextId}
+        eventId={eventId}
+        fieldName={fieldName}
+        timelineId={timelineId}
+        value={`${value}`}
+      />
     );
   } else if (fieldName === SIGNAL_RULE_NAME_FIELD_NAME) {
-    return renderRuleName({ contextId, eventId, fieldName, linkValue, truncate, value });
+    return renderRuleName({
+      contextId,
+      eventId,
+      fieldName,
+      linkValue,
+      timelineId,
+      truncate,
+      value,
+    });
   } else if (fieldName === EVENT_MODULE_FIELD_NAME) {
-    return renderEventModule({ contextId, eventId, fieldName, linkValue, truncate, value });
+    return renderEventModule({
+      contextId,
+      eventId,
+      fieldName,
+      linkValue,
+      timelineId,
+      truncate,
+      value,
+    });
   } else if (fieldName === RULE_REFERENCE_FIELD_NAME) {
-    return renderRulReference({ contextId, eventId, fieldName, linkValue, truncate, value });
+    return renderRuleReference({ contextId, eventId, fieldName, timelineId, truncate, value });
   } else if (columnNamesNotDraggable.includes(fieldName)) {
     return truncate && !isEmpty(value) ? (
       <TruncatableText data-test-subj="truncatable-message">
@@ -131,6 +179,7 @@ const FormattedFieldValueComponent: React.FC<{
         field={fieldName}
         id={`event-details-value-default-draggable-${contextId}-${eventId}-${fieldName}-${value}`}
         value={`${value}`}
+        timelineId={timelineId}
         tooltipContent={
           fieldType === DATE_FIELD_TYPE || fieldType === EVENT_DURATION_FIELD_NAME
             ? null

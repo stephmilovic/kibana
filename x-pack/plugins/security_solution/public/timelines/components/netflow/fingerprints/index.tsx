@@ -25,6 +25,7 @@ export const Fingerprints = React.memo<{
   tlsClientCertificateFingerprintSha1?: string[] | null;
   tlsFingerprintsJa3Hash?: string[] | null;
   tlsServerCertificateFingerprintSha1?: string[] | null;
+  timelineId?: string;
 }>(
   ({
     contextId,
@@ -32,6 +33,7 @@ export const Fingerprints = React.memo<{
     tlsClientCertificateFingerprintSha1,
     tlsFingerprintsJa3Hash,
     tlsServerCertificateFingerprintSha1,
+    timelineId,
   }) => (
     <EuiFlexGroup
       alignItems="center"
@@ -48,6 +50,7 @@ export const Fingerprints = React.memo<{
                 fieldName={JA3_HASH_FIELD_NAME}
                 contextId={contextId}
                 value={ja3}
+                timelineId={timelineId}
               />
             </EuiFlexItem>
           ))
@@ -60,6 +63,7 @@ export const Fingerprints = React.memo<{
                 certificateType="client"
                 contextId={contextId}
                 fieldName={TLS_CLIENT_CERTIFICATE_FINGERPRINT_SHA1_FIELD_NAME}
+                timelineId={timelineId}
                 value={clientCert}
               />
             </EuiFlexItem>
@@ -73,6 +77,7 @@ export const Fingerprints = React.memo<{
                 certificateType="server"
                 contextId={contextId}
                 fieldName={TLS_SERVER_CERTIFICATE_FINGERPRINT_SHA1_FIELD_NAME}
+                timelineId={timelineId}
                 value={serverCert}
               />
             </EuiFlexItem>

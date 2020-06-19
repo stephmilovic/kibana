@@ -40,6 +40,7 @@ export const SourceDestinationWithArrows = React.memo<SourceDestinationWithArrow
     sourcePackets,
     sourceIp,
     sourcePort,
+    timelineId,
   }) => (
     <EuiFlexGroup justifyContent="center" gutterSize="none">
       <EuiFlexItem grow={false}>
@@ -60,6 +61,7 @@ export const SourceDestinationWithArrows = React.memo<SourceDestinationWithArrow
           sourceGeoCityName={sourceGeoCityName}
           sourceIp={sourceIp}
           sourcePort={sourcePort}
+          timelineId={timelineId}
           type="source"
         />
       </EuiFlexItem>
@@ -71,6 +73,7 @@ export const SourceDestinationWithArrows = React.memo<SourceDestinationWithArrow
         eventId={eventId}
         sourceBytes={sourceBytes}
         sourcePackets={sourcePackets}
+        timelineId={timelineId}
       />
 
       <EuiFlexItem grow={false}>
@@ -91,6 +94,7 @@ export const SourceDestinationWithArrows = React.memo<SourceDestinationWithArrow
           sourceGeoCityName={sourceGeoCityName}
           sourceIp={sourceIp}
           sourcePort={sourcePort}
+          timelineId={timelineId}
           type="destination"
         />
       </EuiFlexItem>

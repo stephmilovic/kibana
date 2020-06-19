@@ -180,6 +180,7 @@ export const getColumns = ({
                   fieldFormat={data.format}
                   fieldName={data.field}
                   fieldType={data.type}
+                  timelineId={contextId}
                   value={value}
                 />
               )}

@@ -21,14 +21,16 @@ export const Ip = React.memo<{
   contextId: string;
   eventId: string;
   fieldName: string;
+  timelineId: string;
   value?: string | null;
-}>(({ contextId, eventId, fieldName, value }) => (
+}>(({ contextId, eventId, fieldName, timelineId, value }) => (
   <FormattedFieldValue
     contextId={contextId}
     data-test-subj="formatted-ip"
     eventId={eventId}
     fieldName={fieldName}
     fieldType={IP_FIELD_TYPE}
+    timelineId={timelineId}
     value={value}
   />
 ));

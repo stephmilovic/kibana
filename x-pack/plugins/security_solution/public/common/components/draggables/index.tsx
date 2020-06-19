@@ -22,6 +22,7 @@ export interface DefaultDraggableType {
   queryValue?: string | null;
   children?: React.ReactNode;
   tooltipContent?: React.ReactNode;
+  timelineId?: string;
 }
 
 /**
@@ -83,7 +84,7 @@ Content.displayName = 'Content';
  * @param queryValue - defaults to `value`, this query overrides the `queryMatch.value` used by the `DataProvider` that represents the data
  */
 export const DefaultDraggable = React.memo<DefaultDraggableType>(
-  ({ id, field, value, name, children, tooltipContent, queryValue }) =>
+  ({ id, field, value, name, children, tooltipContent, queryValue, timelineId }) =>
     value != null ? (
       <DraggableWrapper
         dataProvider={{
@@ -110,6 +111,7 @@ export const DefaultDraggable = React.memo<DefaultDraggableType>(
             </Content>
           )
         }
+        timelineId={timelineId}
       />
     ) : null
 );
@@ -127,6 +129,7 @@ export type BadgeDraggableType = Omit<DefaultDraggableType, 'id'> & {
   eventId: string;
   iconType?: IconType;
   color?: string;
+  timelineId?: string;
 };
 
 /**
@@ -154,6 +157,7 @@ export const DraggableBadge = React.memo<BadgeDraggableType>(
     name,
     color = 'hollow',
     children,
+    timelineId,
     tooltipContent,
     queryValue,
   }) =>
@@ -163,6 +167,7 @@ export const DraggableBadge = React.memo<BadgeDraggableType>(
         field={field}
         name={name}
         value={value}
+        timelineId={timelineId}
         tooltipContent={tooltipContent}
         queryValue={queryValue}
       >

@@ -16,10 +16,11 @@ interface Props {
   eventId: string;
   processPpid: number | undefined | null;
   text: string | null | undefined;
+  timelineId?: string;
 }
 
 export const ParentProcessDraggable = React.memo<Props>(
-  ({ contextId, endgameParentProcessName, eventId, processPpid, text }) => {
+  ({ contextId, endgameParentProcessName, eventId, processPpid, text, timelineId }) => {
     if (isNillEmptyOrNotFinite(endgameParentProcessName) && isNillEmptyOrNotFinite(processPpid)) {
       return null;
     }
@@ -43,6 +44,7 @@ export const ParentProcessDraggable = React.memo<Props>(
               eventId={eventId}
               field="endgame.parent_process_name"
               value={endgameParentProcessName}
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         )}
@@ -55,6 +57,7 @@ export const ParentProcessDraggable = React.memo<Props>(
               field="process.ppid"
               queryValue={String(processPpid)}
               value={`(${String(processPpid)})`}
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         )}

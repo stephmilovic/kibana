@@ -89,52 +89,65 @@ const IpAdressesWithPorts = React.memo<{
   eventId: string;
   sourceIp?: string[] | null;
   sourcePort?: Array<number | string | null> | null;
+  timelineId: string;
   type: SourceDestinationType;
-}>(({ contextId, destinationIp, destinationPort, eventId, sourceIp, sourcePort, type }) => {
-  const ip = type === 'source' ? sourceIp : destinationIp;
-  const ipFieldName = type === 'source' ? SOURCE_IP_FIELD_NAME : DESTINATION_IP_FIELD_NAME;
-  const port = type === 'source' ? sourcePort : destinationPort;
-  const portFieldName = type === 'source' ? SOURCE_PORT_FIELD_NAME : DESTINATION_PORT_FIELD_NAME;
+}>(
+  ({
+    contextId,
+    destinationIp,
+    destinationPort,
+    eventId,
+    sourceIp,
+    sourcePort,
+    timelineId,
+    type,
+  }) => {
+    const ip = type === 'source' ? sourceIp : destinationIp;
+    const ipFieldName = type === 'source' ? SOURCE_IP_FIELD_NAME : DESTINATION_IP_FIELD_NAME;
+    const port = type === 'source' ? sourcePort : destinationPort;
+    const portFieldName = type === 'source' ? SOURCE_PORT_FIELD_NAME : DESTINATION_PORT_FIELD_NAME;
 
-  if (ip == null) {
-    return null; // if ip is not populated as an array, ports will be ignored
+    if (ip == null) {
+      return null; // if ip is not populated as an array, ports will be ignored
+    }
+
+    // IMPORTANT: The ip and port arrays are parallel arrays; the port at
+    // index `i` corresponds with the ip address at index `i`. We must
+    // preserve the relationships between the parallel arrays:
+    const ipPortPairs: IpPortPair[] =
+      port != null && ip.length === port.length
+        ? ip.map((address, i) => ({
+            ip: address,
+            port: port[i] != null ? `${port[i]}` : null, // use the corresponding port in the parallel array
+          }))
+        : ip.map((address) => ({
+            ip: address,
+            port: null, // drop the port, because the length of the parallel ip and port arrays is different
+          }));
+
+    return (
+      <EuiFlexGroup gutterSize="none">
+        {uniqWith(deepEqual, ipPortPairs).map(
+          (ipPortPair) =>
+            ipPortPair.ip != null && (
+              <EuiFlexItem grow={false} key={ipPortPair.ip}>
+                <IpWithPort
+                  contextId={contextId}
+                  data-test-subj={`${type}-ip-and-port`}
+                  eventId={eventId}
+                  ip={ipPortPair.ip}
+                  ipFieldName={ipFieldName}
+                  port={ipPortPair.port}
+                  portFieldName={portFieldName}
+                  timelineId={timelineId}
+                />
+              </EuiFlexItem>
+            )
+        )}
+      </EuiFlexGroup>
+    );
   }
-
-  // IMPORTANT: The ip and port arrays are parallel arrays; the port at
-  // index `i` corresponds with the ip address at index `i`. We must
-  // preserve the relationships between the parallel arrays:
-  const ipPortPairs: IpPortPair[] =
-    port != null && ip.length === port.length
-      ? ip.map((address, i) => ({
-          ip: address,
-          port: port[i] != null ? `${port[i]}` : null, // use the corresponding port in the parallel array
-        }))
-      : ip.map((address) => ({
-          ip: address,
-          port: null, // drop the port, because the length of the parallel ip and port arrays is different
-        }));
-
-  return (
-    <EuiFlexGroup gutterSize="none">
-      {uniqWith(deepEqual, ipPortPairs).map(
-        (ipPortPair) =>
-          ipPortPair.ip != null && (
-            <EuiFlexItem grow={false} key={ipPortPair.ip}>
-              <IpWithPort
-                contextId={contextId}
-                data-test-subj={`${type}-ip-and-port`}
-                eventId={eventId}
-                ip={ipPortPair.ip}
-                ipFieldName={ipFieldName}
-                port={ipPortPair.port}
-                portFieldName={portFieldName}
-              />
-            </EuiFlexItem>
-          )
-      )}
-    </EuiFlexGroup>
-  );
-});
+);
 
 IpAdressesWithPorts.displayName = 'IpAdressesWithPorts';
 
@@ -165,6 +178,7 @@ export const SourceDestinationIp = React.memo<SourceDestinationIpProps>(
     sourceGeoCityName,
     sourceIp,
     sourcePort,
+    timelineId,
     type,
   }) => {
     const label = type === 'source' ? i18n.SOURCE : i18n.DESTINATION;
@@ -190,6 +204,7 @@ export const SourceDestinationIp = React.memo<SourceDestinationIpProps>(
                 eventId={eventId}
                 sourceIp={sourceIp}
                 sourcePort={sourcePort}
+                timelineId={timelineId}
                 type={type}
               />
             ) : (
@@ -201,6 +216,7 @@ export const SourceDestinationIp = React.memo<SourceDestinationIpProps>(
                       data-test-subj="port"
                       eventId={eventId}
                       fieldName={`${type}.port`}
+                      timelineId={timelineId}
                       value={port}
                     />
                   </EuiFlexItem>
@@ -222,6 +238,7 @@ export const SourceDestinationIp = React.memo<SourceDestinationIpProps>(
               sourceGeoCountryIsoCode={sourceGeoCountryIsoCode}
               sourceGeoRegionName={sourceGeoRegionName}
               sourceGeoCityName={sourceGeoCityName}
+              timelineId={timelineId}
               type={type}
             />
           </EuiFlexItem>

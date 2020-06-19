@@ -34,6 +34,7 @@ export interface NetflowProps {
   sourceIp?: string[] | null;
   sourcePackets?: string[] | null;
   sourcePort?: string[] | null;
+  timelineId: string;
   tlsClientCertificateFingerprintSha1?: string[] | null;
   tlsFingerprintsJa3Hash?: string[] | null;
   tlsServerCertificateFingerprintSha1?: string[] | null;

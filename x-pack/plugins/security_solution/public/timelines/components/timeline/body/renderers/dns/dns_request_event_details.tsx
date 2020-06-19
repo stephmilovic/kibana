@@ -51,6 +51,7 @@ export const DnsRequestEventDetails = React.memo<Props>(({ data, contextId, time
         processExecutable={processExecutable}
         processName={processName}
         processPid={processPid}
+        timelineId={timelineId}
         userDomain={userDomain}
         userName={userName}
         winlogEventId={winlogEventId}

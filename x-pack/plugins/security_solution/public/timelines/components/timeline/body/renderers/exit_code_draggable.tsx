@@ -15,10 +15,11 @@ interface Props {
   endgameExitCode: string | null | undefined;
   eventId: string;
   text: string | null | undefined;
+  timelineId?: string;
 }
 
 export const ExitCodeDraggable = React.memo<Props>(
-  ({ contextId, endgameExitCode, eventId, text }) => {
+  ({ contextId, endgameExitCode, eventId, text, timelineId }) => {
     if (isNillEmptyOrNotFinite(endgameExitCode)) {
       return null;
     }
@@ -37,6 +38,7 @@ export const ExitCodeDraggable = React.memo<Props>(
             eventId={eventId}
             field="endgame.exit_code"
             value={endgameExitCode}
+            timelineId={timelineId}
           />
         </TokensFlexItem>
       </>

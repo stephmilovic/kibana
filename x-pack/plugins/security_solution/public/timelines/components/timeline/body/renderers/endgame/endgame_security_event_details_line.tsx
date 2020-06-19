@@ -39,6 +39,7 @@ interface Props {
   processExecutable: string | null | undefined;
   processName: string | null | undefined;
   processPid: number | null | undefined;
+  timelineId?: string;
   userDomain: string | null | undefined;
   userName: string | null | undefined;
   winlogEventId: string | null | undefined;
@@ -61,6 +62,7 @@ export const EndgameSecurityEventDetailsLine = React.memo<Props>(
     processExecutable,
     processName,
     processPid,
+    timelineId,
     userDomain,
     userName,
     winlogEventId,
@@ -92,6 +94,7 @@ export const EndgameSecurityEventDetailsLine = React.memo<Props>(
             eventId={id}
             hostName={hostName}
             hostNameSeparator={hostNameSeparator}
+            timelineId={timelineId}
             userDomain={domain}
             userDomainField={userDomainField}
             userName={user}
@@ -114,6 +117,7 @@ export const EndgameSecurityEventDetailsLine = React.memo<Props>(
                   eventId={id}
                   field="endgame.logon_type"
                   queryValue={String(endgameLogonType)}
+                  timelineId={timelineId}
                   value={`${endgameLogonType} - ${getHumanReadableLogonType(endgameLogonType)}`}
                 />
               </TokensFlexItem>
@@ -133,6 +137,7 @@ export const EndgameSecurityEventDetailsLine = React.memo<Props>(
                   contextId={contextId}
                   eventId={id}
                   field="endgame.target_logon_id"
+                  timelineId={timelineId}
                   value={endgameTargetLogonId}
                 />
               </TokensFlexItem>
@@ -155,6 +160,7 @@ export const EndgameSecurityEventDetailsLine = React.memo<Props>(
               processPid={processPid}
               processName={processName}
               processExecutable={processExecutable}
+              timelineId={timelineId}
             />
           </TokensFlexItem>
 
@@ -174,6 +180,7 @@ export const EndgameSecurityEventDetailsLine = React.memo<Props>(
                   eventId={id}
                   field="endgame.subject_user_name"
                   iconType="user"
+                  timelineId={timelineId}
                   value={endgameSubjectUserName}
                 />
               </TokensFlexItem>
@@ -194,6 +201,7 @@ export const EndgameSecurityEventDetailsLine = React.memo<Props>(
                   contextId={contextId}
                   eventId={id}
                   field="endgame.subject_domain_name"
+                  timelineId={timelineId}
                   value={endgameSubjectDomainName}
                 />
               </TokensFlexItem>
@@ -213,6 +221,7 @@ export const EndgameSecurityEventDetailsLine = React.memo<Props>(
                   contextId={contextId}
                   eventId={id}
                   field="endgame.subject_logon_id"
+                  timelineId={timelineId}
                   value={endgameSubjectLogonId}
                 />
               </TokensFlexItem>
@@ -230,6 +239,7 @@ export const EndgameSecurityEventDetailsLine = React.memo<Props>(
                     contextId={contextId}
                     eventId={id}
                     field="event.code"
+                    timelineId={timelineId}
                     value={eventCode}
                   />
                 </TokensFlexItem>
@@ -240,6 +250,7 @@ export const EndgameSecurityEventDetailsLine = React.memo<Props>(
                     eventId={id}
                     iconType="logoWindows"
                     field="winlog.event_id"
+                    timelineId={timelineId}
                     value={winlogEventId}
                   />
                 </TokensFlexItem>

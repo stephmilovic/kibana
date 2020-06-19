@@ -59,13 +59,15 @@ export const DirectionBadge = React.memo<{
   contextId: string;
   direction?: string | null;
   eventId: string;
-}>(({ contextId, eventId, direction }) => (
+  timelineId: string;
+}>(({ contextId, eventId, direction, timelineId }) => (
   <DraggableBadge
     contextId={contextId}
     data-test-subj="network-direction"
     eventId={eventId}
     field={NETWORK_DIRECTION_FIELD_NAME}
     iconType={getDirectionIcon(direction)}
+    timelineId={timelineId}
     value={direction}
   />
 ));

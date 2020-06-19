@@ -35,6 +35,7 @@ export interface NetflowColumnsProps {
   sourceIp?: string[] | null;
   sourcePackets?: string[] | null;
   sourcePort?: string[] | null;
+  timelineId: string;
   transport?: string[] | null;
   userName?: string[] | null;
 }

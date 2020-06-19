@@ -16,10 +16,11 @@ interface Props {
   eventId: string;
   hostName: string | null | undefined;
   workingDirectory: string | null | undefined;
+  timelineId?: string;
 }
 
 export const HostWorkingDir = React.memo<Props>(
-  ({ contextId, eventId, hostName, workingDirectory }) => (
+  ({ contextId, eventId, hostName, workingDirectory, timelineId }) => (
     <>
       <TokensFlexItem grow={false} component="span">
         <DraggableBadge
@@ -27,6 +28,7 @@ export const HostWorkingDir = React.memo<Props>(
           eventId={eventId}
           field="host.name"
           value={hostName}
+          timelineId={timelineId}
         />
       </TokensFlexItem>
       {workingDirectory != null && (
@@ -41,6 +43,7 @@ export const HostWorkingDir = React.memo<Props>(
           field="process.working_directory"
           value={workingDirectory}
           iconType="folderOpen"
+          timelineId={timelineId}
         />
       </TokensFlexItem>
     </>

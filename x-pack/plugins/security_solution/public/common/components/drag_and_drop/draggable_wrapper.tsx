@@ -78,6 +78,7 @@ interface Props {
   render: RenderFunctionProp;
   truncate?: boolean;
   onFilterAdded?: () => void;
+  timelineId?: string;
 }
 
 /**
@@ -100,7 +101,7 @@ export const getStyle = (
 };
 
 export const DraggableWrapper = React.memo<Props>(
-  ({ dataProvider, onFilterAdded, render, truncate }) => {
+  ({ dataProvider, onFilterAdded, render, truncate, timelineId }) => {
     const [showTopN, setShowTopN] = useState<boolean>(false);
     const toggleTopN = useCallback(() => {
       setShowTopN(!showTopN);
@@ -137,6 +138,7 @@ export const DraggableWrapper = React.memo<Props>(
           field={dataProvider.queryMatch.field}
           onFilterAdded={onFilterAdded}
           showTopN={showTopN}
+          timelineId={timelineId}
           toggleTopN={toggleTopN}
           value={
             typeof dataProvider.queryMatch.value !== 'number'
@@ -145,7 +147,7 @@ export const DraggableWrapper = React.memo<Props>(
           }
         />
       ),
-      [dataProvider, onFilterAdded, showTopN, toggleTopN]
+      [dataProvider, onFilterAdded, showTopN, timelineId, toggleTopN]
     );
 
     const renderContent = useCallback(

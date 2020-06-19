@@ -19,12 +19,14 @@ export const Duration = React.memo<{
   contextId: string;
   eventId: string;
   fieldName: string;
+  timelineId: string;
   value?: string | null;
-}>(({ contextId, eventId, fieldName, value }) => (
+}>(({ contextId, eventId, fieldName, timelineId, value }) => (
   <DefaultDraggable
     id={`duration-default-draggable-${contextId}-${eventId}-${fieldName}-${value}`}
     name={name}
     field={fieldName}
+    timelineId={timelineId}
     tooltipContent={null}
     value={value}
   >

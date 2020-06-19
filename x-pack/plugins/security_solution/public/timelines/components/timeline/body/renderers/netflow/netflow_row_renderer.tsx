@@ -130,6 +130,7 @@ export const netflowRowRenderer: RowRenderer = {
           sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, data))}
           sourcePackets={asArrayIfExists(get(SOURCE_PACKETS_FIELD_NAME, data))}
           sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, data))}
+          timelineId={timelineId}
           tlsClientCertificateFingerprintSha1={asArrayIfExists(
             get(TLS_CLIENT_CERTIFICATE_FINGERPRINT_SHA1_FIELD_NAME, data)
           )}

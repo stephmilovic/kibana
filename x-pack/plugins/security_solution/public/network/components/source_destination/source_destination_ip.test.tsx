@@ -36,8 +36,6 @@ import {
 } from './geo_fields';
 
 describe('SourceDestinationIp', () => {
-  const mount = useMountAppended();
-
   describe('#isIpFieldPopulated', () => {
     test('it returns true when type is `source` and sourceIp has an IP address', () => {
       expect(
@@ -323,963 +321,336 @@ describe('SourceDestinationIp', () => {
       ).toEqual(false);
     });
   });
+  describe.only('renders', () => {
+    const mount = useMountAppended();
+    const defaultProps = {
+      contextId: 'test',
+      destinationGeoContinentName: asArrayIfExists(
+        get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
+      ),
+      destinationGeoCountryName: asArrayIfExists(
+        get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
+      ),
+      destinationGeoCountryIsoCode: asArrayIfExists(
+        get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
+      ),
+      destinationGeoRegionName: asArrayIfExists(
+        get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
+      ),
+      destinationGeoCityName: asArrayIfExists(
+        get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
+      ),
+      destinationIp: asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData())),
+      destinationPort: asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData())),
+      eventId: get(ID_FIELD_NAME, getMockNetflowData()),
+      sourceGeoContinentName: asArrayIfExists(
+        get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
+      ),
+      sourceGeoCountryName: asArrayIfExists(
+        get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
+      ),
+      sourceGeoCountryIsoCode: asArrayIfExists(
+        get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
+      ),
+      sourceGeoRegionName: asArrayIfExists(
+        get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
+      ),
+      sourceGeoCityName: asArrayIfExists(
+        get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
+      ),
+      sourceIp: undefined,
+      sourcePort: asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData())),
+      timelineId: 'timeline-1',
+      type: undefined,
+    };
+    test('it renders a `Source` label when type is `source` and (just) the sourceIp field is populated', () => {
+      const diffProps = {
+        sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
+        sourcePort: undefined,
+        type: 'source',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-  test('it renders a `Source` label when type is `source` and (just) the sourceIp field is populated', () => {
-    const type = 'source';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={undefined}
-          type={type}
-        />
-      </TestProviders>
-    );
+      expect(wrapper.find('[data-test-subj="source-label"]').first().text()).toEqual(i18n.SOURCE);
+    });
 
-    expect(wrapper.find('[data-test-subj="source-label"]').first().text()).toEqual(i18n.SOURCE);
-  });
+    test('it renders a `Destination` label when type is `destination` and (just) the destinationIp field is populated', () => {
+      const diffProps = {
+        destinationPort: undefined,
+        type: 'destination',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-  test('it renders a `Destination` label when type is `destination` and (just) the destinationIp field is populated', () => {
-    const type = 'destination';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={undefined}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+      expect(wrapper.find('[data-test-subj="destination-label"]').first().text()).toEqual(
+        i18n.DESTINATION
+      );
+    });
 
-    expect(wrapper.find('[data-test-subj="destination-label"]').first().text()).toEqual(
-      i18n.DESTINATION
-    );
-  });
+    test('it renders a `Source` label when type is `source` (just) the sourcePort field is populated', () => {
+      const type = 'source';
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, type }} />
+        </TestProviders>
+      );
 
-  test('it renders a `Source` label when type is `source` (just) the sourcePort field is populated', () => {
-    const type = 'source';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={undefined}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+      expect(wrapper.find('[data-test-subj="source-label"]').first().text()).toEqual(i18n.SOURCE);
+    });
 
-    expect(wrapper.find('[data-test-subj="source-label"]').first().text()).toEqual(i18n.SOURCE);
-  });
+    test('it renders a `Destination` label when type is `destination` and (just) the destinationPort field is populated', () => {
+      const diffProps = {
+        destinationIp: undefined,
+        type: 'destination',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-  test('it renders a `Destination` label when type is `destination` and (just) the destinationPort field is populated', () => {
-    const type = 'destination';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={undefined}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+      expect(wrapper.find('[data-test-subj="destination-label"]').first().text()).toEqual(
+        i18n.DESTINATION
+      );
+    });
 
-    expect(wrapper.find('[data-test-subj="destination-label"]').first().text()).toEqual(
-      i18n.DESTINATION
-    );
-  });
+    test('it renders a `Source` label when type is `source` and both sourceIp and sourcePort are populated', () => {
+      const diffProps = {
+        sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
+        type: 'source',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-  test('it renders a `Source` label when type is `source` and both sourceIp and sourcePort are populated', () => {
-    const type = 'source';
+      expect(wrapper.find('[data-test-subj="source-label"]').first().text()).toEqual(i18n.SOURCE);
+    });
 
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it renders a `Destination` label when type is `destination` and both destinationIp and destinationPort are populated', () => {
+      const diffProps = {
+        type: 'destination',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(wrapper.find('[data-test-subj="source-label"]').first().text()).toEqual(i18n.SOURCE);
-  });
+      expect(wrapper.find('[data-test-subj="destination-label"]').first().text()).toEqual(
+        i18n.DESTINATION
+      );
+    });
 
-  test('it renders a `Destination` label when type is `destination` and both destinationIp and destinationPort are populated', () => {
-    const type = 'destination';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it does NOT render a `Source` label when type is `source` and both sourceIp and sourcePort are empty', () => {
+      const diffProps = {
+        sourceIp: [],
+        sourcePort: [],
+        type: 'source',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(wrapper.find('[data-test-subj="destination-label"]').first().text()).toEqual(
-      i18n.DESTINATION
-    );
-  });
+      expect(wrapper.exists('[data-test-subj="source-label"]')).toBe(false);
+    });
 
-  test('it does NOT render a `Source` label when type is `source` and both sourceIp and sourcePort are empty', () => {
-    const type = 'source';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={[]}
-          sourcePort={[]}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it does NOT render a `Destination` label when type is `destination` and both destinationIp and destinationPort are empty', () => {
+      const diffProps = {
+        destinationIp: [],
+        destinationPort: [],
+        type: 'destination',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(wrapper.exists('[data-test-subj="source-label"]')).toBe(false);
-  });
+      expect(wrapper.exists('[data-test-subj="destination-label"]')).toBe(false);
+    });
 
-  test('it does NOT render a `Destination` label when type is `destination` and both destinationIp and destinationPort are empty', () => {
-    const type = 'destination';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={[]}
-          destinationPort={[]}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it renders the expected source IP when type is `source`, and both sourceIp and sourcePort are populated', () => {
+      const diffProps = {
+        sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
+        type: 'source',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(wrapper.exists('[data-test-subj="destination-label"]')).toBe(false);
-  });
+      expect(wrapper.find('[data-test-subj="draggable-content-source.ip"]').first().text()).toEqual(
+        '192.168.1.2'
+      );
+    });
 
-  test('it renders the expected source IP when type is `source`, and both sourceIp and sourcePort are populated', () => {
-    const type = 'source';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it renders the expected source IP when type is `source`, but the length of the sourceIp and sourcePort arrays is different', () => {
+      const diffProps = {
+        sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
+        sourcePort: [],
+        type: 'source',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(wrapper.find('[data-test-subj="draggable-content-source.ip"]').first().text()).toEqual(
-      '192.168.1.2'
-    );
-  });
+      expect(wrapper.find('[data-test-subj="draggable-content-source.ip"]').first().text()).toEqual(
+        '192.168.1.2'
+      );
+    });
 
-  test('it renders the expected source IP when type is `source`, but the length of the sourceIp and sourcePort arrays is different', () => {
-    const type = 'source';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={[]}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it renders the expected destination IP when type is `destination`, and both destinationIp and destinationPort are populated', () => {
+      const diffProps = {
+        type: 'destination',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(wrapper.find('[data-test-subj="draggable-content-source.ip"]').first().text()).toEqual(
-      '192.168.1.2'
-    );
-  });
+      expect(
+        wrapper.find('[data-test-subj="draggable-content-destination.ip"]').first().text()
+      ).toEqual('10.1.2.3');
+    });
 
-  test('it renders the expected destination IP when type is `destination`, and both destinationIp and destinationPort are populated', () => {
-    const type = 'destination';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it renders the expected destination IP when type is `destination`, but the length of the destinationIp and destinationPort port arrays is different', () => {
+      const diffProps = {
+        destinationPort: [],
+        type: 'destination',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(
-      wrapper.find('[data-test-subj="draggable-content-destination.ip"]').first().text()
-    ).toEqual('10.1.2.3');
-  });
+      expect(
+        wrapper.find('[data-test-subj="draggable-content-destination.ip"]').first().text()
+      ).toEqual('10.1.2.3');
+    });
 
-  test('it renders the expected destination IP when type is `destination`, but the length of the destinationIp and destinationPort port arrays is different', () => {
-    const type = 'destination';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={[]}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it renders the expected source port when type is `source`, and both sourceIp and sourcePort are populated', () => {
+      const diffProps = {
+        sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
+        type: 'source',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(
-      wrapper.find('[data-test-subj="draggable-content-destination.ip"]').first().text()
-    ).toEqual('10.1.2.3');
-  });
+      expect(
+        wrapper.find('[data-test-subj="draggable-content-source.port"]').first().text()
+      ).toEqual('9987');
+    });
 
-  test('it renders the expected source port when type is `source`, and both sourceIp and sourcePort are populated', () => {
-    const type = 'source';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it renders the expected destination port when type is `destination`, and both destinationIp and destinationPort are populated', () => {
+      const diffProps = {
+        type: 'destination',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(wrapper.find('[data-test-subj="draggable-content-source.port"]').first().text()).toEqual(
-      '9987'
-    );
-  });
+      expect(
+        wrapper.find('[data-test-subj="draggable-content-destination.port"]').first().text()
+      ).toEqual('80');
+    });
 
-  test('it renders the expected destination port when type is `destination`, and both destinationIp and destinationPort are populated', () => {
-    const type = 'destination';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it renders the expected source port when type is `source`, but only sourcePort is populated', () => {
+      const type = 'source';
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, type }} />
+        </TestProviders>
+      );
 
-    expect(
-      wrapper.find('[data-test-subj="draggable-content-destination.port"]').first().text()
-    ).toEqual('80');
-  });
+      expect(
+        wrapper.find('[data-test-subj="draggable-content-source.port"]').first().text()
+      ).toEqual('9987');
+    });
 
-  test('it renders the expected source port when type is `source`, but only sourcePort is populated', () => {
-    const type = 'source';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={undefined}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it renders the expected destination port when type is `destination`, and only destinationPort is populated', () => {
+      const diffProps = {
+        destinationIp: undefined,
+        type: 'destination',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(wrapper.find('[data-test-subj="draggable-content-source.port"]').first().text()).toEqual(
-      '9987'
-    );
-  });
+      expect(
+        wrapper.find('[data-test-subj="draggable-content-destination.port"]').first().text()
+      ).toEqual('80');
+    });
 
-  test('it renders the expected destination port when type is `destination`, and only destinationPort is populated', () => {
-    const type = 'destination';
+    test('it does NOT render the badge when type is `source`, but both sourceIp and sourcePort are undefined', () => {
+      const type = 'source';
+      const diffProps = {
+        sourcePort: undefined,
+        type,
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={undefined}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
+      expect(wrapper.exists(`[data-test-subj="${type}-ip-badge"]`)).toBe(false);
+    });
 
-    expect(
-      wrapper.find('[data-test-subj="draggable-content-destination.port"]').first().text()
-    ).toEqual('80');
-  });
+    test('it does NOT render the badge when type is `destination`, but both destinationIp and destinationPort are undefined', () => {
+      const type = 'destination';
+      const diffProps = {
+        destinationIp: undefined,
+        destinationPort: undefined,
+        type,
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-  test('it does NOT render the badge when type is `source`, but both sourceIp and sourcePort are undefined', () => {
-    const type = 'source';
+      expect(wrapper.exists(`[data-test-subj="${type}-ip-badge"]`)).toBe(false);
+    });
 
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={undefined}
-          sourcePort={undefined}
-          type={type}
-        />
-      </TestProviders>
-    );
+    test('it renders geo fields', () => {
+      const diffProps = {
+        type: 'source',
+      };
+      const wrapper = mount(
+        <TestProviders>
+          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+        </TestProviders>
+      );
 
-    expect(wrapper.exists(`[data-test-subj="${type}-ip-badge"]`)).toBe(false);
-  });
-
-  test('it does NOT render the badge when type is `destination`, but both destinationIp and destinationPort are undefined', () => {
-    const type = 'destination';
-
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={undefined}
-          destinationPort={undefined}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
-
-    expect(wrapper.exists(`[data-test-subj="${type}-ip-badge"]`)).toBe(false);
-  });
-
-  test('it renders geo fields', () => {
-    const type = 'source';
-    const wrapper = mount(
-      <TestProviders>
-        <SourceDestinationIp
-          contextId="test"
-          destinationGeoContinentName={asArrayIfExists(
-            get(DESTINATION_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryName={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCountryIsoCode={asArrayIfExists(
-            get(DESTINATION_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoRegionName={asArrayIfExists(
-            get(DESTINATION_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationGeoCityName={asArrayIfExists(
-            get(DESTINATION_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          destinationIp={asArrayIfExists(get(DESTINATION_IP_FIELD_NAME, getMockNetflowData()))}
-          destinationPort={asArrayIfExists(get(DESTINATION_PORT_FIELD_NAME, getMockNetflowData()))}
-          eventId={get(ID_FIELD_NAME, getMockNetflowData())}
-          sourceGeoContinentName={asArrayIfExists(
-            get(SOURCE_GEO_CONTINENT_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryName={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCountryIsoCode={asArrayIfExists(
-            get(SOURCE_GEO_COUNTRY_ISO_CODE_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoRegionName={asArrayIfExists(
-            get(SOURCE_GEO_REGION_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceGeoCityName={asArrayIfExists(
-            get(SOURCE_GEO_CITY_NAME_FIELD_NAME, getMockNetflowData())
-          )}
-          sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
-          sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
-          type={type}
-        />
-      </TestProviders>
-    );
-
-    expect(
-      wrapper.find('[data-test-subj="draggable-content-source.geo.continent_name"]').first().text()
-    ).toEqual('North America');
+      expect(
+        wrapper
+          .find('[data-test-subj="draggable-content-source.geo.continent_name"]')
+          .first()
+          .text()
+      ).toEqual('North America');
+    });
   });
 });

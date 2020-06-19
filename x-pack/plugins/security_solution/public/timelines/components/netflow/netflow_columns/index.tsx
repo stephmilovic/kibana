@@ -62,6 +62,7 @@ export const NetflowColumns = React.memo<NetflowColumnsProps>(
     sourceIp,
     sourcePackets,
     sourcePort,
+    timelineId,
     transport,
     userName,
   }) => (
@@ -76,6 +77,7 @@ export const NetflowColumns = React.memo<NetflowColumnsProps>(
           contextId={contextId}
           eventId={eventId}
           processName={processName}
+          timelineId={timelineId}
           userName={userName}
         />
       </EuiFlexItemMarginRight>
@@ -87,6 +89,7 @@ export const NetflowColumns = React.memo<NetflowColumnsProps>(
           eventId={eventId}
           eventEnd={eventEnd}
           eventStart={eventStart}
+          timelineId={timelineId}
         />
       </EuiFlexItemMarginRight>
 
@@ -117,6 +120,7 @@ export const NetflowColumns = React.memo<NetflowColumnsProps>(
           sourceIp={sourceIp}
           sourcePackets={sourcePackets}
           sourcePort={sourcePort}
+          timelineId={timelineId}
           transport={transport}
         />
       </EuiFlexItem>

@@ -28,6 +28,7 @@ export const renderRuleName = ({
   eventId,
   fieldName,
   linkValue,
+  timelineId,
   truncate,
   value,
 }: {
@@ -35,6 +36,7 @@ export const renderRuleName = ({
   eventId: string;
   fieldName: string;
   linkValue: string | null | undefined;
+  timelineId: string;
   truncate?: boolean;
   value: string | number | null | undefined;
 }) => {
@@ -47,6 +49,7 @@ export const renderRuleName = ({
     <DefaultDraggable
       field={fieldName}
       id={`event-details-value-default-draggable-${contextId}-${eventId}-${fieldName}-${value}-${ruleId}`}
+      timelineId={timelineId}
       tooltipContent={value}
       value={value}
     >
@@ -69,6 +72,7 @@ export const renderEventModule = ({
   eventId,
   fieldName,
   linkValue,
+  timelineId,
   truncate,
   value,
 }: {
@@ -76,6 +80,7 @@ export const renderEventModule = ({
   eventId: string;
   fieldName: string;
   linkValue: string | null | undefined;
+  timelineId: string;
   truncate?: boolean;
   value: string | number | null | undefined;
 }) => {
@@ -96,6 +101,7 @@ export const renderEventModule = ({
         <DefaultDraggable
           field={fieldName}
           id={`event-details-value-default-draggable-${contextId}-${eventId}-${fieldName}-${value}-${moduleName}`}
+          timelineId={timelineId}
           tooltipContent={value}
           value={value}
         >
@@ -125,18 +131,18 @@ export const renderEventModule = ({
   );
 };
 
-export const renderRulReference = ({
+export const renderRuleReference = ({
   contextId,
   eventId,
   fieldName,
-  linkValue,
+  timelineId,
   truncate,
   value,
 }: {
   contextId: string;
   eventId: string;
   fieldName: string;
-  linkValue: string | null | undefined;
+  timelineId: string;
   truncate?: boolean;
   value: string | number | null | undefined;
 }) => {
@@ -148,6 +154,7 @@ export const renderRulReference = ({
     <DefaultDraggable
       field={fieldName}
       id={`event-details-value-default-draggable-${contextId}-${eventId}-${fieldName}-${value}-${referenceUrlName}`}
+      timelineId={timelineId}
       tooltipContent={value}
       value={value}
     >

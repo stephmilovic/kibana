@@ -54,7 +54,8 @@ const SourceArrow = React.memo<{
   sourceBytes: string | undefined;
   sourceBytesPercent: number | undefined;
   sourcePackets: string | undefined;
-}>(({ contextId, eventId, sourceBytes, sourceBytesPercent, sourcePackets }) => {
+  timelineId?: string;
+}>(({ contextId, eventId, sourceBytes, sourceBytesPercent, sourcePackets, timelineId }) => {
   const sourceArrowHeight =
     sourceBytesPercent != null
       ? getArrowHeightFromPercent(sourceBytesPercent)
@@ -71,6 +72,7 @@ const SourceArrow = React.memo<{
           <DefaultDraggable
             field={SOURCE_BYTES_FIELD_NAME}
             id={`source-arrow-default-draggable-${contextId}-${eventId}-${SOURCE_BYTES_FIELD_NAME}-${sourceBytes}`}
+            timelineId={timelineId}
             value={sourceBytes}
           >
             <Data size="xs">
@@ -96,6 +98,7 @@ const SourceArrow = React.memo<{
           <DefaultDraggable
             field={SOURCE_PACKETS_FIELD_NAME}
             id={`source-arrow-default-draggable-${contextId}-${eventId}-${SOURCE_PACKETS_FIELD_NAME}-${sourcePackets}`}
+            timelineId={timelineId}
             value={sourcePackets}
           >
             <Data size="xs">
@@ -128,69 +131,81 @@ const DestinationArrow = React.memo<{
   destinationBytes: string | undefined;
   destinationBytesPercent: number | undefined;
   destinationPackets: string | undefined;
-}>(({ contextId, eventId, destinationBytes, destinationBytesPercent, destinationPackets }) => {
-  const destinationArrowHeight =
-    destinationBytesPercent != null
-      ? getArrowHeightFromPercent(destinationBytesPercent)
-      : DEFAULT_ARROW_HEIGHT;
+  timelineId?: string;
+}>(
+  ({
+    contextId,
+    eventId,
+    destinationBytes,
+    destinationBytesPercent,
+    destinationPackets,
+    timelineId,
+  }) => {
+    const destinationArrowHeight =
+      destinationBytesPercent != null
+        ? getArrowHeightFromPercent(destinationBytesPercent)
+        : DEFAULT_ARROW_HEIGHT;
 
-  return (
-    <EuiFlexGroup alignItems="center" gutterSize="none" justifyContent="center">
-      <EuiFlexItem grow={false}>
-        <ArrowHead direction="arrowLeft" />
-      </EuiFlexItem>
-
-      <EuiFlexItem grow={false}>
-        <ArrowBody height={destinationArrowHeight} />
-      </EuiFlexItem>
-
-      {destinationBytes != null && !isNaN(Number(destinationBytes)) ? (
+    return (
+      <EuiFlexGroup alignItems="center" gutterSize="none" justifyContent="center">
         <EuiFlexItem grow={false}>
-          <DefaultDraggable
-            field={DESTINATION_BYTES_FIELD_NAME}
-            id={`destination-arrow-default-draggable-${contextId}-${eventId}-${DESTINATION_BYTES_FIELD_NAME}-${destinationBytes}`}
-            value={destinationBytes}
-          >
-            <Data size="xs">
-              {destinationBytesPercent != null ? (
-                <Percent data-test-subj="destination-bytes-percent">
-                  {`(${numeral(destinationBytesPercent).format('0.00')}%)`}
-                </Percent>
-              ) : null}
-              <span data-test-subj="destination-bytes">
-                <PreferenceFormattedBytes value={destinationBytes} />
-              </span>
-            </Data>
-          </DefaultDraggable>
+          <ArrowHead direction="arrowLeft" />
         </EuiFlexItem>
-      ) : null}
 
-      <EuiFlexItem grow={false}>
-        <ArrowBody height={destinationArrowHeight} />
-      </EuiFlexItem>
-
-      {destinationPackets != null && !isNaN(Number(destinationPackets)) ? (
         <EuiFlexItem grow={false}>
-          <DefaultDraggable
-            field={DESTINATION_PACKETS_FIELD_NAME}
-            id={`destination-arrow-default-draggable-${contextId}-${eventId}-${DESTINATION_PACKETS_FIELD_NAME}-${destinationPackets}`}
-            value={destinationPackets}
-          >
-            <Data size="xs">
-              <span data-test-subj="destination-packets">{`${numeral(destinationPackets).format(
-                '0,0'
-              )} ${i18n.PACKETS}`}</span>
-            </Data>
-          </DefaultDraggable>
+          <ArrowBody height={destinationArrowHeight} />
         </EuiFlexItem>
-      ) : null}
 
-      <EuiFlexItem grow={false}>
-        <ArrowBody height={destinationArrowHeight} />
-      </EuiFlexItem>
-    </EuiFlexGroup>
-  );
-});
+        {destinationBytes != null && !isNaN(Number(destinationBytes)) ? (
+          <EuiFlexItem grow={false}>
+            <DefaultDraggable
+              field={DESTINATION_BYTES_FIELD_NAME}
+              id={`destination-arrow-default-draggable-${contextId}-${eventId}-${DESTINATION_BYTES_FIELD_NAME}-${destinationBytes}`}
+              timelineId={timelineId}
+              value={destinationBytes}
+            >
+              <Data size="xs">
+                {destinationBytesPercent != null ? (
+                  <Percent data-test-subj="destination-bytes-percent">
+                    {`(${numeral(destinationBytesPercent).format('0.00')}%)`}
+                  </Percent>
+                ) : null}
+                <span data-test-subj="destination-bytes">
+                  <PreferenceFormattedBytes value={destinationBytes} />
+                </span>
+              </Data>
+            </DefaultDraggable>
+          </EuiFlexItem>
+        ) : null}
+
+        <EuiFlexItem grow={false}>
+          <ArrowBody height={destinationArrowHeight} />
+        </EuiFlexItem>
+
+        {destinationPackets != null && !isNaN(Number(destinationPackets)) ? (
+          <EuiFlexItem grow={false}>
+            <DefaultDraggable
+              field={DESTINATION_PACKETS_FIELD_NAME}
+              id={`destination-arrow-default-draggable-${contextId}-${eventId}-${DESTINATION_PACKETS_FIELD_NAME}-${destinationPackets}`}
+              timelineId={timelineId}
+              value={destinationPackets}
+            >
+              <Data size="xs">
+                <span data-test-subj="destination-packets">{`${numeral(destinationPackets).format(
+                  '0,0'
+                )} ${i18n.PACKETS}`}</span>
+              </Data>
+            </DefaultDraggable>
+          </EuiFlexItem>
+        ) : null}
+
+        <EuiFlexItem grow={false}>
+          <ArrowBody height={destinationArrowHeight} />
+        </EuiFlexItem>
+      </EuiFlexGroup>
+    );
+  }
+);
 
 DestinationArrow.displayName = 'DestinationArrow';
 
@@ -205,65 +220,78 @@ export const SourceDestinationArrows = React.memo<{
   eventId: string;
   sourceBytes?: string[] | null;
   sourcePackets?: string[] | null;
-}>(({ contextId, destinationBytes, destinationPackets, eventId, sourceBytes, sourcePackets }) => {
-  const maybeSourceBytes =
-    sourceBytes != null && hasOneValue(sourceBytes) ? sourceBytes[0] : undefined;
+  timelineId?: string;
+}>(
+  ({
+    contextId,
+    destinationBytes,
+    destinationPackets,
+    eventId,
+    sourceBytes,
+    sourcePackets,
+    timelineId,
+  }) => {
+    const maybeSourceBytes =
+      sourceBytes != null && hasOneValue(sourceBytes) ? sourceBytes[0] : undefined;
 
-  const maybeSourcePackets =
-    sourcePackets != null && hasOneValue(sourcePackets) ? sourcePackets[0] : undefined;
+    const maybeSourcePackets =
+      sourcePackets != null && hasOneValue(sourcePackets) ? sourcePackets[0] : undefined;
 
-  const maybeDestinationBytes =
-    destinationBytes != null && hasOneValue(destinationBytes) ? destinationBytes[0] : undefined;
+    const maybeDestinationBytes =
+      destinationBytes != null && hasOneValue(destinationBytes) ? destinationBytes[0] : undefined;
 
-  const maybeDestinationPackets =
-    destinationPackets != null && hasOneValue(destinationPackets)
-      ? destinationPackets[0]
-      : undefined;
+    const maybeDestinationPackets =
+      destinationPackets != null && hasOneValue(destinationPackets)
+        ? destinationPackets[0]
+        : undefined;
 
-  const maybeSourceBytesPercent =
-    maybeSourceBytes != null && maybeDestinationBytes != null
-      ? getPercent({
-          numerator: Number(maybeSourceBytes),
-          denominator: Number(maybeSourceBytes) + Number(maybeDestinationBytes),
-        })
-      : undefined;
+    const maybeSourceBytesPercent =
+      maybeSourceBytes != null && maybeDestinationBytes != null
+        ? getPercent({
+            numerator: Number(maybeSourceBytes),
+            denominator: Number(maybeSourceBytes) + Number(maybeDestinationBytes),
+          })
+        : undefined;
 
-  const maybeDestinationBytesPercent =
-    maybeSourceBytesPercent != null ? 100 - maybeSourceBytesPercent : undefined;
+    const maybeDestinationBytesPercent =
+      maybeSourceBytesPercent != null ? 100 - maybeSourceBytesPercent : undefined;
 
-  return (
-    <SourceDestinationArrowsContainer
-      alignItems="center"
-      data-test-subj="source-destination-arrows-container"
-      justifyContent="center"
-      direction="column"
-      gutterSize="none"
-    >
-      {maybeSourceBytes != null ? (
-        <EuiFlexItem grow={false}>
-          <SourceArrow
-            contextId={contextId}
-            sourceBytes={maybeSourceBytes}
-            sourcePackets={maybeSourcePackets}
-            sourceBytesPercent={maybeSourceBytesPercent}
-            eventId={eventId}
-          />
-        </EuiFlexItem>
-      ) : null}
+    return (
+      <SourceDestinationArrowsContainer
+        alignItems="center"
+        data-test-subj="source-destination-arrows-container"
+        justifyContent="center"
+        direction="column"
+        gutterSize="none"
+      >
+        {maybeSourceBytes != null ? (
+          <EuiFlexItem grow={false}>
+            <SourceArrow
+              contextId={contextId}
+              sourceBytes={maybeSourceBytes}
+              sourcePackets={maybeSourcePackets}
+              sourceBytesPercent={maybeSourceBytesPercent}
+              eventId={eventId}
+              timelineId={timelineId}
+            />
+          </EuiFlexItem>
+        ) : null}
 
-      {maybeDestinationBytes != null ? (
-        <EuiFlexItem grow={false}>
-          <DestinationArrow
-            contextId={contextId}
-            destinationBytes={maybeDestinationBytes}
-            destinationPackets={maybeDestinationPackets}
-            destinationBytesPercent={maybeDestinationBytesPercent}
-            eventId={eventId}
-          />
-        </EuiFlexItem>
-      ) : null}
-    </SourceDestinationArrowsContainer>
-  );
-});
+        {maybeDestinationBytes != null ? (
+          <EuiFlexItem grow={false}>
+            <DestinationArrow
+              contextId={contextId}
+              destinationBytes={maybeDestinationBytes}
+              destinationPackets={maybeDestinationPackets}
+              destinationBytesPercent={maybeDestinationBytesPercent}
+              eventId={eventId}
+              timelineId={timelineId}
+            />
+          </EuiFlexItem>
+        ) : null}
+      </SourceDestinationArrowsContainer>
+    );
+  }
+);
 
 SourceDestinationArrows.displayName = 'SourceDestinationArrows';

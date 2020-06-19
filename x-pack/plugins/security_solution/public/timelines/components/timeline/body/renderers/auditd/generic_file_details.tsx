@@ -37,6 +37,7 @@ interface Props {
   workingDirectory: string | null | undefined;
   args: string[] | null | undefined;
   session: string | null | undefined;
+  timelineId?: string;
 }
 
 export const AuditdGenericFileLine = React.memo<Props>(
@@ -57,6 +58,7 @@ export const AuditdGenericFileLine = React.memo<Props>(
     args,
     session,
     text,
+    timelineId,
     fileIcon,
   }) => (
     <EuiFlexGroup alignItems="center" justifyContent="center" gutterSize="none" wrap={true}>
@@ -69,6 +71,7 @@ export const AuditdGenericFileLine = React.memo<Props>(
         secondary={secondary}
         workingDirectory={workingDirectory}
         session={session}
+        timelineId={timelineId}
       />
       {(filePath != null || processExecutable != null) && (
         <TokensFlexItem grow={false} component="span">
@@ -82,6 +85,7 @@ export const AuditdGenericFileLine = React.memo<Props>(
           field="file.path"
           value={filePath}
           iconType={fileIcon}
+          timelineId={timelineId}
         />
       </TokensFlexItem>
       {processExecutable != null && (
@@ -168,6 +172,7 @@ export const AuditdGenericFileDetails = React.memo<GenericDetailsProps>(
             secondary={secondary}
             fileIcon={fileIcon}
             result={result}
+            timelineId={timelineId}
           />
           <EuiSpacer size="s" />
           <NetflowRenderer data={data} timelineId={timelineId} />

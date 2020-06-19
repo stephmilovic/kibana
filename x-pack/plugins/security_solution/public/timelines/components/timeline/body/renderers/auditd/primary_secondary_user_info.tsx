@@ -20,69 +20,77 @@ interface Props {
   eventId: string;
   primary: string | null | undefined;
   secondary: string | null | undefined;
+  timelineId?: string;
 }
 
-export const PrimarySecondary = React.memo<Props>(({ contextId, eventId, primary, secondary }) => {
-  if (nilOrUnSet(primary) && nilOrUnSet(secondary)) {
-    return null;
-  } else if (!nilOrUnSet(primary) && nilOrUnSet(secondary)) {
-    return (
-      <DraggableBadge
-        contextId={contextId}
-        eventId={eventId}
-        field="auditd.summary.actor.primary"
-        value={primary}
-        iconType="user"
-      />
-    );
-  } else if (nilOrUnSet(primary) && !nilOrUnSet(secondary)) {
-    return (
-      <DraggableBadge
-        contextId={contextId}
-        eventId={eventId}
-        field="auditd.summary.actor.secondary"
-        value={secondary}
-        iconType="user"
-      />
-    );
-  } else if (primary === secondary) {
-    return (
-      <DraggableBadge
-        contextId={contextId}
-        eventId={eventId}
-        field="auditd.summary.actor.secondary"
-        value={secondary}
-        iconType="user"
-      />
-    );
-  } else {
-    return (
-      <EuiFlexGroup gutterSize="none">
-        <TokensFlexItem grow={false} component="span">
-          <DraggableBadge
-            contextId={contextId}
-            eventId={eventId}
-            field="auditd.summary.actor.primary"
-            value={primary}
-            iconType="user"
-          />
-        </TokensFlexItem>
-        <TokensFlexItem grow={false} component="span">
-          {i18n.AS}
-        </TokensFlexItem>
-        <TokensFlexItem grow={false} component="span">
-          <DraggableBadge
-            contextId={contextId}
-            eventId={eventId}
-            field="auditd.summary.actor.secondary"
-            value={secondary}
-            iconType="user"
-          />
-        </TokensFlexItem>
-      </EuiFlexGroup>
-    );
+export const PrimarySecondary = React.memo<Props>(
+  ({ contextId, eventId, primary, secondary, timelineId }) => {
+    if (nilOrUnSet(primary) && nilOrUnSet(secondary)) {
+      return null;
+    } else if (!nilOrUnSet(primary) && nilOrUnSet(secondary)) {
+      return (
+        <DraggableBadge
+          contextId={contextId}
+          eventId={eventId}
+          field="auditd.summary.actor.primary"
+          value={primary}
+          iconType="user"
+          timelineItimelineId
+        />
+      );
+    } else if (nilOrUnSet(primary) && !nilOrUnSet(secondary)) {
+      return (
+        <DraggableBadge
+          contextId={contextId}
+          eventId={eventId}
+          field="auditd.summary.actor.secondary"
+          value={secondary}
+          iconType="user"
+          timelineId={timelineId}
+        />
+      );
+    } else if (primary === secondary) {
+      return (
+        <DraggableBadge
+          contextId={contextId}
+          eventId={eventId}
+          field="auditd.summary.actor.secondary"
+          value={secondary}
+          iconType="user"
+          timelineId={timelineId}
+        />
+      );
+    } else {
+      return (
+        <EuiFlexGroup gutterSize="none">
+          <TokensFlexItem grow={false} component="span">
+            <DraggableBadge
+              contextId={contextId}
+              eventId={eventId}
+              field="auditd.summary.actor.primary"
+              value={primary}
+              iconType="user"
+              timelineId={timelineId}
+            />
+          </TokensFlexItem>
+          <TokensFlexItem grow={false} component="span">
+            {i18n.AS}
+          </TokensFlexItem>
+          <TokensFlexItem grow={false} component="span">
+            <DraggableBadge
+              contextId={contextId}
+              eventId={eventId}
+              field="auditd.summary.actor.secondary"
+              value={secondary}
+              iconType="user"
+              timelineId={timelineId}
+            />
+          </TokensFlexItem>
+        </EuiFlexGroup>
+      );
+    }
   }
-});
+);
 
 PrimarySecondary.displayName = 'PrimarySecondary';
 
@@ -92,10 +100,11 @@ interface PrimarySecondaryUserInfoProps {
   userName: string | null | undefined;
   primary: string | null | undefined;
   secondary: string | null | undefined;
+  timelineId?: string;
 }
 
 export const PrimarySecondaryUserInfo = React.memo<PrimarySecondaryUserInfoProps>(
-  ({ contextId, eventId, userName, primary, secondary }) => {
+  ({ contextId, eventId, userName, primary, secondary, timelineId }) => {
     if (nilOrUnSet(userName) && nilOrUnSet(primary) && nilOrUnSet(secondary)) {
       return null;
     } else if (
@@ -112,6 +121,7 @@ export const PrimarySecondaryUserInfo = React.memo<PrimarySecondaryUserInfoProps
           field="user.name"
           value={userName}
           iconType="user"
+          timelineId={timelineId}
         />
       );
     } else if (!nilOrUnSet(userName) && nilOrUnSet(primary) && nilOrUnSet(secondary)) {
@@ -122,6 +132,7 @@ export const PrimarySecondaryUserInfo = React.memo<PrimarySecondaryUserInfoProps
           field="user.name"
           value={userName}
           iconType="user"
+          timelineId={timelineId}
         />
       );
     } else {
@@ -131,6 +142,7 @@ export const PrimarySecondaryUserInfo = React.memo<PrimarySecondaryUserInfoProps
           eventId={eventId}
           primary={primary}
           secondary={secondary}
+          timelineId={timelineId}
         />
       );
     }

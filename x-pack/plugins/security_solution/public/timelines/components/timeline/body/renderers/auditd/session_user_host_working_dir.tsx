@@ -22,10 +22,21 @@ interface Props {
   secondary: string | null | undefined;
   workingDirectory: string | null | undefined;
   session: string | null | undefined;
+  timelineId?: string;
 }
 
 export const SessionUserHostWorkingDir = React.memo<Props>(
-  ({ eventId, contextId, hostName, userName, primary, secondary, workingDirectory, session }) => (
+  ({
+    eventId,
+    contextId,
+    hostName,
+    userName,
+    primary,
+    secondary,
+    workingDirectory,
+    session,
+    timelineId,
+  }) => (
     <>
       <TokensFlexItem grow={false} component="span">
         {i18n.SESSION}
@@ -37,6 +48,7 @@ export const SessionUserHostWorkingDir = React.memo<Props>(
           field="auditd.session"
           value={session}
           iconType="number"
+          timelineId={timelineId}
         />
       </TokensFlexItem>
       <TokensFlexItem grow={false} component="span">
@@ -46,6 +58,7 @@ export const SessionUserHostWorkingDir = React.memo<Props>(
           userName={userName}
           primary={primary}
           secondary={secondary}
+          timelineId={timelineId}
         />
       </TokensFlexItem>
       {hostName != null && (
@@ -58,6 +71,7 @@ export const SessionUserHostWorkingDir = React.memo<Props>(
         eventId={eventId}
         workingDirectory={workingDirectory}
         hostName={hostName}
+        timelineId={timelineId}
       />
     </>
   )

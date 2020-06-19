@@ -19,6 +19,7 @@ interface Props {
   processExecutable: string | undefined | null;
   processPid: number | undefined | null;
   processName: string | undefined | null;
+  timelineId?: string;
 }
 
 export const ProcessDraggable = React.memo<Props>(
@@ -30,6 +31,7 @@ export const ProcessDraggable = React.memo<Props>(
     processExecutable,
     processName,
     processPid,
+    timelineId,
   }) => {
     if (
       isNillEmptyOrNotFinite(processName) &&
@@ -50,6 +52,7 @@ export const ProcessDraggable = React.memo<Props>(
             field="process.name"
             value={processName}
             iconType="console"
+            timelineId={timelineId}
           />
         ) : !isNillEmptyOrNotFinite(processExecutable) ? (
           <DraggableBadge
@@ -58,6 +61,7 @@ export const ProcessDraggable = React.memo<Props>(
             field="process.executable"
             value={processExecutable}
             iconType="console"
+            timelineId={timelineId}
           />
         ) : !isNillEmptyOrNotFinite(endgameProcessName) ? (
           <DraggableBadge
@@ -66,6 +70,7 @@ export const ProcessDraggable = React.memo<Props>(
             field="endgame.process_name"
             value={endgameProcessName}
             iconType="console"
+            timelineId={timelineId}
           />
         ) : null}
 
@@ -76,6 +81,7 @@ export const ProcessDraggable = React.memo<Props>(
             field="process.pid"
             queryValue={String(processPid)}
             value={`(${String(processPid)})`}
+            timelineId={timelineId}
           />
         ) : !isNillEmptyOrNotFinite(endgamePid) ? (
           <DraggableBadge
@@ -84,6 +90,7 @@ export const ProcessDraggable = React.memo<Props>(
             field="endgame.pid"
             queryValue={String(endgamePid)}
             value={`(${String(endgamePid)})`}
+            timelineId={timelineId}
           />
         ) : null}
       </div>
@@ -102,6 +109,7 @@ export const ProcessDraggableWithNonExistentProcess = React.memo<Props>(
     processExecutable,
     processName,
     processPid,
+    timelineId,
   }) => {
     if (
       endgamePid == null &&
@@ -121,6 +129,7 @@ export const ProcessDraggableWithNonExistentProcess = React.memo<Props>(
           processExecutable={processExecutable}
           processName={processName}
           processPid={processPid}
+          timelineId={timelineId}
         />
       );
     }

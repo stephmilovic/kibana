@@ -15,10 +15,11 @@ interface Props {
   packageName: string | null | undefined;
   packageSummary: string | null | undefined;
   packageVersion: string | null | undefined;
+  timelineId?: string;
 }
 
 export const Package = React.memo<Props>(
-  ({ contextId, eventId, packageName, packageSummary, packageVersion }) => {
+  ({ contextId, eventId, packageName, packageSummary, packageVersion, timelineId }) => {
     if (packageName != null || packageSummary != null || packageVersion != null) {
       return (
         <>
@@ -29,6 +30,7 @@ export const Package = React.memo<Props>(
               field="system.audit.package.name"
               value={packageName}
               iconType="document"
+              timelineId={timelineId}
             />
           </TokensFlexItem>
           <TokensFlexItem grow={false} component="span">
@@ -38,6 +40,7 @@ export const Package = React.memo<Props>(
               field="system.audit.package.version"
               value={packageVersion}
               iconType="document"
+              timelineId={timelineId}
             />
           </TokensFlexItem>
           <TokensFlexItem grow={false} component="span">
@@ -46,6 +49,7 @@ export const Package = React.memo<Props>(
               eventId={eventId}
               field="system.audit.package.summary"
               value={packageSummary}
+              timelineId={timelineId}
             />
           </TokensFlexItem>
         </>

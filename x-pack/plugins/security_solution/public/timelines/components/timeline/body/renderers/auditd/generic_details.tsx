@@ -35,6 +35,7 @@ interface Props {
   workingDirectory: string | null | undefined;
   args: string[] | null | undefined;
   session: string | null | undefined;
+  timelineId?: string;
 }
 
 export const AuditdGenericLine = React.memo<Props>(
@@ -54,6 +55,7 @@ export const AuditdGenericLine = React.memo<Props>(
     result,
     session,
     text,
+    timelineId,
   }) => (
     <EuiFlexGroup alignItems="center" justifyContent="center" gutterSize="none" wrap={true}>
       <SessionUserHostWorkingDir
@@ -65,6 +67,7 @@ export const AuditdGenericLine = React.memo<Props>(
         secondary={secondary}
         workingDirectory={workingDirectory}
         session={session}
+        timelineId={timelineId}
       />
       {processExecutable != null && (
         <TokensFlexItem grow={false} component="span">
@@ -80,9 +83,16 @@ export const AuditdGenericLine = React.memo<Props>(
           processPid={processPid}
           processName={processName}
           processExecutable={processExecutable}
+          timelineId={timelineId}
         />
       </TokensFlexItem>
-      <Args eventId={id} args={args} contextId={contextId} processTitle={processTitle} />
+      <Args
+        eventId={id}
+        args={args}
+        contextId={contextId}
+        processTitle={processTitle}
+        timelineId={timelineId}
+      />
       {result != null && (
         <TokensFlexItem grow={false} component="span">
           {i18n.WITH_RESULT}
@@ -94,6 +104,7 @@ export const AuditdGenericLine = React.memo<Props>(
           eventId={id}
           field="auditd.result"
           queryValue={result}
+          timelineId={timelineId}
           value={result}
         />
       </TokensFlexItem>
@@ -145,6 +156,7 @@ export const AuditdGenericDetails = React.memo<GenericDetailsProps>(
             primary={primary}
             result={result}
             secondary={secondary}
+            timelineId={timelineId}
           />
           <EuiSpacer size="s" />
           <NetflowRenderer data={data} timelineId={timelineId} />
