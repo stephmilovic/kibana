@@ -37,7 +37,7 @@ interface Props {
   sshMethod: string | null | undefined;
   sshSignature: string | null | undefined;
   text: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
   userDomain: string | null | undefined;
   userName: string | null | undefined;
   workingDirectory: string | null | undefined;
@@ -87,6 +87,7 @@ export const SystemGenericLine = React.memo<Props>(
             processPid={processPid}
             processName={processName}
             processExecutable={processExecutable}
+            timelineId={timelineId}
           />
         </TokensFlexItem>
         {outcome != null && (
@@ -100,6 +101,7 @@ export const SystemGenericLine = React.memo<Props>(
             eventId={id}
             field="event.outcome"
             queryValue={outcome}
+            timelineId={timelineId}
             value={outcome}
           />
         </TokensFlexItem>
@@ -108,6 +110,7 @@ export const SystemGenericLine = React.memo<Props>(
           eventId={id}
           sshSignature={sshSignature}
           sshMethod={sshMethod}
+          timelineId={timelineId}
         />
         <Package
           contextId={contextId}
@@ -115,6 +118,7 @@ export const SystemGenericLine = React.memo<Props>(
           packageName={packageName}
           packageSummary={packageSummary}
           packageVersion={packageVersion}
+          timelineId={timelineId}
         />
       </EuiFlexGroup>
       {message != null && (

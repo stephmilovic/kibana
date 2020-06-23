@@ -17,7 +17,13 @@ describe('ExitCodeDraggable', () => {
   test('it renders the expected text and exit code, when both text and an endgameExitCode are provided', () => {
     const wrapper = mount(
       <TestProviders>
-        <ExitCodeDraggable contextId="test" endgameExitCode="0" eventId="1" text="with exit code" />
+        <ExitCodeDraggable
+          contextId="test"
+          endgameExitCode="0"
+          eventId="1"
+          text="with exit code"
+          timelineId="timeline-1"
+        />
       </TestProviders>
     );
     expect(wrapper.text()).toEqual('with exit code0');
@@ -31,6 +37,7 @@ describe('ExitCodeDraggable', () => {
           endgameExitCode={undefined}
           eventId="1"
           text="with exit code"
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -45,6 +52,7 @@ describe('ExitCodeDraggable', () => {
           endgameExitCode={null}
           eventId="1"
           text="with exit code"
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -54,7 +62,13 @@ describe('ExitCodeDraggable', () => {
   test('it returns an empty string when text is provided, but endgameExitCode is an empty string', () => {
     const wrapper = mount(
       <TestProviders>
-        <ExitCodeDraggable contextId="test" endgameExitCode="" eventId="1" text="with exit code" />
+        <ExitCodeDraggable
+          contextId="test"
+          endgameExitCode=""
+          eventId="1"
+          text="with exit code"
+          timelineId="timeline-1"
+        />
       </TestProviders>
     );
     expect(wrapper.text()).toEqual('');
@@ -63,7 +77,13 @@ describe('ExitCodeDraggable', () => {
   test('it renders just the exit code when text is undefined', () => {
     const wrapper = mount(
       <TestProviders>
-        <ExitCodeDraggable contextId="test" endgameExitCode="1" eventId="1" text={undefined} />
+        <ExitCodeDraggable
+          contextId="test"
+          endgameExitCode="1"
+          eventId="1"
+          text={undefined}
+          timelineId="timeline-1"
+        />
       </TestProviders>
     );
     expect(wrapper.text()).toEqual('1');
@@ -72,7 +92,13 @@ describe('ExitCodeDraggable', () => {
   test('it renders just the exit code when text is null', () => {
     const wrapper = mount(
       <TestProviders>
-        <ExitCodeDraggable contextId="test" endgameExitCode="1" eventId="1" text={null} />
+        <ExitCodeDraggable
+          contextId="test"
+          endgameExitCode="1"
+          eventId="1"
+          text={null}
+          timelineId="timeline-1"
+        />
       </TestProviders>
     );
     expect(wrapper.text()).toEqual('1');
@@ -81,7 +107,13 @@ describe('ExitCodeDraggable', () => {
   test('it renders just the exit code when text is an empty string', () => {
     const wrapper = mount(
       <TestProviders>
-        <ExitCodeDraggable contextId="test" endgameExitCode="1" eventId="1" text="" />
+        <ExitCodeDraggable
+          contextId="test"
+          endgameExitCode="1"
+          eventId="1"
+          text=""
+          timelineId="timeline-1"
+        />
       </TestProviders>
     );
     expect(wrapper.text()).toEqual('1');

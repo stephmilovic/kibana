@@ -25,6 +25,7 @@ describe('ProcessDraggable', () => {
           processExecutable="process-executable-1"
           processName="process-name-1"
           processPid={123}
+          timelineId="timeline-1"
         />
       );
       expect(wrapper).toMatchSnapshot();
@@ -40,6 +41,7 @@ describe('ProcessDraggable', () => {
           processExecutable={null}
           processName={null}
           processPid={null}
+          timelineId="timeline-1"
         />
       );
       expect(wrapper.isEmptyRender()).toBeTruthy();
@@ -55,6 +57,7 @@ describe('ProcessDraggable', () => {
           processExecutable={undefined}
           processName={undefined}
           processPid={undefined}
+          timelineId="timeline-1"
         />
       );
       expect(wrapper.isEmptyRender()).toBeTruthy();
@@ -71,6 +74,7 @@ describe('ProcessDraggable', () => {
             processExecutable={undefined}
             processName="[process-name]"
             processPid={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -88,6 +92,7 @@ describe('ProcessDraggable', () => {
             processExecutable="[process-executable]"
             processName={null}
             processPid={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -105,6 +110,7 @@ describe('ProcessDraggable', () => {
             processExecutable={null}
             processName={null}
             processPid={123}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -122,6 +128,7 @@ describe('ProcessDraggable', () => {
             processExecutable=""
             processName="[process-name]"
             processPid={NaN}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -139,6 +146,7 @@ describe('ProcessDraggable', () => {
             processExecutable="[process-executable]"
             processName=""
             processPid={NaN}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -156,6 +164,7 @@ describe('ProcessDraggable', () => {
             processExecutable="[process-executable]"
             processName=""
             processPid={NaN}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -173,6 +182,7 @@ describe('ProcessDraggable', () => {
             processExecutable=""
             processName=""
             processPid={NaN}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -190,6 +200,7 @@ describe('ProcessDraggable', () => {
             processExecutable=""
             processName=""
             processPid={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -207,6 +218,7 @@ describe('ProcessDraggable', () => {
             processExecutable=""
             processName=""
             processPid={123}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -224,6 +236,7 @@ describe('ProcessDraggable', () => {
             processExecutable=""
             processName=""
             processPid={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -241,6 +254,7 @@ describe('ProcessDraggable', () => {
             processExecutable="[process-executable]"
             processName="[process-name]"
             processPid={123}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -258,6 +272,7 @@ describe('ProcessDraggable', () => {
             processExecutable="[process-executable]"
             processName={null}
             processPid={123}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -275,6 +290,7 @@ describe('ProcessDraggable', () => {
             processExecutable="[process-executable]"
             processName={null}
             processPid={null}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -292,6 +308,7 @@ describe('ProcessDraggable', () => {
             processExecutable="[process-executable]"
             processName={undefined}
             processPid={123}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -309,6 +326,7 @@ describe('ProcessDraggable', () => {
             processExecutable="[process-executable]"
             processName=""
             processPid={123}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -326,6 +344,7 @@ describe('ProcessDraggable', () => {
             processExecutable="[process-executable]"
             processName="[process-name]"
             processPid={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -343,6 +362,7 @@ describe('ProcessDraggable', () => {
             processExecutable="[process-executable]"
             processName={undefined}
             processPid={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -360,6 +380,7 @@ describe('ProcessDraggable', () => {
             processExecutable={undefined}
             processName={undefined}
             processPid={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -377,6 +398,7 @@ describe('ProcessDraggable', () => {
             processExecutable={undefined}
             processName={undefined}
             processPid={123}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -394,6 +416,7 @@ describe('ProcessDraggable', () => {
             processExecutable={undefined}
             processName={undefined}
             processPid={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -416,6 +439,7 @@ describe('ProcessDraggableWithNonExistentProcess', () => {
           processExecutable={undefined}
           processName={undefined}
           processPid={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -433,6 +457,7 @@ describe('ProcessDraggableWithNonExistentProcess', () => {
           processExecutable={undefined}
           processName={undefined}
           processPid={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -450,6 +475,7 @@ describe('ProcessDraggableWithNonExistentProcess', () => {
           processExecutable={undefined}
           processName={undefined}
           processPid={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -467,6 +493,7 @@ describe('ProcessDraggableWithNonExistentProcess', () => {
           processExecutable="[processExecutable]"
           processName={undefined}
           processPid={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -484,6 +511,7 @@ describe('ProcessDraggableWithNonExistentProcess', () => {
           processExecutable={undefined}
           processName="[processName]"
           processPid={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -501,6 +529,7 @@ describe('ProcessDraggableWithNonExistentProcess', () => {
           processExecutable={undefined}
           processName={undefined}
           processPid={123}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -518,6 +547,7 @@ describe('ProcessDraggableWithNonExistentProcess', () => {
           processExecutable="[processExecutable]"
           processName="[processName]"
           processPid={123}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );

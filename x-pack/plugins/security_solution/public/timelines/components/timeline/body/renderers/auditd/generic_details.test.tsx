@@ -83,6 +83,7 @@ describe('GenericDetails', () => {
             workingDirectory="working-directory-1"
             args={['arg1', 'arg2', 'arg3']}
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -110,6 +111,7 @@ describe('GenericDetails', () => {
             workingDirectory="working-directory-1"
             args={['arg1', 'arg2', 'arg3']}
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -137,6 +139,7 @@ describe('GenericDetails', () => {
             workingDirectory="working-directory-1"
             args={['arg1', 'arg2', 'arg3']}
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -164,6 +167,7 @@ describe('GenericDetails', () => {
             workingDirectory="working-directory-1"
             args={['arg1', 'arg2', 'arg3']}
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -191,6 +195,7 @@ describe('GenericDetails', () => {
             workingDirectory="working-directory-1"
             args={['arg1', 'arg2', 'arg3']}
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -218,6 +223,7 @@ describe('GenericDetails', () => {
             workingDirectory="working-directory-1"
             args={['arg1', 'arg2', 'arg3']}
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -245,6 +251,7 @@ describe('GenericDetails', () => {
             workingDirectory="working-directory-1"
             args={['arg1', 'arg2', 'arg3']}
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -272,6 +279,7 @@ describe('GenericDetails', () => {
             workingDirectory="working-directory-1"
             args={['arg1', 'arg2', 'arg3']}
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -299,6 +307,7 @@ describe('GenericDetails', () => {
             workingDirectory="working-directory-1"
             args={['arg1', 'arg2', 'arg3']}
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -326,6 +335,7 @@ describe('GenericDetails', () => {
             workingDirectory={undefined}
             args={undefined}
             result={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -351,6 +361,7 @@ describe('GenericDetails', () => {
             workingDirectory={undefined}
             args={undefined}
             result={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -376,6 +387,7 @@ describe('GenericDetails', () => {
             workingDirectory={undefined}
             args={undefined}
             result={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -401,6 +413,7 @@ describe('GenericDetails', () => {
             workingDirectory={undefined}
             args={undefined}
             result={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -426,6 +439,7 @@ describe('GenericDetails', () => {
             workingDirectory={undefined}
             args={undefined}
             result={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -451,6 +465,7 @@ describe('GenericDetails', () => {
             processTitle={undefined}
             args={undefined}
             result={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -476,6 +491,7 @@ describe('GenericDetails', () => {
             processTitle={undefined}
             workingDirectory={undefined}
             result={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );

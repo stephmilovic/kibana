@@ -19,7 +19,7 @@ interface Props {
   userNameField?: string;
   hostName: string | null | undefined;
   hostNameSeparator?: string;
-  timelineId?: string;
+  timelineId: string;
   workingDirectory: string | null | undefined;
 }
 

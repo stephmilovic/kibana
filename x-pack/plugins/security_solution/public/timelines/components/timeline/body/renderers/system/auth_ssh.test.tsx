@@ -18,6 +18,7 @@ describe('AuthSsh', () => {
           eventId="[event-123]"
           sshSignature="[ssh-signature]"
           sshMethod="[ssh-method]"
+          timelineId="timeline-1"
         />
       );
       expect(wrapper).toMatchSnapshot();
@@ -30,6 +31,7 @@ describe('AuthSsh', () => {
           eventId="[event-123]"
           sshSignature={null}
           sshMethod={null}
+          timelineId="timeline-1"
         />
       );
       expect(wrapper.children().length).toEqual(0);
@@ -42,6 +44,7 @@ describe('AuthSsh', () => {
           eventId="[event-123]"
           sshSignature={undefined}
           sshMethod={undefined}
+          timelineId="timeline-1"
         />
       );
       expect(wrapper.children().length).toEqual(0);
@@ -54,6 +57,7 @@ describe('AuthSsh', () => {
           eventId="[event-123]"
           sshSignature={null}
           sshMethod={undefined}
+          timelineId="timeline-1"
         />
       );
       expect(wrapper.children().length).toEqual(0);
@@ -66,6 +70,7 @@ describe('AuthSsh', () => {
           eventId="[event-123]"
           sshSignature={undefined}
           sshMethod={null}
+          timelineId="timeline-1"
         />
       );
       expect(wrapper.children().length).toEqual(0);
@@ -78,6 +83,7 @@ describe('AuthSsh', () => {
           eventId="[event-123]"
           sshSignature="[sshSignature-1]"
           sshMethod={null}
+          timelineId="timeline-1"
         />
       );
       expect(wrapper.find('DraggableBadge').prop('value')).toEqual('[sshSignature-1]');
@@ -90,6 +96,7 @@ describe('AuthSsh', () => {
           eventId="[event-123]"
           sshSignature={null}
           sshMethod="[sshMethod-1]"
+          timelineId="timeline-1"
         />
       );
       expect(wrapper.find('DraggableBadge').prop('value')).toEqual('[sshMethod-1]');

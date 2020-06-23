@@ -23,6 +23,7 @@ describe('ProcessHash', () => {
           processHashMd5="[processHashMd5]"
           processHashSha1="[processHashSha1]"
           processHashSha256="[processHashSha256]"
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -38,6 +39,7 @@ describe('ProcessHash', () => {
           processHashMd5={undefined}
           processHashSha1={undefined}
           processHashSha256={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -53,6 +55,7 @@ describe('ProcessHash', () => {
           processHashMd5="[processHashMd5]"
           processHashSha1={undefined}
           processHashSha256={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -68,6 +71,7 @@ describe('ProcessHash', () => {
           processHashMd5={undefined}
           processHashSha1="[processHashSha1]"
           processHashSha256={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -83,6 +87,7 @@ describe('ProcessHash', () => {
           processHashMd5={undefined}
           processHashSha1={undefined}
           processHashSha256="[processHashSha256]"
+          timelineId="timeline-1"
         />
       </TestProviders>
     );

@@ -15,7 +15,7 @@ interface Props {
   endgameExitCode: string | null | undefined;
   eventId: string;
   text: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const ExitCodeDraggable = React.memo<Props>(

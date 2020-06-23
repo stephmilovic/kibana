@@ -19,7 +19,7 @@ export const Bytes = React.memo<{
   contextId: string;
   eventId: string;
   fieldName: string;
-  timelineId: stringl;
+  timelineId: string;
   value?: string | null;
 }>(({ contextId, eventId, fieldName, timelineId, value }) => (
   <DefaultDraggable

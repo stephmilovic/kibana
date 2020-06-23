@@ -23,6 +23,7 @@ describe('ParentProcessDraggable', () => {
           eventId="1"
           processPpid={456}
           text="via parent process"
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -38,6 +39,7 @@ describe('ParentProcessDraggable', () => {
           eventId="1"
           processPpid={undefined}
           text="via parent process"
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -53,6 +55,7 @@ describe('ParentProcessDraggable', () => {
           eventId="1"
           processPpid={456}
           text="via parent process"
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -68,6 +71,7 @@ describe('ParentProcessDraggable', () => {
           eventId="1"
           processPpid={456}
           text={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -83,6 +87,7 @@ describe('ParentProcessDraggable', () => {
           eventId="1"
           processPpid={undefined}
           text="via parent process"
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -98,6 +103,7 @@ describe('ParentProcessDraggable', () => {
           eventId="1"
           processPpid={undefined}
           text={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );

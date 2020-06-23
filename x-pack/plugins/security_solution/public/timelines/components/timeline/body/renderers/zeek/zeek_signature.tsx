@@ -69,7 +69,7 @@ export const DraggableZeekElement = React.memo<{
   field: string;
   value: string | null | undefined;
   stringRenderer?: StringRenderer;
-  timelineId?: string;
+  timelineId: string;
 }>(({ id, field, value, stringRenderer = defaultStringRenderer, timelineId }) =>
   value != null ? (
     <TokensFlexItem grow={false}>

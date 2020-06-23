@@ -45,6 +45,7 @@ describe('draggables', () => {
           value="some-value"
           queryValue="some-query-value"
           iconType="number"
+          timelineId="timeline-1"
         >
           <span>{'A child of this'}</span>
         </DraggableBadge>
@@ -194,6 +195,7 @@ describe('draggables', () => {
             field="some-field"
             value="some value"
             iconType="number"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -207,6 +209,7 @@ describe('draggables', () => {
           eventId="event-id"
           field="some-field"
           iconType="number"
+          timelineId="timeline-1"
           value={undefined}
         />
       );
@@ -221,6 +224,7 @@ describe('draggables', () => {
           field="some-field"
           value={null}
           iconType="number"
+          timelineId="timeline-1"
         />
       );
       expect(wrapper.isEmptyRender()).toBeTruthy();
@@ -235,6 +239,7 @@ describe('draggables', () => {
             field="some-field"
             value=""
             iconType="document"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -250,6 +255,7 @@ describe('draggables', () => {
             field="some-field"
             value="some value"
             iconType="number"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -268,6 +274,7 @@ describe('draggables', () => {
             field="some-field"
             value="some value"
             iconType="number"
+            timelineId="timeline-1"
             tooltipContent="draggable badge string tooltip"
           />
         </TestProviders>
@@ -287,6 +294,7 @@ describe('draggables', () => {
             field="some-field"
             value="some value"
             iconType="number"
+            timelineId="timeline-1"
             tooltipContent={<span>{'draggable badge tooltip'}</span>}
           />
         </TestProviders>
@@ -306,6 +314,7 @@ describe('draggables', () => {
             field="some-field"
             value="some value"
             iconType="number"
+            timelineId="timeline-1"
             tooltipContent={null}
           />
         </TestProviders>

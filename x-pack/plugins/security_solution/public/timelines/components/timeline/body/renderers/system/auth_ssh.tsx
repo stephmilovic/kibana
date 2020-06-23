@@ -14,7 +14,7 @@ interface Props {
   eventId: string;
   sshSignature: string | null | undefined;
   sshMethod: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const AuthSsh = React.memo<Props>(

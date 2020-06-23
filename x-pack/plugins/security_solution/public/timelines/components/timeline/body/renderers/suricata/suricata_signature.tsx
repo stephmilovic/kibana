@@ -60,7 +60,7 @@ Tokens.displayName = 'Tokens';
 export const DraggableSignatureId = React.memo<{
   id: string;
   signatureId: number;
-  timelineId?: string;
+  timelineId: string;
 }>(({ id, signatureId, timelineId }) => (
   <SignatureFlexItem grow={false}>
     <DraggableWrapper

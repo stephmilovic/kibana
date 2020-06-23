@@ -16,7 +16,7 @@ interface Props {
   eventId: string;
   processPpid: number | undefined | null;
   text: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const ParentProcessDraggable = React.memo<Props>(

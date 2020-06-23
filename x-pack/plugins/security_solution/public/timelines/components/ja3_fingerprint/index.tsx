@@ -30,7 +30,7 @@ export const Ja3Fingerprint = React.memo<{
   eventId: string;
   contextId: string;
   fieldName: string;
-  timelineId?: string;
+  timelineId: string;
   value?: string | null;
 }>(({ contextId, eventId, fieldName, timelineId, value }) => (
   <DraggableBadge

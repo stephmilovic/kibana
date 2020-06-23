@@ -14,7 +14,7 @@ interface Props {
   contextId: string;
   eventId: string;
   processTitle: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const ArgsComponent = ({ args, contextId, eventId, processTitle, timelineId }: Props) => {

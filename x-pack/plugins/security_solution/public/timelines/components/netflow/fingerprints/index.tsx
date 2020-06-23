@@ -25,7 +25,7 @@ export const Fingerprints = React.memo<{
   tlsClientCertificateFingerprintSha1?: string[] | null;
   tlsFingerprintsJa3Hash?: string[] | null;
   tlsServerCertificateFingerprintSha1?: string[] | null;
-  timelineId?: string;
+  timelineId: string;
 }>(
   ({
     contextId,

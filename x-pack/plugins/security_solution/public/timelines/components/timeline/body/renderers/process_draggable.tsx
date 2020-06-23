@@ -19,7 +19,7 @@ interface Props {
   processExecutable: string | undefined | null;
   processPid: number | undefined | null;
   processName: string | undefined | null;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const ProcessDraggable = React.memo<Props>(

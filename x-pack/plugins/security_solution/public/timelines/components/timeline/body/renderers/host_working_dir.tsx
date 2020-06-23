@@ -16,7 +16,7 @@ interface Props {
   eventId: string;
   hostName: string | null | undefined;
   workingDirectory: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const HostWorkingDir = React.memo<Props>(

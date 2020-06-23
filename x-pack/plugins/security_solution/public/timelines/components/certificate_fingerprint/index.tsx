@@ -13,7 +13,6 @@ import { ExternalLinkIcon } from '../../../common/components/external_link_icon'
 import { CertificateFingerprintLink } from '../../../common/components/links';
 
 import * as i18n from './translations';
-import { Ja3Fingerprint } from '../ja3_fingerprint';
 
 export type CertificateType = 'client' | 'server';
 
@@ -41,7 +40,7 @@ export const CertificateFingerprint = React.memo<{
   certificateType: CertificateType;
   contextId: string;
   fieldName: string;
-  timelineId?: string;
+  timelineId: string;
   value?: string | null;
 }>(({ eventId, certificateType, contextId, fieldName, timelineId, value }) => {
   return (

@@ -22,7 +22,7 @@ interface Props {
   secondary: string | null | undefined;
   workingDirectory: string | null | undefined;
   session: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const SessionUserHostWorkingDir = React.memo<Props>(

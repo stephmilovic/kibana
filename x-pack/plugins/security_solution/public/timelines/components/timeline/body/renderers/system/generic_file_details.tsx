@@ -58,7 +58,7 @@ interface Props {
   sshSignature: string | null | undefined;
   sshMethod: string | null | undefined;
   text: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
   userDomain: string | null | undefined;
   userName: string | null | undefined;
   workingDirectory: string | null | undefined;

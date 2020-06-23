@@ -37,7 +37,7 @@ interface Props {
   workingDirectory: string | null | undefined;
   args: string[] | null | undefined;
   session: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const AuditdGenericFileLine = React.memo<Props>(
@@ -102,9 +102,16 @@ export const AuditdGenericFileLine = React.memo<Props>(
           processPid={processPid}
           processName={processName}
           processExecutable={processExecutable}
+          timelineId={timelineId}
         />
       </TokensFlexItem>
-      <Args eventId={id} args={args} contextId={contextId} processTitle={processTitle} />
+      <Args
+        eventId={id}
+        args={args}
+        contextId={contextId}
+        processTitle={processTitle}
+        timelineId={timelineId}
+      />
       {result != null && (
         <TokensFlexItem grow={false} component="span">
           {i18n.WITH_RESULT}
@@ -116,6 +123,7 @@ export const AuditdGenericFileLine = React.memo<Props>(
           eventId={id}
           field="auditd.result"
           queryValue={result}
+          timelineId={timelineId}
           value={result}
         />
       </TokensFlexItem>

@@ -9,20 +9,22 @@ import React from 'react';
 import { TestProviders } from '../../../common/mock';
 import { useMountAppended } from '../../../common/utils/use_mount_appended';
 
-import { CertificateFingerprint } from '.';
+import { CertificateFingerprint, CertificateType } from '.';
 
 describe('CertificateFingerprint', () => {
   const mount = useMountAppended();
+  const defaultProps = {
+    certificateType: 'client' as CertificateType,
+    contextId: 'test',
+    eventId: 'Tgwnt2kBqd-n62SwPZDP',
+    fieldName: 'tls.client_certificate.fingerprint.sha1',
+    timelineId: 'timeline-1',
+    value: '3f4c57934e089f02ae7511200aee2d7e7aabd272',
+  };
   test('renders the expected label', () => {
     const wrapper = mount(
       <TestProviders>
-        <CertificateFingerprint
-          eventId="Tgwnt2kBqd-n62SwPZDP"
-          certificateType="client"
-          contextId="test"
-          fieldName="tls.client_certificate.fingerprint.sha1"
-          value="3f4c57934e089f02ae7511200aee2d7e7aabd272"
-        />
+        <CertificateFingerprint {...defaultProps} />
       </TestProviders>
     );
     expect(wrapper.find('[data-test-subj="fingerprint-label"]').first().text()).toEqual(
@@ -33,13 +35,7 @@ describe('CertificateFingerprint', () => {
   test('renders the fingerprint as text', () => {
     const wrapper = mount(
       <TestProviders>
-        <CertificateFingerprint
-          eventId="Tgwnt2kBqd-n62SwPZDP"
-          certificateType="client"
-          contextId="test"
-          fieldName="tls.client_certificate.fingerprint.sha1"
-          value="3f4c57934e089f02ae7511200aee2d7e7aabd272"
-        />
+        <CertificateFingerprint {...defaultProps} />
       </TestProviders>
     );
     expect(wrapper.find('[data-test-subj="certificate-fingerprint-link"]').first().text()).toEqual(
@@ -50,13 +46,7 @@ describe('CertificateFingerprint', () => {
   test('it renders a hyperlink to an external site to compare the fingerprint against a known set of signatures', () => {
     const wrapper = mount(
       <TestProviders>
-        <CertificateFingerprint
-          eventId="Tgwnt2kBqd-n62SwPZDP"
-          certificateType="client"
-          contextId="test"
-          fieldName="tls.client_certificate.fingerprint.sha1"
-          value="3f4c57934e089f02ae7511200aee2d7e7aabd272"
-        />
+        <CertificateFingerprint {...defaultProps} />
       </TestProviders>
     );
 

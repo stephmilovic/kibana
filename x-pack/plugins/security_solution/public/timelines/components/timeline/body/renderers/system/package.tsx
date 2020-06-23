@@ -15,7 +15,7 @@ interface Props {
   packageName: string | null | undefined;
   packageSummary: string | null | undefined;
   packageVersion: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const Package = React.memo<Props>(

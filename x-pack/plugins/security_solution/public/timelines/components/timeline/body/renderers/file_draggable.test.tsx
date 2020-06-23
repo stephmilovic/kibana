@@ -24,6 +24,7 @@ describe('FileDraggable', () => {
           eventId="1"
           fileName="[fileName]"
           filePath="[filePath]"
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -40,6 +41,7 @@ describe('FileDraggable', () => {
           eventId="1"
           fileName={undefined}
           filePath={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -56,6 +58,7 @@ describe('FileDraggable', () => {
           eventId="1"
           fileName={undefined}
           filePath={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -72,6 +75,7 @@ describe('FileDraggable', () => {
           eventId="1"
           fileName={undefined}
           filePath={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -88,6 +92,7 @@ describe('FileDraggable', () => {
           eventId="1"
           fileName="[fileName]"
           filePath={undefined}
+          timelineId="timeline-1"
         />
       </TestProviders>
     );
@@ -104,6 +109,7 @@ describe('FileDraggable', () => {
           eventId="1"
           fileName={undefined}
           filePath="[filePath]"
+          timelineId="timeline-1"
         />
       </TestProviders>
     );

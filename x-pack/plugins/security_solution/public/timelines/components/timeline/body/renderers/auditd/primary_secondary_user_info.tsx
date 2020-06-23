@@ -20,7 +20,7 @@ interface Props {
   eventId: string;
   primary: string | null | undefined;
   secondary: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const PrimarySecondary = React.memo<Props>(
@@ -35,7 +35,7 @@ export const PrimarySecondary = React.memo<Props>(
           field="auditd.summary.actor.primary"
           value={primary}
           iconType="user"
-          timelineItimelineId
+          timelineId={timelineId}
         />
       );
     } else if (nilOrUnSet(primary) && !nilOrUnSet(secondary)) {
@@ -100,7 +100,7 @@ interface PrimarySecondaryUserInfoProps {
   userName: string | null | undefined;
   primary: string | null | undefined;
   secondary: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const PrimarySecondaryUserInfo = React.memo<PrimarySecondaryUserInfoProps>(

@@ -18,7 +18,7 @@ interface Props {
   eventId: string;
   fileName: string | null | undefined;
   filePath: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const FileDraggable = React.memo<Props>(

@@ -20,6 +20,7 @@ describe('HostWorkingDir', () => {
         eventId={mockTimelineData[0].ecs._id}
         contextId="test"
         hostName="[hostname-123]"
+        timelineId="timeline-1"
         workingDirectory="[working-directory-123]"
       />
     );
@@ -34,6 +35,7 @@ describe('HostWorkingDir', () => {
             eventId={mockTimelineData[0].ecs._id}
             contextId="test"
             hostName="[hostname-123]"
+            timelineId="timeline-1"
             workingDirectory={undefined}
           />
         </div>
@@ -51,6 +53,7 @@ describe('HostWorkingDir', () => {
             eventId={mockTimelineData[0].ecs._id}
             contextId="test"
             hostName="[hostname-123]"
+            timelineId="timeline-1"
             workingDirectory={null}
           />
         </div>
@@ -68,6 +71,7 @@ describe('HostWorkingDir', () => {
             eventId={mockTimelineData[0].ecs._id}
             contextId="test"
             hostName={undefined}
+            timelineId="timeline-1"
             workingDirectory="[working-directory-123]"
           />
         </div>
@@ -85,6 +89,7 @@ describe('HostWorkingDir', () => {
             eventId={mockTimelineData[0].ecs._id}
             contextId="test"
             hostName={null}
+            timelineId="timeline-1"
             workingDirectory="[working-directory-123]"
           />
         </div>

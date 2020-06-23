@@ -21,6 +21,7 @@ describe('Ja3Fingerprint', () => {
           eventId="KzNOvGkBqd-n62SwSPa4"
           contextId="test"
           fieldName="tls.fingerprints.ja3.hash"
+          timelineId="timeline-1"
           value="fff799d91b7c01ae3fe6787cfc895552"
         />
       </TestProviders>
@@ -36,6 +37,7 @@ describe('Ja3Fingerprint', () => {
           eventId="KzNOvGkBqd-n62SwSPa4"
           contextId="test"
           fieldName="tls.fingerprints.ja3.hash"
+          timelineId="timeline-1"
           value="fff799d91b7c01ae3fe6787cfc895552"
         />
       </TestProviders>
@@ -53,6 +55,7 @@ describe('Ja3Fingerprint', () => {
           eventId="KzNOvGkBqd-n62SwSPa4"
           contextId="test"
           fieldName="tls.fingerprints.ja3.hash"
+          timelineId="timeline-1"
           value="fff799d91b7c01ae3fe6787cfc895552"
         />
       </TestProviders>

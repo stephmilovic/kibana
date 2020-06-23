@@ -129,7 +129,7 @@ export type BadgeDraggableType = Omit<DefaultDraggableType, 'id'> & {
   eventId: string;
   iconType?: IconType;
   color?: string;
-  timelineId?: string;
+  timelineId: string;
 };
 
 /**

@@ -35,7 +35,7 @@ interface Props {
   workingDirectory: string | null | undefined;
   args: string[] | null | undefined;
   session: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const AuditdGenericLine = React.memo<Props>(

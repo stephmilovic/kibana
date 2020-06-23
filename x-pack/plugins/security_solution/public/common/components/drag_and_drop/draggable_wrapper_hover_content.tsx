@@ -13,7 +13,7 @@ import { useAddToTimeline } from '../../hooks/use_add_to_timeline';
 import { WithCopyToClipboard } from '../../lib/clipboard/with_copy_to_clipboard';
 import { useKibana } from '../../lib/kibana';
 import { createFilter } from '../add_filter_to_global_search_bar';
-import { ACTIVE_TIMELINE_REDUX_ID, StatefulTopN } from '../top_n';
+import { StatefulTopN } from '../top_n';
 
 import { allowTopN } from './helpers';
 import * as i18n from './translations';
@@ -34,7 +34,7 @@ const DraggableWrapperHoverContentComponent: React.FC<Props> = ({
   field,
   onFilterAdded,
   showTopN,
-  timelineId, // = ACTIVE_TIMELINE_REDUX_ID,
+  timelineId,
   toggleTopN,
   value,
 }) => {

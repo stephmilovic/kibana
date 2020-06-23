@@ -108,6 +108,7 @@ const getNetflowInstance = () => (
     sourceIp={asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData()))}
     sourcePackets={asArrayIfExists(get(SOURCE_PACKETS_FIELD_NAME, getMockNetflowData()))}
     sourcePort={asArrayIfExists(get(SOURCE_PORT_FIELD_NAME, getMockNetflowData()))}
+    timelineId="timeline-1"
     tlsClientCertificateFingerprintSha1={asArrayIfExists(
       get(TLS_CLIENT_CERTIFICATE_FINGERPRINT_SHA1_FIELD_NAME, getMockNetflowData())
     )}

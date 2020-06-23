@@ -34,6 +34,10 @@ import {
   SOURCE_GEO_COUNTRY_NAME_FIELD_NAME,
   SOURCE_GEO_REGION_NAME_FIELD_NAME,
 } from './geo_fields';
+import { SourceDestinationType } from './types';
+
+const destinationType: SourceDestinationType = 'destination';
+const sourceType: SourceDestinationType = 'source';
 
 describe('SourceDestinationIp', () => {
   describe('#isIpFieldPopulated', () => {
@@ -42,7 +46,7 @@ describe('SourceDestinationIp', () => {
         isIpFieldPopulated({
           destinationIp: undefined,
           sourceIp: ['10.1.1.1'],
-          type: 'source',
+          type: sourceType,
         })
       ).toBe(true);
     });
@@ -52,7 +56,7 @@ describe('SourceDestinationIp', () => {
         isIpFieldPopulated({
           destinationIp: undefined,
           sourceIp: ['', '10.1.1.1'],
-          type: 'source',
+          type: sourceType,
         })
       ).toBe(true);
     });
@@ -62,7 +66,7 @@ describe('SourceDestinationIp', () => {
         isIpFieldPopulated({
           destinationIp: [],
           sourceIp: undefined,
-          type: 'source',
+          type: sourceType,
         })
       ).toBe(false);
     });
@@ -72,7 +76,7 @@ describe('SourceDestinationIp', () => {
         isIpFieldPopulated({
           destinationIp: [],
           sourceIp: [],
-          type: 'source',
+          type: sourceType,
         })
       ).toBe(false);
     });
@@ -82,7 +86,7 @@ describe('SourceDestinationIp', () => {
         isIpFieldPopulated({
           destinationIp: [],
           sourceIp: ['', ''],
-          type: 'source',
+          type: sourceType,
         })
       ).toBe(false);
     });
@@ -92,7 +96,7 @@ describe('SourceDestinationIp', () => {
         isIpFieldPopulated({
           destinationIp: ['10.1.1.1'],
           sourceIp: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toBe(true);
     });
@@ -102,7 +106,7 @@ describe('SourceDestinationIp', () => {
         isIpFieldPopulated({
           destinationIp: ['', '10.1.1.1'],
           sourceIp: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toBe(true);
     });
@@ -112,7 +116,7 @@ describe('SourceDestinationIp', () => {
         isIpFieldPopulated({
           destinationIp: undefined,
           sourceIp: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toBe(false);
     });
@@ -122,7 +126,7 @@ describe('SourceDestinationIp', () => {
         isIpFieldPopulated({
           destinationIp: [],
           sourceIp: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toBe(false);
     });
@@ -132,7 +136,7 @@ describe('SourceDestinationIp', () => {
         isIpFieldPopulated({
           destinationIp: ['', ''],
           sourceIp: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toBe(false);
     });
@@ -144,7 +148,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: undefined,
           sourcePort: [80, 443],
-          type: 'source',
+          type: sourceType,
         })
       ).toEqual(['80', '443']);
     });
@@ -154,7 +158,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: undefined,
           sourcePort: ['80', '443'],
-          type: 'source',
+          type: sourceType,
         })
       ).toEqual(['80', '443']);
     });
@@ -164,7 +168,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: undefined,
           sourcePort: undefined,
-          type: 'source',
+          type: sourceType,
         })
       ).toEqual([]);
     });
@@ -174,7 +178,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: undefined,
           sourcePort: [],
-          type: 'source',
+          type: sourceType,
         })
       ).toEqual([]);
     });
@@ -184,7 +188,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: undefined,
           sourcePort: ['', ''],
-          type: 'source',
+          type: sourceType,
         })
       ).toEqual([]);
     });
@@ -194,7 +198,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: [],
           sourcePort: [null], // test case was added based on real-world data
-          type: 'source',
+          type: sourceType,
         })
       ).toEqual([]);
     });
@@ -204,7 +208,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: [80, 443],
           sourcePort: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toEqual(['80', '443']);
     });
@@ -214,7 +218,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: ['80', '443'],
           sourcePort: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toEqual(['80', '443']);
     });
@@ -224,7 +228,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: undefined,
           sourcePort: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toEqual([]);
     });
@@ -234,7 +238,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: [],
           sourcePort: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toEqual([]);
     });
@@ -244,7 +248,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: ['', ''],
           sourcePort: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toEqual([]);
     });
@@ -254,7 +258,7 @@ describe('SourceDestinationIp', () => {
         getPorts({
           destinationPort: [null], // test case was added based on real-world data
           sourcePort: [],
-          type: 'destination',
+          type: destinationType,
         })
       ).toEqual([]);
     });
@@ -266,7 +270,7 @@ describe('SourceDestinationIp', () => {
         hasPorts({
           destinationPort: undefined,
           sourcePort: [80, 443],
-          type: 'source',
+          type: sourceType,
         })
       ).toEqual(true);
     });
@@ -276,7 +280,7 @@ describe('SourceDestinationIp', () => {
         hasPorts({
           destinationPort: undefined,
           sourcePort: ['80', '443'],
-          type: 'source',
+          type: sourceType,
         })
       ).toEqual(true);
     });
@@ -286,7 +290,7 @@ describe('SourceDestinationIp', () => {
         hasPorts({
           destinationPort: undefined,
           sourcePort: [null], // test case was added based on real-world data
-          type: 'source',
+          type: sourceType,
         })
       ).toEqual(false);
     });
@@ -296,7 +300,7 @@ describe('SourceDestinationIp', () => {
         hasPorts({
           destinationPort: [80, 443],
           sourcePort: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toEqual(true);
     });
@@ -306,7 +310,7 @@ describe('SourceDestinationIp', () => {
         hasPorts({
           destinationPort: ['80', '443'],
           sourcePort: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toEqual(true);
     });
@@ -316,12 +320,12 @@ describe('SourceDestinationIp', () => {
         hasPorts({
           destinationPort: [null], // test case was added based on real-world data
           sourcePort: undefined,
-          type: 'destination',
+          type: destinationType,
         })
       ).toEqual(false);
     });
   });
-  describe.only('renders', () => {
+  describe('renders', () => {
     const mount = useMountAppended();
     const defaultProps = {
       contextId: 'test',
@@ -367,7 +371,7 @@ describe('SourceDestinationIp', () => {
       const diffProps = {
         sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
         sourcePort: undefined,
-        type: 'source',
+        type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -381,7 +385,7 @@ describe('SourceDestinationIp', () => {
     test('it renders a `Destination` label when type is `destination` and (just) the destinationIp field is populated', () => {
       const diffProps = {
         destinationPort: undefined,
-        type: 'destination',
+        type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -395,7 +399,7 @@ describe('SourceDestinationIp', () => {
     });
 
     test('it renders a `Source` label when type is `source` (just) the sourcePort field is populated', () => {
-      const type = 'source';
+      const type = sourceType;
       const wrapper = mount(
         <TestProviders>
           <SourceDestinationIp {...{ ...defaultProps, type }} />
@@ -408,7 +412,7 @@ describe('SourceDestinationIp', () => {
     test('it renders a `Destination` label when type is `destination` and (just) the destinationPort field is populated', () => {
       const diffProps = {
         destinationIp: undefined,
-        type: 'destination',
+        type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -424,7 +428,7 @@ describe('SourceDestinationIp', () => {
     test('it renders a `Source` label when type is `source` and both sourceIp and sourcePort are populated', () => {
       const diffProps = {
         sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
-        type: 'source',
+        type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -437,7 +441,7 @@ describe('SourceDestinationIp', () => {
 
     test('it renders a `Destination` label when type is `destination` and both destinationIp and destinationPort are populated', () => {
       const diffProps = {
-        type: 'destination',
+        type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -454,7 +458,7 @@ describe('SourceDestinationIp', () => {
       const diffProps = {
         sourceIp: [],
         sourcePort: [],
-        type: 'source',
+        type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -469,7 +473,7 @@ describe('SourceDestinationIp', () => {
       const diffProps = {
         destinationIp: [],
         destinationPort: [],
-        type: 'destination',
+        type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -483,7 +487,7 @@ describe('SourceDestinationIp', () => {
     test('it renders the expected source IP when type is `source`, and both sourceIp and sourcePort are populated', () => {
       const diffProps = {
         sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
-        type: 'source',
+        type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -500,7 +504,7 @@ describe('SourceDestinationIp', () => {
       const diffProps = {
         sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
         sourcePort: [],
-        type: 'source',
+        type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -515,7 +519,7 @@ describe('SourceDestinationIp', () => {
 
     test('it renders the expected destination IP when type is `destination`, and both destinationIp and destinationPort are populated', () => {
       const diffProps = {
-        type: 'destination',
+        type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -531,7 +535,7 @@ describe('SourceDestinationIp', () => {
     test('it renders the expected destination IP when type is `destination`, but the length of the destinationIp and destinationPort port arrays is different', () => {
       const diffProps = {
         destinationPort: [],
-        type: 'destination',
+        type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -547,7 +551,7 @@ describe('SourceDestinationIp', () => {
     test('it renders the expected source port when type is `source`, and both sourceIp and sourcePort are populated', () => {
       const diffProps = {
         sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
-        type: 'source',
+        type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -562,7 +566,7 @@ describe('SourceDestinationIp', () => {
 
     test('it renders the expected destination port when type is `destination`, and both destinationIp and destinationPort are populated', () => {
       const diffProps = {
-        type: 'destination',
+        type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -576,7 +580,7 @@ describe('SourceDestinationIp', () => {
     });
 
     test('it renders the expected source port when type is `source`, but only sourcePort is populated', () => {
-      const type = 'source';
+      const type = sourceType;
       const wrapper = mount(
         <TestProviders>
           <SourceDestinationIp {...{ ...defaultProps, type }} />
@@ -591,7 +595,7 @@ describe('SourceDestinationIp', () => {
     test('it renders the expected destination port when type is `destination`, and only destinationPort is populated', () => {
       const diffProps = {
         destinationIp: undefined,
-        type: 'destination',
+        type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
@@ -605,7 +609,7 @@ describe('SourceDestinationIp', () => {
     });
 
     test('it does NOT render the badge when type is `source`, but both sourceIp and sourcePort are undefined', () => {
-      const type = 'source';
+      const type = sourceType;
       const diffProps = {
         sourcePort: undefined,
         type,
@@ -620,7 +624,7 @@ describe('SourceDestinationIp', () => {
     });
 
     test('it does NOT render the badge when type is `destination`, but both destinationIp and destinationPort are undefined', () => {
-      const type = 'destination';
+      const type = destinationType;
       const diffProps = {
         destinationIp: undefined,
         destinationPort: undefined,
@@ -637,7 +641,7 @@ describe('SourceDestinationIp', () => {
 
     test('it renders geo fields', () => {
       const diffProps = {
-        type: 'source',
+        type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>

@@ -23,6 +23,7 @@ describe('UserPrimarySecondary', () => {
           userName="user-name-1"
           primary="primary-1"
           secondary="secondary-1"
+          timelineId="timeline-id"
         />
       );
       expect(wrapper).toMatchSnapshot();
@@ -37,6 +38,7 @@ describe('UserPrimarySecondary', () => {
             userName="user-name-1"
             primary={undefined}
             secondary={undefined}
+            timelineId="timeline-id"
           />
         </TestProviders>
       );
@@ -52,6 +54,7 @@ describe('UserPrimarySecondary', () => {
             userName="user-name-1"
             primary="unset"
             secondary="unset"
+            timelineId="timeline-id"
           />
         </TestProviders>
       );
@@ -67,6 +70,7 @@ describe('UserPrimarySecondary', () => {
             primary="primary-1"
             userName={undefined}
             secondary={undefined}
+            timelineId="timeline-id"
           />
         </TestProviders>
       );
@@ -82,6 +86,7 @@ describe('UserPrimarySecondary', () => {
             primary="primary-1"
             userName="unset"
             secondary="unset"
+            timelineId="timeline-id"
           />
         </TestProviders>
       );
@@ -97,6 +102,7 @@ describe('UserPrimarySecondary', () => {
             userName={undefined}
             primary={undefined}
             secondary="secondary-1"
+            timelineId="timeline-id"
           />
         </TestProviders>
       );
@@ -110,6 +116,7 @@ describe('UserPrimarySecondary', () => {
             contextId="context-123"
             eventId="event-123"
             secondary="secondary-1"
+            timelineId="timeline-id"
             primary="unset"
             userName="unset"
           />
@@ -127,6 +134,7 @@ describe('UserPrimarySecondary', () => {
             userName="username-1"
             primary="username-1"
             secondary="username-1"
+            timelineId="timeline-id"
           />
         </TestProviders>
       );
@@ -142,6 +150,7 @@ describe('UserPrimarySecondary', () => {
             userName="[username]"
             primary="[primary]"
             secondary="[secondary]"
+            timelineId="timeline-id"
           />
         </TestProviders>
       );

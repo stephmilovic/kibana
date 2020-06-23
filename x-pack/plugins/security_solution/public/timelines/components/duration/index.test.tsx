@@ -22,6 +22,7 @@ describe('Duration', () => {
           contextId="test"
           eventId="abc"
           fieldName="event.duration"
+          timelineId="timeline-1"
           value={`${ONE_MILLISECOND_AS_NANOSECONDS}`}
         />
       </TestProviders>

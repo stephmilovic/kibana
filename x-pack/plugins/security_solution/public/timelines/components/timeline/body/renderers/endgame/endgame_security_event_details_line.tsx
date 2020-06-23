@@ -39,7 +39,7 @@ interface Props {
   processExecutable: string | null | undefined;
   processName: string | null | undefined;
   processPid: number | null | undefined;
-  timelineId?: string;
+  timelineId: string;
   userDomain: string | null | undefined;
   userName: string | null | undefined;
   winlogEventId: string | null | undefined;

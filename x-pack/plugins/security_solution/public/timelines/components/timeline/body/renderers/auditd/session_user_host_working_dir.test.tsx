@@ -27,6 +27,7 @@ describe('SessionUserHostWorkingDir', () => {
             userName="username-123"
             primary="primary-123"
             secondary="secondary-123"
+            timelineId="timeline-id"
             workingDirectory="workingdir-123"
           />
         </EuiFlexItem>
@@ -46,6 +47,7 @@ describe('SessionUserHostWorkingDir', () => {
               userName={undefined}
               primary={undefined}
               secondary={undefined}
+              timelineId="timeline-id"
               workingDirectory={undefined}
             />
           </EuiFlexItem>
@@ -66,6 +68,7 @@ describe('SessionUserHostWorkingDir', () => {
               userName={undefined}
               primary={undefined}
               secondary={undefined}
+              timelineId="timeline-id"
               workingDirectory={undefined}
             />
           </EuiFlexItem>
@@ -86,6 +89,7 @@ describe('SessionUserHostWorkingDir', () => {
               userName={undefined}
               primary={undefined}
               secondary={undefined}
+              timelineId="timeline-id"
               workingDirectory={undefined}
             />
           </EuiFlexItem>
@@ -106,6 +110,7 @@ describe('SessionUserHostWorkingDir', () => {
               userName="username-123"
               primary={undefined}
               secondary={undefined}
+              timelineId="timeline-id"
               workingDirectory={undefined}
             />
           </EuiFlexItem>
@@ -126,6 +131,7 @@ describe('SessionUserHostWorkingDir', () => {
               userName="username-123"
               primary="primary-123"
               secondary={undefined}
+              timelineId="timeline-id"
               workingDirectory={undefined}
             />
           </EuiFlexItem>
@@ -146,6 +152,7 @@ describe('SessionUserHostWorkingDir', () => {
               userName="username-123"
               primary="primary-123"
               secondary="secondary-123"
+              timelineId="timeline-id"
               workingDirectory={undefined}
             />
           </EuiFlexItem>
@@ -166,6 +173,7 @@ describe('SessionUserHostWorkingDir', () => {
               userName="username-123"
               primary="primary-123"
               secondary="secondary-123"
+              timelineId="timeline-id"
               workingDirectory="workingdirectory-123"
             />
           </EuiFlexItem>

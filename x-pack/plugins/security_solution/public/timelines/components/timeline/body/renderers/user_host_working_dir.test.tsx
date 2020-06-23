@@ -23,6 +23,7 @@ describe('UserHostWorkingDir', () => {
           userDomain="[userDomain-123]"
           userName="[userName-123]"
           hostName="[hostName-123]"
+          timelineId="timeline-1"
           workingDirectory="[working-directory-123]"
         />
       );
@@ -37,6 +38,7 @@ describe('UserHostWorkingDir', () => {
           userDomain={null}
           userName={null}
           hostName={null}
+          timelineId="timeline-1"
           workingDirectory={null}
         />
       );
@@ -51,6 +53,7 @@ describe('UserHostWorkingDir', () => {
           userDomain={undefined}
           userName={undefined}
           hostName={undefined}
+          timelineId="timeline-1"
           workingDirectory={undefined}
         />
       );
@@ -67,6 +70,7 @@ describe('UserHostWorkingDir', () => {
               userDomain="[user-domain-123]"
               userName={undefined}
               hostName={undefined}
+              timelineId="timeline-1"
               workingDirectory={undefined}
             />
           </div>
@@ -85,6 +89,7 @@ describe('UserHostWorkingDir', () => {
               userDomain={undefined}
               userName="[user-name-123]"
               hostName={undefined}
+              timelineId="timeline-1"
               workingDirectory={undefined}
             />
           </div>
@@ -103,6 +108,7 @@ describe('UserHostWorkingDir', () => {
               userDomain={undefined}
               userName={null}
               hostName="[host-name-123]"
+              timelineId="timeline-1"
               workingDirectory={undefined}
             />
           </div>
@@ -121,6 +127,7 @@ describe('UserHostWorkingDir', () => {
               userDomain={null}
               userName={null}
               hostName={null}
+              timelineId="timeline-1"
               workingDirectory="[working-directory-123]"
             />
           </div>
@@ -139,6 +146,7 @@ describe('UserHostWorkingDir', () => {
               userDomain={null}
               userName="[user-name-123]"
               hostName={null}
+              timelineId="timeline-1"
               workingDirectory="[working-directory-123]"
             />
           </div>
@@ -157,6 +165,7 @@ describe('UserHostWorkingDir', () => {
               userDomain={null}
               userName={null}
               hostName="[host-name-123]"
+              timelineId="timeline-1"
               workingDirectory="[working-directory-123]"
             />
           </div>
@@ -175,6 +184,7 @@ describe('UserHostWorkingDir', () => {
               userDomain="[user-domain-123]"
               userName="[user-name-123]"
               hostName="[host-name-123]"
+              timelineId="timeline-1"
               workingDirectory={null}
             />
           </div>
@@ -193,6 +203,7 @@ describe('UserHostWorkingDir', () => {
               userDomain={null}
               userName="[user-name-123]"
               hostName="[host-name-123]"
+              timelineId="timeline-1"
               workingDirectory={undefined}
             />
           </div>
@@ -213,6 +224,7 @@ describe('UserHostWorkingDir', () => {
               userDomain={null}
               userName="[user-name-123]"
               hostName="[host-name-123]"
+              timelineId="timeline-1"
               workingDirectory={undefined}
             />
           </div>
@@ -232,6 +244,7 @@ describe('UserHostWorkingDir', () => {
               userDomain="[user-domain-123]"
               userName={undefined}
               hostName={undefined}
+              timelineId="timeline-1"
               workingDirectory={undefined}
             />
           </div>
@@ -252,6 +265,7 @@ describe('UserHostWorkingDir', () => {
               userDomainField="overridden.field.name"
               userName={undefined}
               hostName={undefined}
+              timelineId="timeline-1"
               workingDirectory={undefined}
             />
           </div>
@@ -273,6 +287,7 @@ describe('UserHostWorkingDir', () => {
               userDomain={undefined}
               userName="[user-name-123]"
               hostName={undefined}
+              timelineId="timeline-1"
               workingDirectory={undefined}
             />
           </div>
@@ -293,6 +308,7 @@ describe('UserHostWorkingDir', () => {
               userName="[user-name-123]"
               userNameField="overridden.field.name"
               hostName={undefined}
+              timelineId="timeline-1"
               workingDirectory={undefined}
             />
           </div>

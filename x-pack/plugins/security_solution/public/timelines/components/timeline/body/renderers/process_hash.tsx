@@ -22,7 +22,7 @@ interface Props {
   processHashMd5: string | null | undefined;
   processHashSha1: string | null | undefined;
   processHashSha256: string | null | undefined;
-  timelineId?: string;
+  timelineId: string;
 }
 
 export const ProcessHash = React.memo<Props>(

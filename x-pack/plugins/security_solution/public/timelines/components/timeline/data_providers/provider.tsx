@@ -12,9 +12,10 @@ import { ProviderItemBadge } from './provider_item_badge';
 
 interface OwnProps {
   dataProvider: DataProvider;
+  timelineId?: string;
 }
 
-export const Provider = React.memo<OwnProps>(({ dataProvider }) => (
+export const Provider = React.memo<OwnProps>(({ dataProvider, timelineId }) => (
   <ProviderItemBadge
     deleteProvider={noop}
     field={dataProvider.queryMatch.displayField || dataProvider.queryMatch.field}
@@ -22,6 +23,7 @@ export const Provider = React.memo<OwnProps>(({ dataProvider }) => (
     isEnabled={dataProvider.enabled}
     isExcluded={dataProvider.excluded}
     providerId={dataProvider.id}
+    timelineId={timelineId}
     toggleExcludedProvider={noop}
     toggleEnabledProvider={noop}
     val={dataProvider.queryMatch.displayValue || dataProvider.queryMatch.value}

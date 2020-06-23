@@ -88,6 +88,7 @@ describe('GenericFileDetails', () => {
             filePath="/somepath"
             fileIcon="document"
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -117,6 +118,7 @@ describe('GenericFileDetails', () => {
             filePath="/somepath"
             fileIcon="document"
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -146,6 +148,7 @@ describe('GenericFileDetails', () => {
             filePath="/somepath"
             fileIcon="document"
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -175,6 +178,7 @@ describe('GenericFileDetails', () => {
             filePath="/somepath"
             fileIcon="document"
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -204,6 +208,7 @@ describe('GenericFileDetails', () => {
             filePath="/somepath"
             fileIcon="document"
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -233,6 +238,7 @@ describe('GenericFileDetails', () => {
             filePath="/somepath"
             fileIcon="document"
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -262,6 +268,7 @@ describe('GenericFileDetails', () => {
             filePath="/somepath"
             fileIcon="document"
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -291,6 +298,7 @@ describe('GenericFileDetails', () => {
             filePath="/somepath"
             fileIcon="document"
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -320,6 +328,7 @@ describe('GenericFileDetails', () => {
             filePath="/somepath"
             fileIcon="document"
             result="success"
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -349,6 +358,7 @@ describe('GenericFileDetails', () => {
             args={undefined}
             result={undefined}
             filePath={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -376,6 +386,7 @@ describe('GenericFileDetails', () => {
             args={undefined}
             result={undefined}
             filePath={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -403,6 +414,7 @@ describe('GenericFileDetails', () => {
             args={undefined}
             result={undefined}
             filePath={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -430,6 +442,7 @@ describe('GenericFileDetails', () => {
             args={undefined}
             result={undefined}
             filePath={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -457,6 +470,7 @@ describe('GenericFileDetails', () => {
             args={undefined}
             result={undefined}
             filePath={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -484,6 +498,7 @@ describe('GenericFileDetails', () => {
             args={undefined}
             result={undefined}
             filePath={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );
@@ -511,6 +526,7 @@ describe('GenericFileDetails', () => {
             workingDirectory={undefined}
             result={undefined}
             filePath={undefined}
+            timelineId="timeline-1"
           />
         </TestProviders>
       );

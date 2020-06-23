@@ -28,6 +28,7 @@ describe('Events', () => {
           contextId="test"
           fieldName="timestamp"
           fieldType="date"
+          timelineId="timeline-1"
           value={get('timestamp', mockTimelineData[0].ecs)}
         />
       </TestProviders>
@@ -43,6 +44,7 @@ describe('Events', () => {
           contextId="test"
           fieldName="timestamp"
           fieldType="date"
+          timelineId="timeline-1"
           value={get('timestamp', mockTimelineData[0].ecs)}
         />
       </TestProviders>
@@ -59,6 +61,7 @@ describe('Events', () => {
           contextId="test"
           fieldName="timestamp"
           fieldType="text"
+          timelineId="timeline-1"
           value={get('timestamp', mockTimelineData[0].ecs)}
         />
       </TestProviders>
@@ -80,6 +83,7 @@ describe('Events', () => {
           contextId="test"
           fieldName="timestamp"
           fieldType="date"
+          timelineId="timeline-1"
           value={get('timestamp', hasBadDate)}
         />
       </TestProviders>
@@ -96,6 +100,7 @@ describe('Events', () => {
           contextId="test"
           fieldName="event.module"
           fieldType="text"
+          timelineId="timeline-1"
           value={get('event.module[0]', mockTimelineData[0].ecs)}
         />
       </TestProviders>
@@ -112,6 +117,7 @@ describe('Events', () => {
           contextId="test"
           fieldName="fake.field"
           fieldType="text"
+          timelineId="timeline-1"
           value={get('fake.field', mockTimelineData[0].ecs)}
         />
       </TestProviders>
@@ -129,6 +135,7 @@ describe('Events', () => {
           fieldName="message"
           fieldType="text"
           truncate
+          timelineId="timeline-1"
           value={'some message'}
         />
       </TestProviders>
@@ -146,6 +153,7 @@ describe('Events', () => {
           fieldName="message"
           fieldType="text"
           truncate
+          timelineId="timeline-1"
           value={null}
         />
       </TestProviders>
@@ -162,6 +170,7 @@ describe('Events', () => {
           fieldName="message"
           fieldType="text"
           truncate
+          timelineId="timeline-1"
           value={undefined}
         />
       </TestProviders>
@@ -178,6 +187,7 @@ describe('Events', () => {
           fieldName="message"
           fieldType="text"
           truncate
+          timelineId="timeline-1"
           value={''}
         />
       </TestProviders>
@@ -193,6 +203,7 @@ describe('Events', () => {
           contextId="test"
           fieldName="message"
           fieldType="text"
+          timelineId="timeline-1"
           value={'some message'}
         />
       </TestProviders>
@@ -209,6 +220,7 @@ describe('Events', () => {
           fieldName="message"
           fieldType="text"
           truncate
+          timelineId="timeline-1"
           value={'some message'}
         />
       </TestProviders>
@@ -224,6 +236,7 @@ describe('Events', () => {
           contextId="test"
           fieldName="NOT-message"
           fieldType="text"
+          timelineId="timeline-1"
           value={'a NON-message value'}
         />
       </TestProviders>
@@ -239,6 +252,7 @@ describe('Events', () => {
           contextId="test"
           fieldName={HOST_NAME_FIELD_NAME}
           fieldType="text"
+          timelineId="timeline-1"
           value={'some-hostname'}
         />
       </TestProviders>
@@ -254,6 +268,7 @@ describe('Events', () => {
           contextId="test"
           fieldName={HOST_NAME_FIELD_NAME}
           fieldType="text"
+          timelineId="timeline-1"
           value={undefined}
         />
       </TestProviders>
@@ -269,6 +284,7 @@ describe('Events', () => {
           contextId="test"
           fieldName={HOST_NAME_FIELD_NAME}
           fieldType="text"
+          timelineId="timeline-1"
           value={undefined}
         />
       </TestProviders>
