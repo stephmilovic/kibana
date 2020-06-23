@@ -371,13 +371,14 @@ describe('SourceDestinationIp', () => {
     };
     test('it renders a `Source` label when type is `source` and (just) the sourceIp field is populated', () => {
       const diffProps = {
+        ...defaultProps,
         sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
         sourcePort: undefined,
         type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -386,12 +387,13 @@ describe('SourceDestinationIp', () => {
 
     test('it renders a `Destination` label when type is `destination` and (just) the destinationIp field is populated', () => {
       const diffProps = {
+        ...defaultProps,
         destinationPort: undefined,
         type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -401,10 +403,13 @@ describe('SourceDestinationIp', () => {
     });
 
     test('it renders a `Source` label when type is `source` (just) the sourcePort field is populated', () => {
-      const type = sourceType;
+      const diffProps = {
+        ...defaultProps,
+        type: sourceType,
+      };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, type }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -413,12 +418,13 @@ describe('SourceDestinationIp', () => {
 
     test('it renders a `Destination` label when type is `destination` and (just) the destinationPort field is populated', () => {
       const diffProps = {
+        ...defaultProps,
         destinationIp: undefined,
         type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -429,12 +435,13 @@ describe('SourceDestinationIp', () => {
 
     test('it renders a `Source` label when type is `source` and both sourceIp and sourcePort are populated', () => {
       const diffProps = {
+        ...defaultProps,
         sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
         type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -443,11 +450,12 @@ describe('SourceDestinationIp', () => {
 
     test('it renders a `Destination` label when type is `destination` and both destinationIp and destinationPort are populated', () => {
       const diffProps = {
+        ...defaultProps,
         type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -458,13 +466,14 @@ describe('SourceDestinationIp', () => {
 
     test('it does NOT render a `Source` label when type is `source` and both sourceIp and sourcePort are empty', () => {
       const diffProps = {
+        ...defaultProps,
         sourceIp: [],
         sourcePort: [],
         type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -473,13 +482,14 @@ describe('SourceDestinationIp', () => {
 
     test('it does NOT render a `Destination` label when type is `destination` and both destinationIp and destinationPort are empty', () => {
       const diffProps = {
+        ...defaultProps,
         destinationIp: [],
         destinationPort: [],
         type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -488,12 +498,13 @@ describe('SourceDestinationIp', () => {
 
     test('it renders the expected source IP when type is `source`, and both sourceIp and sourcePort are populated', () => {
       const diffProps = {
+        ...defaultProps,
         sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
         type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -504,13 +515,14 @@ describe('SourceDestinationIp', () => {
 
     test('it renders the expected source IP when type is `source`, but the length of the sourceIp and sourcePort arrays is different', () => {
       const diffProps = {
+        ...defaultProps,
         sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
         sourcePort: [],
         type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -521,11 +533,12 @@ describe('SourceDestinationIp', () => {
 
     test('it renders the expected destination IP when type is `destination`, and both destinationIp and destinationPort are populated', () => {
       const diffProps = {
+        ...defaultProps,
         type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -536,12 +549,13 @@ describe('SourceDestinationIp', () => {
 
     test('it renders the expected destination IP when type is `destination`, but the length of the destinationIp and destinationPort port arrays is different', () => {
       const diffProps = {
+        ...defaultProps,
         destinationPort: [],
         type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -552,12 +566,13 @@ describe('SourceDestinationIp', () => {
 
     test('it renders the expected source port when type is `source`, and both sourceIp and sourcePort are populated', () => {
       const diffProps = {
+        ...defaultProps,
         sourceIp: asArrayIfExists(get(SOURCE_IP_FIELD_NAME, getMockNetflowData())),
         type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -568,11 +583,12 @@ describe('SourceDestinationIp', () => {
 
     test('it renders the expected destination port when type is `destination`, and both destinationIp and destinationPort are populated', () => {
       const diffProps = {
+        ...defaultProps,
         type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -582,10 +598,13 @@ describe('SourceDestinationIp', () => {
     });
 
     test('it renders the expected source port when type is `source`, but only sourcePort is populated', () => {
-      const type = sourceType;
+      const diffProps = {
+        ...defaultProps,
+        type: sourceType,
+      };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, type }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -596,12 +615,13 @@ describe('SourceDestinationIp', () => {
 
     test('it renders the expected destination port when type is `destination`, and only destinationPort is populated', () => {
       const diffProps = {
+        ...defaultProps,
         destinationIp: undefined,
         type: destinationType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -613,12 +633,13 @@ describe('SourceDestinationIp', () => {
     test('it does NOT render the badge when type is `source`, but both sourceIp and sourcePort are undefined', () => {
       const type = sourceType;
       const diffProps = {
+        ...defaultProps,
         sourcePort: undefined,
         type,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -628,13 +649,14 @@ describe('SourceDestinationIp', () => {
     test('it does NOT render the badge when type is `destination`, but both destinationIp and destinationPort are undefined', () => {
       const type = destinationType;
       const diffProps = {
+        ...defaultProps,
         destinationIp: undefined,
         destinationPort: undefined,
         type,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
@@ -643,11 +665,12 @@ describe('SourceDestinationIp', () => {
 
     test('it renders geo fields', () => {
       const diffProps = {
+        ...defaultProps,
         type: sourceType,
       };
       const wrapper = mount(
         <TestProviders>
-          <SourceDestinationIp {...{ ...defaultProps, ...diffProps }} />
+          <SourceDestinationIp {...diffProps} />
         </TestProviders>
       );
 
