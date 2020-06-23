@@ -120,6 +120,7 @@ exports[`SourceDestination renders correctly against snapshot 1`] = `
         9987,
       ]
     }
+    timelineId="timeline-1"
     transport={
       Array [
         "tcp",

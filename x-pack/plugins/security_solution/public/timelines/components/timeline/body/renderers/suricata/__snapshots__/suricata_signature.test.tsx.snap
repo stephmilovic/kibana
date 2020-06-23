@@ -9,6 +9,7 @@ exports[`SuricataSignature rendering it renders the default SuricataSignature 1`
   <DraggableSignatureId
     id="draggable-signature-id-test-doc-id-123"
     signatureId={123}
+    timelineId="timeline-1"
   />
   <Tokens
     tokens={
@@ -26,6 +27,7 @@ exports[`SuricataSignature rendering it renders the default SuricataSignature 1`
       data-test-subj="draggable-signature-link"
       field="suricata.eve.alert.signature"
       id="suricata-signature-default-draggable-test-doc-id-123-suricata.eve.alert.signature"
+      timelineId="timeline-1"
       value="ET SCAN ATTACK Hello"
     >
       <div>

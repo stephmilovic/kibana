@@ -142,6 +142,7 @@ exports[`netflowRowRenderer renders correctly against snapshot 1`] = `
             9987,
           ]
         }
+        timelineId="test"
         tlsClientCertificateFingerprintSha1={
           Array [
             "tls.client_certificate.fingerprint.sha1-value",

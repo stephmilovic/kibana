@@ -13,6 +13,7 @@ exports[`SystemGenericFileDetails rendering it renders the default SystemGeneric
     processPid={6278}
     showMessage={true}
     text="[generic-text-123]"
+    timelineId="timeline-1"
     userName="Evan"
   />
   <EuiSpacer
@@ -103,7 +104,7 @@ exports[`SystemGenericFileDetails rendering it renders the default SystemGeneric
         "zeek": null,
       }
     }
-    timelineId="test"
+    timelineId="timeline-1"
   />
 </Details>
 `;

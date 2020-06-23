@@ -14,6 +14,7 @@ exports[`GenericDetails rendering it renders the default AuditAcquiredCredsDetai
     secondary="alice"
     session="340"
     text="generic-text-123"
+    timelineId="test"
     userName="root"
   />
   <EuiSpacer

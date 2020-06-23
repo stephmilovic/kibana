@@ -150,6 +150,7 @@ exports[`Netflow renders correctly against snapshot 1`] = `
           9987,
         ]
       }
+      timelineId="timeline-1"
       transport={
         Array [
           "tcp",
@@ -168,6 +169,7 @@ exports[`Netflow renders correctly against snapshot 1`] = `
     <Fingerprints
       contextId="test"
       eventId="abcd"
+      timelineId="timeline-1"
       tlsClientCertificateFingerprintSha1={
         Array [
           "tls.client_certificate.fingerprint.sha1-value",

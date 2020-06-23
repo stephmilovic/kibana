@@ -6,5 +6,6 @@ exports[`UserPrimarySecondary rendering it renders the default PrimarySecondaryU
   eventId="event-123"
   primary="primary-1"
   secondary="secondary-1"
+  timelineId="timeline-id"
 />
 `;

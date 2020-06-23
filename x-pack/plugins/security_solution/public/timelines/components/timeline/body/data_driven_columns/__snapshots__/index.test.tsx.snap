@@ -30,6 +30,7 @@ exports[`Columns it renders the expected columns 1`] = `
         }
         key="empty-column-renderer-draggable-wrapper-test-message-1-message"
         render={[Function]}
+        timelineId="test"
         truncate={true}
       />
     </styled.div>
@@ -48,6 +49,7 @@ exports[`Columns it renders the expected columns 1`] = `
         fieldName="event.category"
         fieldType=""
         key="plain-column-renderer-formatted-field-value-test-event.category-1-event.category-Access"
+        timelineId="test"
         truncate={true}
         value="Access"
       />
@@ -67,6 +69,7 @@ exports[`Columns it renders the expected columns 1`] = `
         fieldName="event.action"
         fieldType=""
         key="plain-column-renderer-formatted-field-value-test-event.action-1-event.action-Action"
+        timelineId="test"
         truncate={true}
         value="Action"
       />
@@ -86,6 +89,7 @@ exports[`Columns it renders the expected columns 1`] = `
         fieldName="host.name"
         fieldType=""
         key="plain-column-renderer-formatted-field-value-test-host.name-1-host.name-apache"
+        timelineId="test"
         truncate={true}
         value="apache"
       />
@@ -105,6 +109,7 @@ exports[`Columns it renders the expected columns 1`] = `
         fieldName="source.ip"
         fieldType=""
         key="plain-column-renderer-formatted-field-value-test-source.ip-1-source.ip-192.168.0.1"
+        timelineId="test"
         truncate={true}
         value="192.168.0.1"
       />
@@ -124,6 +129,7 @@ exports[`Columns it renders the expected columns 1`] = `
         fieldName="destination.ip"
         fieldType=""
         key="plain-column-renderer-formatted-field-value-test-destination.ip-1-destination.ip-192.168.0.3"
+        timelineId="test"
         truncate={true}
         value="192.168.0.3"
       />
@@ -143,6 +149,7 @@ exports[`Columns it renders the expected columns 1`] = `
         fieldName="user.name"
         fieldType=""
         key="plain-column-renderer-formatted-field-value-test-user.name-1-user.name-john.dee"
+        timelineId="test"
         truncate={true}
         value="john.dee"
       />

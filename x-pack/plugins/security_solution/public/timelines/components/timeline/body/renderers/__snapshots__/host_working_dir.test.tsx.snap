@@ -10,6 +10,7 @@ exports[`HostWorkingDir renders correctly against snapshot 1`] = `
       contextId="test"
       eventId="1"
       field="host.name"
+      timelineId="timeline-1"
       value="[hostname-123]"
     />
   </TokensFlexItem>
@@ -28,6 +29,7 @@ exports[`HostWorkingDir renders correctly against snapshot 1`] = `
       eventId="1"
       field="process.working_directory"
       iconType="folderOpen"
+      timelineId="timeline-1"
       value="[working-directory-123]"
     />
   </TokensFlexItem>

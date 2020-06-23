@@ -18,6 +18,7 @@ exports[`GenericFileDetails rendering it renders the default GenericFileDetails 
     secondary="root"
     session="unset"
     text="generic-text-123"
+    timelineId="test"
     userName="root"
     workingDirectory="/"
   />

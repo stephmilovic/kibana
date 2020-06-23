@@ -10,6 +10,7 @@ exports[`SystemGenericDetails rendering it renders the default SystemGenericDeta
     outcome="failure"
     processPid={6278}
     text="[generic-text-123]"
+    timelineId="test"
     userName="Braden"
   />
   <EuiSpacer

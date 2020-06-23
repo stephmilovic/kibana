@@ -7,6 +7,7 @@ exports[`ProcessDraggable rendering it renders against shallow snapshot 1`] = `
     eventId="event-123"
     field="process.name"
     iconType="console"
+    timelineId="timeline-1"
     value="process-name-1"
   />
   <DraggableBadge
@@ -14,6 +15,7 @@ exports[`ProcessDraggable rendering it renders against shallow snapshot 1`] = `
     eventId="event-123"
     field="process.pid"
     queryValue="123"
+    timelineId="timeline-1"
     value="(123)"
   />
 </div>

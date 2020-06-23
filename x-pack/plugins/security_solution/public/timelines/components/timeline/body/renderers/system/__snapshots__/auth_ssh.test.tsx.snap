@@ -11,6 +11,7 @@ exports[`AuthSsh rendering it renders against shallow snapshot 1`] = `
       eventId="[event-123]"
       field="system.audit.package.name"
       iconType="document"
+      timelineId="timeline-1"
       value="[ssh-signature]"
     />
   </TokensFlexItem>
@@ -23,6 +24,7 @@ exports[`AuthSsh rendering it renders against shallow snapshot 1`] = `
       eventId="[event-123]"
       field="system.audit.package.version"
       iconType="document"
+      timelineId="timeline-1"
       value="[ssh-method]"
     />
   </TokensFlexItem>

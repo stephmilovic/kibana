@@ -11,6 +11,7 @@ exports[`Package rendering it renders against shallow snapshot 1`] = `
       eventId="[event-123]"
       field="system.audit.package.name"
       iconType="document"
+      timelineId="timeline-1"
       value="package-name-123"
     />
   </TokensFlexItem>
@@ -23,6 +24,7 @@ exports[`Package rendering it renders against shallow snapshot 1`] = `
       eventId="[event-123]"
       field="system.audit.package.version"
       iconType="document"
+      timelineId="timeline-1"
       value="package-version-123"
     />
   </TokensFlexItem>
@@ -34,6 +36,7 @@ exports[`Package rendering it renders against shallow snapshot 1`] = `
       contextId="[context-123]"
       eventId="[event-123]"
       field="system.audit.package.summary"
+      timelineId="timeline-1"
       value="package-summary-123"
     />
   </TokensFlexItem>

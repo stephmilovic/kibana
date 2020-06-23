@@ -11,6 +11,7 @@ exports[`SessionUserHostWorkingDir rendering it renders the default SessionUserH
     primary="primary-123"
     secondary="secondary-123"
     session="session-123"
+    timelineId="timeline-id"
     userName="username-123"
     workingDirectory="workingdir-123"
   />

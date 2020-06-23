@@ -5,6 +5,7 @@ exports[`draggables rendering it renders the default Badge 1`] = `
   field="some-field"
   id="draggable-badge-default-draggable-context-id-event-id-some-field-some-value"
   queryValue="some-query-value"
+  timelineId="timeline-1"
   value="some-value"
 >
   <Badge
