@@ -12,6 +12,8 @@ import { useMountAppended } from '../../../common/utils/use_mount_appended';
 
 import { Ip } from '.';
 
+jest.mock('../../../common/components/link_to');
+
 describe('Port', () => {
   const mount = useMountAppended();
   const defaultProps = {
@@ -46,6 +48,6 @@ describe('Port', () => {
     expect(
       wrapper.find('[data-test-subj="draggable-content-destination.ip"]').find('a').first().props()
         .href
-    ).toEqual('#/link-to/network/ip/10.1.2.3/source');
+    ).toEqual('/ip/10.1.2.3/source');
   });
 });

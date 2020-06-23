@@ -121,6 +121,8 @@ const getNetflowInstance = () => (
   />
 );
 
+jest.mock('../../../common/components/link_to');
+
 describe('Netflow', () => {
   const mount = useMountAppended();
 

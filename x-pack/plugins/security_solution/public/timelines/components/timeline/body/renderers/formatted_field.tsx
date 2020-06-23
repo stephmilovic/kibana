@@ -30,7 +30,7 @@ import {
   RULE_REFERENCE_FIELD_NAME,
   SIGNAL_RULE_NAME_FIELD_NAME,
 } from './constants';
-import { renderRuleName, renderEventModule, renderRuleReference } from './formatted_field_helpers';
+import { RenderRuleName, renderEventModule, renderRuleReference } from './formatted_field_helpers';
 
 // simple black-list to prevent dragging and dropping fields such as message name
 const columnNamesNotDraggable = [MESSAGE_FIELD_NAME];
@@ -127,15 +127,17 @@ const FormattedFieldValueComponent: React.FC<{
       />
     );
   } else if (fieldName === SIGNAL_RULE_NAME_FIELD_NAME) {
-    return renderRuleName({
-      contextId,
-      eventId,
-      fieldName,
-      linkValue,
-      timelineId,
-      truncate,
-      value,
-    });
+    return (
+      <RenderRuleName
+        contextId={contextId}
+        eventId={eventId}
+        fieldName={fieldName}
+        linkValue={linkValue}
+        truncate={truncate}
+        timelineId={timelineId}
+        value={value}
+      />
+    );
   } else if (fieldName === EVENT_MODULE_FIELD_NAME) {
     return renderEventModule({
       contextId,

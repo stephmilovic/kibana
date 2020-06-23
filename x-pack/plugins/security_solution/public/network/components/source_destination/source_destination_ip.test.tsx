@@ -39,6 +39,8 @@ import { SourceDestinationType } from './types';
 const destinationType: SourceDestinationType = 'destination';
 const sourceType: SourceDestinationType = 'source';
 
+jest.mock('../../../common/components/link_to');
+
 describe('SourceDestinationIp', () => {
   describe('#isIpFieldPopulated', () => {
     test('it returns true when type is `source` and sourceIp has an IP address', () => {
