@@ -113,11 +113,13 @@ export const EventColumnView = React.memo<Props>(
       />
     );
 
-    const onClickCb = useCallback((cb: () => void) => {
-      cb();
-      closePopover();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    const onClickCb = useCallback(
+      (cb: () => void) => {
+        cb();
+        closePopover();
+      },
+      [closePopover]
+    );
 
     const additionalActions = useMemo<JSX.Element[]>(() => {
       const grouped = timelineActions.reduce(
