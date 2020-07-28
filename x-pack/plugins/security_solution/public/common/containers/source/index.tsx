@@ -7,7 +7,7 @@
 import { isUndefined } from 'lodash';
 import { set } from '@elastic/safer-lodash-set/fp';
 import { get, keyBy, pick, isEmpty } from 'lodash/fp';
-import { useEffect, useMemo, useState } from 'react';
+import React, { createContext, useEffect, useMemo, useState } from 'react';
 import memoizeOne from 'memoize-one';
 import { IIndexPattern } from 'src/plugins/data/public';
 
@@ -209,4 +209,23 @@ export const useWithSource = (
   }, [apolloClient, sourceId, defaultIndex]);
 
   return state;
+};
+
+const init: UseWithSourceState = {
+  browserFields: [],
+  docValueFields: [],
+  errorMessage: null,
+  indexPattern: [],
+  indicesExist: null,
+  loading: false,
+};
+
+const ManageIndexPatternContext = createContext<UseWithSourceState>(init);
+
+interface ManageIndexPatternProps {
+  children: React.ReactNode;
+}
+
+export const ManageIndexPattern = ({ children }: ManageIndexPatternProps) => {
+  const indexPatternManager = useWithSource();
 };
