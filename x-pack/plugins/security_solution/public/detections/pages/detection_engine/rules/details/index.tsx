@@ -40,7 +40,7 @@ import { WrapperPage } from '../../../../../common/components/wrapper_page';
 import { Rule } from '../../../../containers/detection_engine/rules';
 import { useListsConfig } from '../../../../containers/detection_engine/lists/use_lists_config';
 
-import { useWithSource } from '../../../../../common/containers/source';
+import { useManageSource } from '../../../../../common/containers/source';
 import { SpyRoute } from '../../../../../common/utils/route/spy_routes';
 
 import { StepAboutRuleToggleDetails } from '../../../../components/rules/step_about_rule_details';
@@ -317,7 +317,18 @@ export const RuleDetailsPageComponent: FC<PropsFromRedux> = ({
     [setShowBuildingBlockAlerts]
   );
 
-  const { indicesExist, indexPattern } = useWithSource('default', indexToAdd);
+  const { getManageSourceById, initializeSource } = useManageSource();
+
+  const { indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
+    () => getManageSourceById('rules'),
+    [getManageSourceById]
+  );
+  useEffect(() => {
+    if (getManageSourceById('rules').loading) {
+      initializeSource('rules', indexToAdd);
+    }
+    // eslint-disable-next-line
+  }, []);
 
   const exceptionLists = useMemo((): {
     lists: ExceptionIdentifiers[];
@@ -363,7 +374,7 @@ export const RuleDetailsPageComponent: FC<PropsFromRedux> = ({
     <>
       {hasIndexWrite != null && !hasIndexWrite && <NoWriteAlertsCallOut />}
       {userHasNoPermissions(canUserCRUD) && <ReadOnlyCallOut />}
-      {indicesExist ? (
+      {indicesExist || isLoadingIndicies ? (
         <StickyContainer>
           <EuiWindowEvent event="resize" handler={noop} />
           <FiltersGlobal show={showGlobalFilters({ globalFullScreen, graphEventId })}>

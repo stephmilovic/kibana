@@ -158,7 +158,6 @@ export const useWithSource = (
 
     async function fetchSource() {
       if (!apolloClient) return;
-
       setState((prevState) => ({ ...prevState, loading: true }));
 
       try {
@@ -252,6 +251,7 @@ type ActionManageSource =
   | {
       type: 'INITIALIZE_SOURCE';
       id: string;
+      defaultIndex: string[];
       payload: ManageSourceInit;
     }
   | {
@@ -271,7 +271,7 @@ const reducerManageSource = (state: ManageSourceById, action: ActionManageSource
       return {
         ...state,
         [action.id]: {
-          ...getSourceDefaults(action.id),
+          ...getSourceDefaults(action.id, action.defaultIndex),
           ...state[action.id],
           ...action.payload,
         },
@@ -282,7 +282,7 @@ const reducerManageSource = (state: ManageSourceById, action: ActionManageSource
         [action.id]: {
           ...state[action.id],
           id: action.id,
-          isLoading: action.payload,
+          loading: action.payload,
         },
       };
     default:
@@ -311,32 +311,28 @@ export const useSourceManager = (): UseSourceManager => {
   const [state, dispatch] = useReducer(reducerManageSource, initManageSource);
 
   const apolloClient = useApolloClient();
-  const setIsSourceLoading = useCallback(
-    ({ id, isLoading }: { id: string; isLoading: boolean }) => {
-      dispatch({
-        type: 'SET_IS_LOADING',
-        id,
-        payload: isLoading,
-      });
-    },
-    []
-  );
+  const setIsSourceLoading = useCallback(({ id, loading }: { id: string; loading: boolean }) => {
+    dispatch({
+      type: 'SET_IS_LOADING',
+      id,
+      payload: loading,
+    });
+  }, []);
   const initializeSource = useCallback(
-    (newSource: ManageSourceInit, indexToAdd?: string[] | null, onlyCheckIndexToAdd?: boolean) => {
+    (id: string, indexToAdd?: string[] | null, onlyCheckIndexToAdd?: boolean) => {
       let isSubscribed = true;
       const abortCtrl = new AbortController();
-
+      const defaultIndex = getDefaultIndex(indexToAdd, onlyCheckIndexToAdd);
       async function fetchSource() {
         if (!apolloClient) return;
-
-        setIsSourceLoading({ id: newSource.id, isLoading: true });
+        setIsSourceLoading({ id, loading: true });
 
         try {
           const result = await apolloClient.query<SourceQuery.Query, SourceQuery.Variables>({
             query: sourceQuery,
             fetchPolicy: 'network-only',
             variables: {
-              sourceId: newSource.id,
+              sourceId: 'default', // always
               defaultIndex,
             },
             context: {
@@ -345,11 +341,12 @@ export const useSourceManager = (): UseSourceManager => {
               },
             },
           });
-          const defaultIndex = getDefaultIndex(indexToAdd, onlyCheckIndexToAdd);
+
           if (isSubscribed) {
             dispatch({
               type: 'INITIALIZE_SOURCE',
-              id: newSource.id,
+              id,
+              defaultIndex,
               payload: {
                 browserFields: getBrowserFields(
                   defaultIndex.join(),
@@ -368,7 +365,7 @@ export const useSourceManager = (): UseSourceManager => {
                   get('data.source.status.indicesExist', result)
                 ),
                 loading: false,
-                id: newSource.id,
+                id,
               },
             });
           }
@@ -376,10 +373,11 @@ export const useSourceManager = (): UseSourceManager => {
           if (isSubscribed) {
             dispatch({
               type: 'INITIALIZE_SOURCE',
-              id: newSource.id,
+              id,
+              defaultIndex,
               payload: {
                 errorMessage: error.message,
-                id: newSource.id,
+                id,
                 loading: false,
               },
             });
@@ -397,14 +395,13 @@ export const useSourceManager = (): UseSourceManager => {
     [apolloClient, getDefaultIndex, setIsSourceLoading]
   );
   const getManageSourceById = useCallback(
-    (id = 'default', indexToAdd?: string[] | null, onlyCheckIndexToAdd?: boolean): ManageSource => {
+    (id = 'default'): ManageSource => {
       if (state[id] != null) {
         return state[id];
       }
-      initializeSource({ id }, indexToAdd, onlyCheckIndexToAdd);
-      return getSourceDefaults(id);
+      return getSourceDefaults(id, getDefaultIndex());
     },
-    [initializeSource, state]
+    [getDefaultIndex, state]
   );
 
   return {
@@ -414,7 +411,7 @@ export const useSourceManager = (): UseSourceManager => {
 };
 
 const init: UseSourceManager = {
-  getManageSourceById: (id: string) => getSourceDefaults(id),
+  getManageSourceById: () => {},
   initializeSource: () => noop,
 };
 

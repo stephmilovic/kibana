@@ -5,7 +5,7 @@
  */
 
 import { EuiFlexGroup, EuiFlexItem, EuiSpacer } from '@elastic/eui';
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { StickyContainer } from 'react-sticky';
 import { Query, Filter } from 'src/plugins/data/public';
@@ -16,7 +16,7 @@ import { FiltersGlobal } from '../../common/components/filters_global';
 import { SiemSearchBar } from '../../common/components/search_bar';
 import { WrapperPage } from '../../common/components/wrapper_page';
 import { useGlobalTime } from '../../common/containers/use_global_time';
-import { useWithSource } from '../../common/containers/source';
+import { useManageSource } from '../../common/containers/source';
 import { EventsByDataset } from '../components/events_by_dataset';
 import { EventCounts } from '../components/event_counts';
 import { OverviewEmpty } from '../components/overview_empty';
@@ -48,12 +48,21 @@ const OverviewComponent: React.FC<PropsFromRedux> = ({
   }, []);
 
   const { from, deleteQuery, setQuery, to } = useGlobalTime();
-  const { indicesExist, indexPattern } = useWithSource();
-  const { indicesExist: metadataIndexExists } = useWithSource(
-    'default',
-    endpointMetadataIndex,
-    true
+  const { getManageSourceById, initializeSource } = useManageSource();
+  const { indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
+    () => getManageSourceById('default'),
+    [getManageSourceById]
   );
+  const { indicesExist: metadataIndexExists, loading: isLoadingMetadataIndicies } = useMemo(
+    () => getManageSourceById('default'),
+    [getManageSourceById]
+  );
+  useEffect(() => {
+    if (getManageSourceById('metadata').loading) {
+      initializeSource('metadata', endpointMetadataIndex, true);
+    }
+    // eslint-disable-next-line
+  }, []);
   const { addMessage, hasMessage } = useMessagesStorage();
   const hasDismissEndpointNoticeMessage: boolean = useMemo(
     () => hasMessage('management', 'dismissEndpointNotice'),
@@ -69,19 +78,21 @@ const OverviewComponent: React.FC<PropsFromRedux> = ({
 
   return (
     <>
-      {indicesExist ? (
+      {indicesExist || isLoadingIndicies ? (
         <StickyContainer>
           <FiltersGlobal>
             <SiemSearchBar id="global" indexPattern={indexPattern} />
           </FiltersGlobal>
 
           <WrapperPage>
-            {!dismissMessage && !metadataIndexExists && isIngestEnabled && (
-              <>
-                <EndpointNotice onDismiss={dismissEndpointNotice} />
-                <EuiSpacer size="l" />
-              </>
-            )}
+            {!dismissMessage &&
+              !(metadataIndexExists || isLoadingMetadataIndicies) &&
+              isIngestEnabled && (
+                <>
+                  <EndpointNotice onDismiss={dismissEndpointNotice} />
+                  <EuiSpacer size="l" />
+                </>
+              )}
             <EuiFlexGroup gutterSize="none" justifyContent="spaceBetween">
               <SidebarFlexItem grow={false}>
                 <StatefulSidebar />

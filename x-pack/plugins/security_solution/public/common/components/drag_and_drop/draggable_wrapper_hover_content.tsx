@@ -8,7 +8,7 @@ import { EuiButtonIcon, EuiToolTip } from '@elastic/eui';
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { DraggableId } from 'react-beautiful-dnd';
 
-import { getAllFieldsByName, useWithSource } from '../../containers/source';
+import { getAllFieldsByName, useManageSource } from '../../containers/source';
 import { useAddToTimeline } from '../../hooks/use_add_to_timeline';
 import { WithCopyToClipboard } from '../../lib/clipboard/with_copy_to_clipboard';
 import { useKibana } from '../../lib/kibana';
@@ -121,7 +121,16 @@ const DraggableWrapperHoverContentComponent: React.FC<Props> = ({
     }
   }, [goGetTimelineId, timelineId]);
 
-  const { browserFields, indexPattern } = useWithSource('default', indexToAdd);
+  const { getManageSourceById, initializeSource } = useManageSource();
+  const { browserFields, indexPattern } = useMemo(() => getManageSourceById('draggable'), [
+    getManageSourceById,
+  ]);
+  useEffect(() => {
+    if (getManageSourceById('draggable').loading) {
+      initializeSource('draggable', indexToAdd);
+    }
+    // eslint-disable-next-line
+  }, []);
 
   return (
     <>

@@ -6,7 +6,7 @@
 
 import { EuiButtonEmpty, EuiFlexGroup, EuiFlexItem, EuiIcon } from '@elastic/eui';
 import { pickBy } from 'lodash/fp';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 
 import { gutterTimeline } from '../../lib/helpers';
@@ -16,7 +16,7 @@ import { getAppOverviewUrl } from '../link_to';
 import { MlPopover } from '../ml_popover/ml_popover';
 import { SiemNavigation } from '../navigation';
 import * as i18n from './translations';
-import { useWithSource } from '../../containers/source';
+import { useManageSource } from '../../containers/source';
 import { useFullScreen } from '../../containers/use_full_screen';
 import { useGetUrlSearch } from '../navigation/use_get_url_search';
 import { useKibana } from '../../lib/kibana';
@@ -43,7 +43,9 @@ interface HeaderGlobalProps {
   hideDetectionEngine?: boolean;
 }
 export const HeaderGlobal = React.memo<HeaderGlobalProps>(({ hideDetectionEngine = false }) => {
-  const { indicesExist } = useWithSource();
+  const { getManageSourceById } = useManageSource();
+
+  const { indicesExist } = useMemo(() => getManageSourceById('default'), [getManageSourceById]);
   const { globalFullScreen } = useFullScreen();
   const search = useGetUrlSearch(navTabs.overview);
   const { navigateToApp } = useKibana().services.application;

@@ -6,7 +6,7 @@
 
 import { EuiSpacer, EuiWindowEvent } from '@elastic/eui';
 import { noop } from 'lodash/fp';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StickyContainer } from 'react-sticky';
 import { connect, ConnectedProps } from 'react-redux';
 import { useWindowSize } from 'react-use';
@@ -16,7 +16,7 @@ import { globalHeaderHeightPx } from '../../../app/home';
 import { SecurityPageName } from '../../../app/types';
 import { TimelineId } from '../../../../common/types/timeline';
 import { useGlobalTime } from '../../../common/containers/use_global_time';
-import { useWithSource } from '../../../common/containers/source';
+import { useManageSource } from '../../../common/containers/source';
 import { UpdateDateRange } from '../../../common/components/charts/common';
 import { FiltersGlobal } from '../../../common/components/filters_global';
 import { getRulesUrl } from '../../../common/components/link_to/redirect_to_detection_engine';
@@ -129,7 +129,18 @@ export const DetectionEnginePageComponent: React.FC<PropsFromRedux> = ({
   const indexToAdd = useMemo(() => (signalIndexName == null ? [] : [signalIndexName]), [
     signalIndexName,
   ]);
-  const { indicesExist, indexPattern } = useWithSource('default', indexToAdd);
+  const { getManageSourceById, initializeSource } = useManageSource();
+
+  const { indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
+    () => getManageSourceById('detections'),
+    [getManageSourceById]
+  );
+  useEffect(() => {
+    if (getManageSourceById('detections').loading) {
+      initializeSource('detections', indexToAdd);
+    }
+    // eslint-disable-next-line
+  }, []);
 
   if (isUserAuthenticated != null && !isUserAuthenticated && !loading) {
     return (
@@ -153,7 +164,7 @@ export const DetectionEnginePageComponent: React.FC<PropsFromRedux> = ({
     <>
       {hasEncryptionKey != null && !hasEncryptionKey && <NoApiIntegrationKeyCallOut />}
       {hasIndexWrite != null && !hasIndexWrite && <NoWriteAlertsCallOut />}
-      {indicesExist ? (
+      {indicesExist || isLoadingIndicies ? (
         <StickyContainer>
           <EuiWindowEvent event="resize" handler={noop} />
           <FiltersGlobal show={showGlobalFilters({ globalFullScreen, graphEventId })}>

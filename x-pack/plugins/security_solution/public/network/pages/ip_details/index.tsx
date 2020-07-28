@@ -5,7 +5,7 @@
  */
 
 import { EuiHorizontalRule, EuiSpacer, EuiFlexItem } from '@elastic/eui';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { StickyContainer } from 'react-sticky';
 
@@ -23,7 +23,7 @@ import { IpOverview } from '../../components/ip_overview';
 import { SiemSearchBar } from '../../../common/components/search_bar';
 import { WrapperPage } from '../../../common/components/wrapper_page';
 import { IpOverviewQuery } from '../../containers/ip_overview';
-import { useWithSource } from '../../../common/containers/source';
+import { useManageSource } from '../../../common/containers/source';
 import { FlowTargetSourceDest, LastEventIndexKey } from '../../../graphql/types';
 import { useKibana } from '../../../common/lib/kibana';
 import { decodeIpv6 } from '../../../common/lib/helpers';
@@ -77,7 +77,11 @@ export const IPDetailsComponent: React.FC<IPDetailsComponentProps & PropsFromRed
     setIpDetailsTablesActivePageToZero();
   }, [detailName, setIpDetailsTablesActivePageToZero]);
 
-  const { docValueFields, indicesExist, indexPattern } = useWithSource();
+  const { getManageSourceById } = useManageSource();
+  const { docValueFields, indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
+    () => getManageSourceById('default'),
+    [getManageSourceById]
+  );
   const ip = decodeIpv6(detailName);
   const filterQuery = convertToBuildEsQuery({
     config: esQuery.getEsQueryConfig(uiSettings),
@@ -88,7 +92,7 @@ export const IPDetailsComponent: React.FC<IPDetailsComponentProps & PropsFromRed
 
   return (
     <div data-test-subj="ip-details-page">
-      {indicesExist ? (
+      {indicesExist || isLoadingIndicies ? (
         <StickyContainer>
           <FiltersGlobal>
             <SiemSearchBar indexPattern={indexPattern} id="global" />

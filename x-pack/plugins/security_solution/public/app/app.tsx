@@ -52,21 +52,21 @@ const StartAppComponent: FC<StartAppComponent> = ({ children, apolloClient, hist
       <i18n.Context>
         <ManageGlobalToaster>
           <ManageGlobalTimeline>
-            <ManageSource>
-              <ReduxStoreProvider store={store}>
-                <ApolloProvider client={apolloClient}>
-                  <ApolloClientContext.Provider value={apolloClient}>
+            <ReduxStoreProvider store={store}>
+              <ApolloProvider client={apolloClient}>
+                <ApolloClientContext.Provider value={apolloClient}>
+                  <ManageSource>
                     <ThemeProvider theme={theme}>
                       <MlCapabilitiesProvider>
                         <PageRouter history={history}>{children}</PageRouter>
                       </MlCapabilitiesProvider>
                     </ThemeProvider>
-                    <ErrorToastDispatcher />
-                    <GlobalToaster />
-                  </ApolloClientContext.Provider>
-                </ApolloProvider>
-              </ReduxStoreProvider>
-            </ManageSource>
+                  </ManageSource>
+                  <ErrorToastDispatcher />
+                  <GlobalToaster />
+                </ApolloClientContext.Provider>
+              </ApolloProvider>
+            </ReduxStoreProvider>
           </ManageGlobalTimeline>
         </ManageGlobalToaster>
       </i18n.Context>

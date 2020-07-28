@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 
 import { useThrottledResizeObserver } from '../../common/components/utils';
@@ -14,7 +14,7 @@ import { HeaderGlobal } from '../../common/components/header_global';
 import { HelpMenu } from '../../common/components/help_menu';
 import { AutoSaveWarningMsg } from '../../timelines/components/timeline/auto_save_warning';
 import { UseUrlState } from '../../common/components/url_state';
-import { useManageIndexPattern, useWithSource } from '../../common/containers/source';
+import { useManageSource } from '../../common/containers/source';
 import { useShowTimeline } from '../../common/utils/timeline/use_show_timeline';
 import { navTabs } from './home_navigations';
 import { useSignalIndex } from '../../detections/containers/detection_engine/alerts/use_signal_index';
@@ -66,8 +66,18 @@ export const HomePage: React.FC<HomePageProps> = ({ children }) => {
   }, [signalIndexExists, signalIndexName]);
 
   const [showTimeline] = useShowTimeline();
-  const { browserFields, indexPattern, indicesExist } = useWithSource('default', indexToAdd);
-  const hey = useManageIndexPattern();
+  const { getManageSourceById, initializeSource } = useManageSource();
+
+  const { browserFields, indexPattern, indicesExist } = useMemo(
+    () => getManageSourceById('default'),
+    [getManageSourceById]
+  );
+  useEffect(() => {
+    if (getManageSourceById('default').loading) {
+      initializeSource('default', indexToAdd);
+    }
+    // eslint-disable-next-line
+  }, []);
 
   return (
     <WrappedByAutoSizer data-test-subj="wrapped-by-auto-sizer" ref={measureRef}>

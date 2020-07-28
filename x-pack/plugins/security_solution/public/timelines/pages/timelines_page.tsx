@@ -5,7 +5,7 @@
  */
 
 import { EuiButton, EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { useParams } from 'react-router-dom';
 
@@ -15,7 +15,7 @@ import { WrapperPage } from '../../common/components/wrapper_page';
 import { useKibana } from '../../common/lib/kibana';
 import { SpyRoute } from '../../common/utils/route/spy_routes';
 import { useApolloClient } from '../../common/utils/apollo_context';
-import { useWithSource } from '../../common/containers/source';
+import { useManageSource } from '../../common/containers/source';
 import { OverviewEmpty } from '../../overview/components/overview_empty';
 
 import { StatefulOpenTimeline } from '../components/open_timeline';
@@ -38,7 +38,11 @@ export const TimelinesPageComponent: React.FC = () => {
   const onImportTimelineBtnClick = useCallback(() => {
     setImportDataModalToggle(true);
   }, [setImportDataModalToggle]);
-  const { indicesExist } = useWithSource();
+  const { getManageSourceById } = useManageSource();
+  const { indicesExist, loading: isLoadingIndicies } = useMemo(
+    () => getManageSourceById('default'),
+    [getManageSourceById]
+  );
 
   const apolloClient = useApolloClient();
   const capabilitiesCanUserCRUD: boolean = !!useKibana().services.application.capabilities.siem
@@ -46,7 +50,7 @@ export const TimelinesPageComponent: React.FC = () => {
 
   return (
     <>
-      {indicesExist ? (
+      {indicesExist || isLoadingIndicies ? (
         <>
           <WrapperPage>
             <HeaderPage border title={i18n.PAGE_TITLE}>

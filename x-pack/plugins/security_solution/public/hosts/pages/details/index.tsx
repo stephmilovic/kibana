@@ -29,7 +29,7 @@ import { WrapperPage } from '../../../common/components/wrapper_page';
 import { HostOverviewByNameQuery } from '../../containers/hosts/overview';
 import { KpiHostDetailsQuery } from '../../containers/kpi_host_details';
 import { useGlobalTime } from '../../../common/containers/use_global_time';
-import { useWithSource } from '../../../common/containers/source';
+import { useManageSource } from '../../../common/containers/source';
 import { LastEventIndexKey } from '../../../graphql/types';
 import { useKibana } from '../../../common/lib/kibana';
 import { convertToBuildEsQuery } from '../../../common/lib/keury';
@@ -91,7 +91,11 @@ const HostDetailsComponent = React.memo<HostDetailsProps & PropsFromRedux>(
       },
       [setAbsoluteRangeDatePicker]
     );
-    const { docValueFields, indicesExist, indexPattern } = useWithSource();
+    const { getManageSourceById } = useManageSource();
+    const { docValueFields, indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
+      () => getManageSourceById('default'),
+      [getManageSourceById]
+    );
     const filterQuery = convertToBuildEsQuery({
       config: esQuery.getEsQueryConfig(kibana.services.uiSettings),
       indexPattern,
@@ -101,7 +105,7 @@ const HostDetailsComponent = React.memo<HostDetailsProps & PropsFromRedux>(
 
     return (
       <>
-        {indicesExist ? (
+        {indicesExist || isLoadingIndicies ? (
           <StickyContainer>
             <EuiWindowEvent event="resize" handler={noop} />
             <FiltersGlobal show={showGlobalFilters({ globalFullScreen, graphEventId })}>

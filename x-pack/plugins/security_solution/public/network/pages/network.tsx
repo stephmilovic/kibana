@@ -26,7 +26,7 @@ import { WrapperPage } from '../../common/components/wrapper_page';
 import { KpiNetworkQuery } from '../../network/containers/kpi_network';
 import { useFullScreen } from '../../common/containers/use_full_screen';
 import { useGlobalTime } from '../../common/containers/use_global_time';
-import { useWithSource } from '../../common/containers/source';
+import { useManageSource } from '../../common/containers/source';
 import { LastEventIndexKey } from '../../graphql/types';
 import { useKibana } from '../../common/lib/kibana';
 import { convertToBuildEsQuery } from '../../common/lib/keury';
@@ -87,7 +87,11 @@ const NetworkComponent = React.memo<NetworkComponentProps & PropsFromRedux>(
       [setAbsoluteRangeDatePicker]
     );
 
-    const { indicesExist, indexPattern } = useWithSource(sourceId);
+    const { getManageSourceById } = useManageSource();
+    const { indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
+      () => getManageSourceById('default'),
+      [getManageSourceById]
+    );
     const filterQuery = convertToBuildEsQuery({
       config: esQuery.getEsQueryConfig(kibana.services.uiSettings),
       indexPattern,
@@ -103,7 +107,7 @@ const NetworkComponent = React.memo<NetworkComponentProps & PropsFromRedux>(
 
     return (
       <>
-        {indicesExist ? (
+        {indicesExist || isLoadingIndicies ? (
           <StickyContainer>
             <EuiWindowEvent event="resize" handler={noop} />
             <FiltersGlobal show={showGlobalFilters({ globalFullScreen, graphEventId })}>

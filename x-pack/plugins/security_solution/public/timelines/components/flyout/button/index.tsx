@@ -10,7 +10,7 @@ import { rgba } from 'polished';
 import React, { useMemo } from 'react';
 import styled from 'styled-components';
 
-import { useWithSource } from '../../../../common/containers/source';
+import { useManageSource } from '../../../../common/containers/source';
 import { IS_DRAGGING_CLASS_NAME } from '../../../../common/components/drag_and_drop/helpers';
 import { DataProvider } from '../../timeline/data_providers/data_provider';
 import { flattenIntoAndGroups } from '../../timeline/data_providers/helpers';
@@ -85,7 +85,8 @@ interface FlyoutButtonProps {
 export const FlyoutButton = React.memo<FlyoutButtonProps>(
   ({ onOpen, show, dataProviders, timelineId }) => {
     const badgeCount = useMemo(() => getBadgeCount(dataProviders), [dataProviders]);
-    const { browserFields } = useWithSource();
+    const { getManageSourceById } = useManageSource();
+    const { browserFields } = useMemo(() => getManageSourceById('default'), [getManageSourceById]);
 
     if (!show) {
       return null;

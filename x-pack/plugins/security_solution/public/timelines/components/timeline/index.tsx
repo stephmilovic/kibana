@@ -10,7 +10,7 @@ import { connect, ConnectedProps } from 'react-redux';
 import deepEqual from 'fast-deep-equal';
 
 import { NO_ALERT_INDEX } from '../../../../common/constants';
-import { useWithSource } from '../../../common/containers/source';
+import { useManageSource } from '../../../common/containers/source';
 import { useSignalIndex } from '../../../detections/containers/detection_engine/alerts/use_signal_index';
 import { inputsModel, inputsSelectors, State } from '../../../common/store';
 import { timelineActions, timelineSelectors } from '../../store/timeline';
@@ -171,10 +171,18 @@ const StatefulTimelineComponent = React.memo<Props>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const { docValueFields, indexPattern, browserFields, loading: isLoadingSource } = useWithSource(
-      'default',
-      indexToAdd
+    const { getManageSourceById, initializeSource } = useManageSource();
+
+    const { docValueFields, indexPattern, browserFields, loading: isLoadingSource } = useMemo(
+      () => getManageSourceById('timeline'),
+      [getManageSourceById]
     );
+    useEffect(() => {
+      if (getManageSourceById('timeline').loading) {
+        initializeSource('timeline', indexToAdd);
+      }
+      // eslint-disable-next-line
+    }, []);
 
     return (
       <Timeline

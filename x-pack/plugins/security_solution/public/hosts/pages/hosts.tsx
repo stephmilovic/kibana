@@ -6,7 +6,7 @@
 
 import { EuiSpacer, EuiWindowEvent } from '@elastic/eui';
 import { noop } from 'lodash/fp';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { StickyContainer } from 'react-sticky';
 import { useParams } from 'react-router-dom';
@@ -25,7 +25,7 @@ import { WrapperPage } from '../../common/components/wrapper_page';
 import { KpiHostsQuery } from '../containers/kpi_hosts';
 import { useFullScreen } from '../../common/containers/use_full_screen';
 import { useGlobalTime } from '../../common/containers/use_global_time';
-import { useWithSource } from '../../common/containers/source';
+import { useManageSource } from '../../common/containers/source';
 import { TimelineId } from '../../../common/types/timeline';
 import { LastEventIndexKey } from '../../graphql/types';
 import { useKibana } from '../../common/lib/kibana';
@@ -79,7 +79,11 @@ export const HostsComponent = React.memo<HostsComponentProps & PropsFromRedux>(
       },
       [setAbsoluteRangeDatePicker]
     );
-    const { docValueFields, indicesExist, indexPattern } = useWithSource();
+    const { getManageSourceById } = useManageSource();
+    const { docValueFields, indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
+      () => getManageSourceById('default'),
+      [getManageSourceById]
+    );
     const filterQuery = convertToBuildEsQuery({
       config: esQuery.getEsQueryConfig(kibana.services.uiSettings),
       indexPattern,
@@ -95,7 +99,7 @@ export const HostsComponent = React.memo<HostsComponentProps & PropsFromRedux>(
 
     return (
       <>
-        {indicesExist ? (
+        {indicesExist || isLoadingIndicies ? (
           <StickyContainer>
             <EuiWindowEvent event="resize" handler={noop} />
             <FiltersGlobal show={showGlobalFilters({ globalFullScreen, graphEventId })}>
