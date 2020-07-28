@@ -6,8 +6,16 @@
 
 import { isUndefined } from 'lodash';
 import { set } from '@elastic/safer-lodash-set/fp';
-import { get, keyBy, pick, isEmpty } from 'lodash/fp';
-import React, { createContext, useEffect, useMemo, useState } from 'react';
+import { get, keyBy, noop, pick, isEmpty } from 'lodash/fp';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+} from 'react';
 import memoizeOne from 'memoize-one';
 import { IIndexPattern } from 'src/plugins/data/public';
 
@@ -211,21 +219,218 @@ export const useWithSource = (
   return state;
 };
 
-const init: UseWithSourceState = {
-  browserFields: [],
-  docValueFields: [],
+interface ManageSource {
+  browserFields: BrowserFields;
+  docValueFields: DocValueFields[];
+  errorMessage: string | null;
+  id: string;
+  indexPattern: IIndexPattern;
+  indicesExist: boolean | undefined | null;
+  loading: boolean;
+}
+
+interface ManageSourceInit {
+  browserFields?: BrowserFields;
+  docValueFields?: DocValueFields[];
+  errorMessage?: string | null;
+  id: string;
+  indexPattern?: IIndexPattern;
+  indicesExist?: boolean | undefined | null;
+  loading?: boolean;
+}
+const getSourceDefaults = (id: string, defaultIndex) => ({
+  browserFields: EMPTY_BROWSER_FIELDS,
+  docValueFields: EMPTY_DOCVALUE_FIELD,
   errorMessage: null,
-  indexPattern: [],
-  indicesExist: null,
-  loading: false,
+  id,
+  indexPattern: getIndexFields(defaultIndex.join(), []),
+  indicesExist: indicesExistOrDataTemporarilyUnavailable(undefined),
+  loading: true,
+});
+
+type ActionManageSource =
+  | {
+      type: 'INITIALIZE_SOURCE';
+      id: string;
+      payload: ManageSourceInit;
+    }
+  | {
+      type: 'SET_IS_LOADING';
+      id: string;
+      payload: boolean;
+    };
+
+interface ManageSourceById {
+  [id: string]: UseWithSourceState;
+}
+const initManageSource: ManageSourceById = {};
+
+const reducerManageSource = (state: ManageSourceById, action: ActionManageSource) => {
+  switch (action.type) {
+    case 'INITIALIZE_SOURCE':
+      return {
+        ...state,
+        [action.id]: {
+          ...getSourceDefaults(action.id),
+          ...state[action.id],
+          ...action.payload,
+        },
+      };
+    case 'SET_IS_LOADING':
+      return {
+        ...state,
+        [action.id]: {
+          ...state[action.id],
+          id: action.id,
+          isLoading: action.payload,
+        },
+      };
+    default:
+      return state;
+  }
 };
 
-const ManageIndexPatternContext = createContext<UseWithSourceState>(init);
+export interface UseSourceManager {
+  getManageSourceById: (id: string) => ManageSource;
+  initializeSource: (newSource: ManageSourceInit) => void;
+}
 
-interface ManageIndexPatternProps {
+export const useSourceManager = (): UseSourceManager => {
+  const [configIndex] = useUiSetting$<string[]>(DEFAULT_INDEX_KEY);
+
+  const getDefaultIndex = useCallback(
+    (indexToAdd?: string[] | null, onlyCheckIndexToAdd?: boolean) => {
+      const filterIndexAdd = (indexToAdd ?? []).filter((item) => item !== NO_ALERT_INDEX);
+      if (!isEmpty(filterIndexAdd)) {
+        return onlyCheckIndexToAdd ? filterIndexAdd : [...configIndex, ...filterIndexAdd];
+      }
+      return configIndex;
+    },
+    [configIndex]
+  );
+  const [state, dispatch] = useReducer(reducerManageSource, initManageSource);
+
+  const apolloClient = useApolloClient();
+  const setIsSourceLoading = useCallback(
+    ({ id, isLoading }: { id: string; isLoading: boolean }) => {
+      dispatch({
+        type: 'SET_IS_LOADING',
+        id,
+        payload: isLoading,
+      });
+    },
+    []
+  );
+  const initializeSource = useCallback(
+    (newSource: ManageSourceInit, indexToAdd?: string[] | null, onlyCheckIndexToAdd?: boolean) => {
+      let isSubscribed = true;
+      const abortCtrl = new AbortController();
+
+      async function fetchSource() {
+        if (!apolloClient) return;
+
+        setIsSourceLoading({ id: newSource.id, isLoading: true });
+
+        try {
+          const result = await apolloClient.query<SourceQuery.Query, SourceQuery.Variables>({
+            query: sourceQuery,
+            fetchPolicy: 'network-only',
+            variables: {
+              sourceId: newSource.id,
+              defaultIndex,
+            },
+            context: {
+              fetchOptions: {
+                signal: abortCtrl.signal,
+              },
+            },
+          });
+          const defaultIndex = getDefaultIndex(indexToAdd, onlyCheckIndexToAdd);
+          if (isSubscribed) {
+            dispatch({
+              type: 'INITIALIZE_SOURCE',
+              id: newSource.id,
+              payload: {
+                browserFields: getBrowserFields(
+                  defaultIndex.join(),
+                  get('data.source.status.indexFields', result)
+                ),
+                docValueFields: getDocValueFields(
+                  defaultIndex.join(),
+                  get('data.source.status.indexFields', result)
+                ),
+                errorMessage: null,
+                indexPattern: getIndexFields(
+                  defaultIndex.join(),
+                  get('data.source.status.indexFields', result)
+                ),
+                indicesExist: indicesExistOrDataTemporarilyUnavailable(
+                  get('data.source.status.indicesExist', result)
+                ),
+                loading: false,
+                id: newSource.id,
+              },
+            });
+          }
+        } catch (error) {
+          if (isSubscribed) {
+            dispatch({
+              type: 'INITIALIZE_SOURCE',
+              id: newSource.id,
+              payload: {
+                errorMessage: error.message,
+                id: newSource.id,
+                loading: false,
+              },
+            });
+          }
+        }
+      }
+
+      fetchSource();
+
+      return () => {
+        isSubscribed = false;
+        return abortCtrl.abort();
+      };
+    },
+    [apolloClient, getDefaultIndex, setIsSourceLoading]
+  );
+  const getManageSourceById = useCallback(
+    (id = 'default', indexToAdd?: string[] | null, onlyCheckIndexToAdd?: boolean): ManageSource => {
+      if (state[id] != null) {
+        return state[id];
+      }
+      initializeSource({ id }, indexToAdd, onlyCheckIndexToAdd);
+      return getSourceDefaults(id);
+    },
+    [initializeSource, state]
+  );
+
+  return {
+    getManageSourceById,
+    initializeSource,
+  };
+};
+
+const init: UseSourceManager = {
+  getManageSourceById: (id: string) => getSourceDefaults(id),
+  initializeSource: () => noop,
+};
+
+const ManageSourceContext = createContext<UseSourceManager>(init);
+
+export const useManageSource = () => useContext(ManageSourceContext);
+
+interface ManageSourceProps {
   children: React.ReactNode;
 }
 
-export const ManageIndexPattern = ({ children }: ManageIndexPatternProps) => {
-  const indexPatternManager = useWithSource();
+export const ManageSource = ({ children }: ManageSourceProps) => {
+  const indexPatternManager = useSourceManager();
+  return (
+    <ManageSourceContext.Provider value={indexPatternManager}>
+      {children}
+    </ManageSourceContext.Provider>
+  );
 };

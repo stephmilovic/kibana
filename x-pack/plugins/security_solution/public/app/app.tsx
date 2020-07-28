@@ -27,6 +27,7 @@ import { ApolloClientContext } from '../common/utils/apollo_context';
 import { ManageGlobalTimeline } from '../timelines/components/manage_timeline';
 import { StartServices } from '../types';
 import { PageRouter } from './routes';
+import { ManageSource } from '../common/containers/source';
 
 interface StartAppComponent extends AppFrontendLibs {
   children: React.ReactNode;
@@ -51,19 +52,21 @@ const StartAppComponent: FC<StartAppComponent> = ({ children, apolloClient, hist
       <i18n.Context>
         <ManageGlobalToaster>
           <ManageGlobalTimeline>
-            <ReduxStoreProvider store={store}>
-              <ApolloProvider client={apolloClient}>
-                <ApolloClientContext.Provider value={apolloClient}>
-                  <ThemeProvider theme={theme}>
-                    <MlCapabilitiesProvider>
-                      <PageRouter history={history}>{children}</PageRouter>
-                    </MlCapabilitiesProvider>
-                  </ThemeProvider>
-                  <ErrorToastDispatcher />
-                  <GlobalToaster />
-                </ApolloClientContext.Provider>
-              </ApolloProvider>
-            </ReduxStoreProvider>
+            <ManageSource>
+              <ReduxStoreProvider store={store}>
+                <ApolloProvider client={apolloClient}>
+                  <ApolloClientContext.Provider value={apolloClient}>
+                    <ThemeProvider theme={theme}>
+                      <MlCapabilitiesProvider>
+                        <PageRouter history={history}>{children}</PageRouter>
+                      </MlCapabilitiesProvider>
+                    </ThemeProvider>
+                    <ErrorToastDispatcher />
+                    <GlobalToaster />
+                  </ApolloClientContext.Provider>
+                </ApolloProvider>
+              </ReduxStoreProvider>
+            </ManageSource>
           </ManageGlobalTimeline>
         </ManageGlobalToaster>
       </i18n.Context>
