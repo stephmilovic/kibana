@@ -233,6 +233,7 @@ interface ManageSource {
   errorMessage: string | null;
   id: string;
   indexPattern: IIndexPattern;
+  indexPatterns: string[];
   indicesExist: boolean | undefined | null;
   loading: boolean;
 }
@@ -243,22 +244,24 @@ interface ManageSourceInit {
   errorMessage?: string | null;
   id: string;
   indexPattern?: IIndexPattern;
+  indexPatterns?: string[];
   indicesExist?: boolean | undefined | null;
   loading?: boolean;
 }
-const getSourceDefaults = (id: string, defaultIndex) => ({
+const getSourceDefaults = (id: string, defaultIndex: string[]) => ({
   browserFields: EMPTY_BROWSER_FIELDS,
   docValueFields: EMPTY_DOCVALUE_FIELD,
   errorMessage: null,
   id,
   indexPattern: getIndexFields(defaultIndex.join(), []),
+  indexPatterns: defaultIndex,
   indicesExist: indicesExistOrDataTemporarilyUnavailable(undefined),
   loading: true,
 });
 
 type ActionManageSource =
   | {
-      type: 'INITIALIZE_SOURCE';
+      type: 'SET_SOURCE';
       id: string;
       defaultIndex: string[];
       payload: ManageSourceInit;
@@ -270,13 +273,13 @@ type ActionManageSource =
     };
 
 interface ManageSourceById {
-  [id: string]: UseWithSourceState;
+  [id: string]: ManageSource;
 }
 const initManageSource: ManageSourceById = {};
 
 const reducerManageSource = (state: ManageSourceById, action: ActionManageSource) => {
   switch (action.type) {
-    case 'INITIALIZE_SOURCE':
+    case 'SET_SOURCE':
       return {
         ...state,
         [action.id]: {
@@ -301,7 +304,12 @@ const reducerManageSource = (state: ManageSourceById, action: ActionManageSource
 
 export interface UseSourceManager {
   getManageSourceById: (id: string) => ManageSource;
-  initializeSource: (newSource: ManageSourceInit) => void;
+  initializeSource: (
+    id: string,
+    indexToAdd?: string[] | null,
+    onlyCheckIndexToAdd?: boolean
+  ) => void;
+  updateIndicies: (id: string, updatedIndicies: string[]) => void;
 }
 
 export const useSourceManager = (): UseSourceManager => {
@@ -327,7 +335,8 @@ export const useSourceManager = (): UseSourceManager => {
       payload: loading,
     });
   }, []);
-  const initializeSource = useCallback(
+
+  const setIndexPatterns = useCallback(
     (id: string, indexToAdd?: string[] | null, onlyCheckIndexToAdd?: boolean) => {
       let isSubscribed = true;
       const abortCtrl = new AbortController();
@@ -353,7 +362,7 @@ export const useSourceManager = (): UseSourceManager => {
 
           if (isSubscribed) {
             dispatch({
-              type: 'INITIALIZE_SOURCE',
+              type: 'SET_SOURCE',
               id,
               defaultIndex,
               payload: {
@@ -370,6 +379,7 @@ export const useSourceManager = (): UseSourceManager => {
                   defaultIndex.join(),
                   get('data.source.status.indexFields', result)
                 ),
+                indexPatterns: defaultIndex,
                 indicesExist: indicesExistOrDataTemporarilyUnavailable(
                   get('data.source.status.indicesExist', result)
                 ),
@@ -381,7 +391,7 @@ export const useSourceManager = (): UseSourceManager => {
         } catch (error) {
           if (isSubscribed) {
             dispatch({
-              type: 'INITIALIZE_SOURCE',
+              type: 'SET_SOURCE',
               id,
               defaultIndex,
               payload: {
@@ -403,10 +413,21 @@ export const useSourceManager = (): UseSourceManager => {
     },
     [apolloClient, getDefaultIndex, setIsSourceLoading]
   );
+
+  const initializeSource = useCallback(
+    (id: string, indexToAdd?: string[] | null, onlyCheckIndexToAdd?: boolean) =>
+      setIndexPatterns(id, indexToAdd, onlyCheckIndexToAdd),
+    [setIndexPatterns]
+  );
+
+  const updateIndicies = useCallback(
+    (id: string, updatedIndicies: string[]) => setIndexPatterns(id, updatedIndicies, true),
+    [setIndexPatterns]
+  );
   const getManageSourceById = useCallback(
     (id = 'default'): ManageSource => {
       if (state[id] != null) {
-        return state[id];
+        return { ...getSourceDefaults(id, getDefaultIndex()), ...state[id] };
       }
       return getSourceDefaults(id, getDefaultIndex());
     },
@@ -416,12 +437,14 @@ export const useSourceManager = (): UseSourceManager => {
   return {
     getManageSourceById,
     initializeSource,
+    updateIndicies,
   };
 };
 
 const init: UseSourceManager = {
-  getManageSourceById: () => {},
+  getManageSourceById: (id: string) => getSourceDefaults(id, []),
   initializeSource: () => noop,
+  updateIndicies: () => noop,
 };
 
 const ManageSourceContext = createContext<UseSourceManager>(init);

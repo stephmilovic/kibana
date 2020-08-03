@@ -5,19 +5,18 @@
  */
 
 import { getOr } from 'lodash/fp';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Query } from 'react-apollo';
 import { connect, ConnectedProps } from 'react-redux';
 
-import { DEFAULT_INDEX_KEY } from '../../../../common/constants';
 import { GetOverviewHostQuery, OverviewHostData } from '../../../graphql/types';
-import { useUiSetting } from '../../../common/lib/kibana';
 import { inputsModel, inputsSelectors } from '../../../common/store/inputs';
 import { State } from '../../../common/store';
 import { createFilter, getDefaultFetchPolicy } from '../../../common/containers/helpers';
 import { QueryTemplateProps } from '../../../common/containers/query_template';
 
 import { overviewHostQuery } from './index.gql_query';
+import { useManageSource } from '../../../common/containers/source';
 
 export const ID = 'overviewHostQuery';
 
@@ -38,6 +37,8 @@ export interface OverviewHostProps extends QueryTemplateProps {
 
 const OverviewHostComponentQuery = React.memo<OverviewHostProps & PropsFromRedux>(
   ({ id = ID, children, filterQuery, isInspected, sourceId, startDate, endDate }) => {
+    const { getManageSourceById } = useManageSource();
+    const { indexPatterns } = useMemo(() => getManageSourceById('default'), [getManageSourceById]);
     return (
       <Query<GetOverviewHostQuery.Query, GetOverviewHostQuery.Variables>
         query={overviewHostQuery}
@@ -50,7 +51,7 @@ const OverviewHostComponentQuery = React.memo<OverviewHostProps & PropsFromRedux
             to: endDate,
           },
           filterQuery: createFilter(filterQuery),
-          defaultIndex: useUiSetting<string[]>(DEFAULT_INDEX_KEY),
+          defaultIndex: indexPatterns,
           inspect: isInspected,
         }}
       >

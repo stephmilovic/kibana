@@ -22,6 +22,7 @@ import { useGetUrlSearch } from '../navigation/use_get_url_search';
 import { useKibana } from '../../lib/kibana';
 import { APP_ID, ADD_DATA_PATH, APP_DETECTIONS_PATH } from '../../../../common/constants';
 import { LinkAnchor } from '../links';
+import { IndexPatternizerPopover } from '../index_patternizer/popover';
 
 const Wrapper = styled.header<{ show: boolean }>`
   ${({ show, theme }) => css`
@@ -45,7 +46,9 @@ interface HeaderGlobalProps {
 export const HeaderGlobal = React.memo<HeaderGlobalProps>(({ hideDetectionEngine = false }) => {
   const { getManageSourceById } = useManageSource();
 
-  const { indicesExist } = useMemo(() => getManageSourceById('default'), [getManageSourceById]);
+  const { indicesExist, loading: indicesLoading } = useMemo(() => getManageSourceById('default'), [
+    getManageSourceById,
+  ]);
   const { globalFullScreen } = useFullScreen();
   const search = useGetUrlSearch(navTabs.overview);
   const { navigateToApp } = useKibana().services.application;
@@ -89,6 +92,10 @@ export const HeaderGlobal = React.memo<HeaderGlobalProps>(({ hideDetectionEngine
                   <MlPopover />
                 </FlexItem>
               )}
+
+              <FlexItem grow={false}>
+                <IndexPatternizerPopover isLoading={indicesLoading} />
+              </FlexItem>
 
               <FlexItem grow={false}>
                 <EuiButtonEmpty

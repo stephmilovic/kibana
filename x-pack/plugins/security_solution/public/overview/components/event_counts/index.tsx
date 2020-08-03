@@ -44,7 +44,6 @@ const EventCountsComponent: React.FC<Props> = ({
   to,
 }) => {
   const kibana = useKibana();
-
   return (
     <EuiFlexGroup gutterSize="none" justifyContent="spaceBetween">
       <EuiFlexItem grow={true}>

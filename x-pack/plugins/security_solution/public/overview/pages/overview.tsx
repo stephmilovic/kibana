@@ -54,7 +54,7 @@ const OverviewComponent: React.FC<PropsFromRedux> = ({
     [getManageSourceById]
   );
   const { indicesExist: metadataIndexExists, loading: isLoadingMetadataIndicies } = useMemo(
-    () => getManageSourceById('default'),
+    () => getManageSourceById('metadata'),
     [getManageSourceById]
   );
   useEffect(() => {
@@ -75,6 +75,7 @@ const OverviewComponent: React.FC<PropsFromRedux> = ({
     addMessage('management', 'dismissEndpointNotice');
   }, [addMessage]);
   const { allEnabled: isIngestEnabled } = useIngestEnabledCheck();
+  console.log('OVERVIEW indexPattern', indexPattern);
   return (
     <>
       {indicesExist || isLoadingIndicies ? (

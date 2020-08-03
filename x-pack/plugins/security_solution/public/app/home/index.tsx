@@ -66,18 +66,12 @@ export const HomePage: React.FC<HomePageProps> = ({ children }) => {
   }, [signalIndexExists, signalIndexName]);
 
   const [showTimeline] = useShowTimeline();
-  const { getManageSourceById, initializeSource } = useManageSource();
+  const { getManageSourceById } = useManageSource();
 
   const { browserFields, indexPattern, indicesExist } = useMemo(
     () => getManageSourceById('default'),
     [getManageSourceById]
   );
-  useEffect(() => {
-    if (getManageSourceById('default').loading) {
-      initializeSource('default', indexToAdd);
-    }
-    // eslint-disable-next-line
-  }, []);
 
   return (
     <WrappedByAutoSizer data-test-subj="wrapped-by-auto-sizer" ref={measureRef}>
