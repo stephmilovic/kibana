@@ -75,12 +75,11 @@ const OverviewComponent: React.FC<PropsFromRedux> = ({
     addMessage('management', 'dismissEndpointNotice');
   }, [addMessage]);
   const { allEnabled: isIngestEnabled } = useIngestEnabledCheck();
-
   return (
     <>
       {indicesExist || isLoadingIndicies ? (
         <StickyContainer>
-          <FiltersGlobal>
+          <FiltersGlobal globalFullScreen={false}>
             <SiemSearchBar id="global" indexPattern={indexPattern} />
           </FiltersGlobal>
 
