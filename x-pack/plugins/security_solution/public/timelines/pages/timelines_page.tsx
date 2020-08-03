@@ -38,10 +38,11 @@ export const TimelinesPageComponent: React.FC = () => {
   const onImportTimelineBtnClick = useCallback(() => {
     setImportDataModalToggle(true);
   }, [setImportDataModalToggle]);
-  const { getManageSourceById } = useManageSource();
+  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
   const { indicesExist, loading: isLoadingIndicies } = useMemo(
-    () => getManageSourceById('default'),
-    [getManageSourceById]
+    () => getManageSourceById(indexPatternId),
+    [getManageSourceById, indexPatternId]
   );
 
   const apolloClient = useApolloClient();

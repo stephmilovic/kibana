@@ -44,10 +44,11 @@ interface HeaderGlobalProps {
   hideDetectionEngine?: boolean;
 }
 export const HeaderGlobal = React.memo<HeaderGlobalProps>(({ hideDetectionEngine = false }) => {
-  const { getManageSourceById } = useManageSource();
-
-  const { indicesExist, loading: indicesLoading } = useMemo(() => getManageSourceById('default'), [
+  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+  const { indicesExist } = useMemo(() => getManageSourceById(indexPatternId), [
     getManageSourceById,
+    indexPatternId,
   ]);
   const { globalFullScreen } = useFullScreen();
   const search = useGetUrlSearch(navTabs.overview);
@@ -94,7 +95,7 @@ export const HeaderGlobal = React.memo<HeaderGlobalProps>(({ hideDetectionEngine
               )}
 
               <FlexItem grow={false}>
-                <IndexPatternizerPopover isLoading={indicesLoading} />
+                <IndexPatternizerPopover />
               </FlexItem>
 
               <FlexItem grow={false}>

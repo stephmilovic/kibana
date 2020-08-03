@@ -77,10 +77,11 @@ export const IPDetailsComponent: React.FC<IPDetailsComponentProps & PropsFromRed
     setIpDetailsTablesActivePageToZero();
   }, [detailName, setIpDetailsTablesActivePageToZero]);
 
-  const { getManageSourceById } = useManageSource();
+  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
   const { docValueFields, indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
-    () => getManageSourceById('default'),
-    [getManageSourceById]
+    () => getManageSourceById(indexPatternId),
+    [getManageSourceById, indexPatternId]
   );
   const ip = decodeIpv6(detailName);
   const filterQuery = convertToBuildEsQuery({

@@ -48,10 +48,12 @@ const OverviewComponent: React.FC<PropsFromRedux> = ({
   }, []);
 
   const { from, deleteQuery, setQuery, to } = useGlobalTime();
-  const { getManageSourceById, initializeSource } = useManageSource();
+
+  const { getActiveIndexPatternId, getManageSourceById, initializeSource } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
   const { indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
-    () => getManageSourceById('default'),
-    [getManageSourceById]
+    () => getManageSourceById(indexPatternId),
+    [getManageSourceById, indexPatternId]
   );
   const { indicesExist: metadataIndexExists, loading: isLoadingMetadataIndicies } = useMemo(
     () => getManageSourceById('metadata'),
@@ -75,7 +77,6 @@ const OverviewComponent: React.FC<PropsFromRedux> = ({
     addMessage('management', 'dismissEndpointNotice');
   }, [addMessage]);
   const { allEnabled: isIngestEnabled } = useIngestEnabledCheck();
-  console.log('OVERVIEW indexPattern', indexPattern);
   return (
     <>
       {indicesExist || isLoadingIndicies ? (

@@ -304,6 +304,9 @@ const reducerManageSource = (state: ManageSourceById, action: ActionManageSource
 
 export interface UseSourceManager {
   getManageSourceById: (id: string) => ManageSource;
+  getActiveIndexPatternId: () => string;
+  getAvailableIndexPatternIds: () => string[];
+  setActiveIndexPatternId: (id: string) => void;
   initializeSource: (
     id: string,
     indexToAdd?: string[] | null,
@@ -311,6 +314,8 @@ export interface UseSourceManager {
   ) => void;
   updateIndicies: (id: string, updatedIndicies: string[]) => void;
 }
+
+export const APP_INDEX_ID = 'default';
 
 export const useSourceManager = (): UseSourceManager => {
   const [configIndex] = useUiSetting$<string[]>(DEFAULT_INDEX_KEY);
@@ -326,6 +331,7 @@ export const useSourceManager = (): UseSourceManager => {
     [configIndex]
   );
   const [state, dispatch] = useReducer(reducerManageSource, initManageSource);
+  const [activeIndexPatternId, setActiveIndexPatternId] = useState<string>(APP_INDEX_ID);
 
   const apolloClient = useApolloClient();
   const setIsSourceLoading = useCallback(({ id, loading }: { id: string; loading: boolean }) => {
@@ -434,16 +440,48 @@ export const useSourceManager = (): UseSourceManager => {
     [getDefaultIndex, state]
   );
 
+  const getAvailableIndexPatternIds = useCallback(() => {
+    return Object.keys(state);
+  }, [state]);
+
+  const getActiveIndexPatternId = useCallback(() => activeIndexPatternId, [activeIndexPatternId]);
+
+  const setTheIpId = useCallback(
+    (id: string) => {
+      if (getAvailableIndexPatternIds().includes(id)) {
+        setActiveIndexPatternId(id);
+      }
+    },
+    [getAvailableIndexPatternIds]
+  );
+
+  // load initial default index
+  useEffect(() => {
+    initializeSource(activeIndexPatternId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('state', state);
+  }, [state]);
+
   return {
+    getActiveIndexPatternId,
+    getAvailableIndexPatternIds,
     getManageSourceById,
     initializeSource,
+    setActiveIndexPatternId: setTheIpId,
     updateIndicies,
   };
 };
 
 const init: UseSourceManager = {
+  getActiveIndexPatternId: () => APP_INDEX_ID,
+  getAvailableIndexPatternIds: () => [],
   getManageSourceById: (id: string) => getSourceDefaults(id, []),
   initializeSource: () => noop,
+  setActiveIndexPatternId: (id: string) => noop,
   updateIndicies: () => noop,
 };
 

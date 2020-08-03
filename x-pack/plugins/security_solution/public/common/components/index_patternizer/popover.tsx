@@ -16,11 +16,7 @@ const PopoverContentsDiv = styled.div`
 
 PopoverContentsDiv.displayName = 'PopoverContentsDiv';
 
-interface Props {
-  isLoading: boolean;
-}
-
-export const IndexPatternizerPopover = React.memo(({ isLoading }: Props) => {
+export const IndexPatternizerPopover = React.memo(() => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   return (
     <EuiPopover
@@ -44,7 +40,7 @@ export const IndexPatternizerPopover = React.memo(({ isLoading }: Props) => {
     >
       <PopoverContentsDiv data-test-subj="index-pattern-popover-contents">
         <EuiPopoverTitle>{i18n.INDEX_PATTERN_SETTINGS}</EuiPopoverTitle>
-        <IndexPatternizer isLoading={isLoading} onSubmit={(args) => console.log('args', args)} />
+        <IndexPatternizer />
       </PopoverContentsDiv>
     </EuiPopover>
   );

@@ -66,11 +66,12 @@ export const HomePage: React.FC<HomePageProps> = ({ children }) => {
   }, [signalIndexExists, signalIndexName]);
 
   const [showTimeline] = useShowTimeline();
-  const { getManageSourceById } = useManageSource();
 
+  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
   const { browserFields, indexPattern, indicesExist } = useMemo(
-    () => getManageSourceById('default'),
-    [getManageSourceById]
+    () => getManageSourceById(indexPatternId),
+    [getManageSourceById, indexPatternId]
   );
 
   return (

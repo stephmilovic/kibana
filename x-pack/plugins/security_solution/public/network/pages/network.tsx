@@ -87,10 +87,11 @@ const NetworkComponent = React.memo<NetworkComponentProps & PropsFromRedux>(
       [setAbsoluteRangeDatePicker]
     );
 
-    const { getManageSourceById } = useManageSource();
+    const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
+    const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
     const { indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
-      () => getManageSourceById('default'),
-      [getManageSourceById]
+      () => getManageSourceById(indexPatternId),
+      [getManageSourceById, indexPatternId]
     );
     const filterQuery = convertToBuildEsQuery({
       config: esQuery.getEsQueryConfig(kibana.services.uiSettings),
