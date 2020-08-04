@@ -5,7 +5,7 @@
  */
 
 import { get } from 'lodash/fp';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { DEFAULT_INDEX_KEY } from '../../../../../common/constants';
 import {
@@ -19,7 +19,7 @@ import { useUiSetting$ } from '../../../lib/kibana';
 
 import { LastEventTimeGqlQuery } from './last_event_time.gql_query';
 import { useApolloClient } from '../../../utils/apollo_context';
-import { useWithSource } from '../../source';
+import { useManageSource } from '../../source';
 
 export interface LastEventTimeArgs {
   id: string;
@@ -45,8 +45,12 @@ export function useLastEventTimeQuery(
   const [currentIndexKey, updateCurrentIndexKey] = useState<LastEventIndexKey | null>(null);
   const [defaultIndex] = useUiSetting$<string[]>(DEFAULT_INDEX_KEY);
   const apolloClient = useApolloClient();
-  const { docValueFields } = useWithSource(sourceId);
-
+  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+  const { docValueFields } = useMemo(() => getManageSourceById(indexPatternId), [
+    getManageSourceById,
+    indexPatternId,
+  ]);
   async function fetchLastEventTime(signal: AbortSignal) {
     updateLoading(true);
     if (apolloClient) {
