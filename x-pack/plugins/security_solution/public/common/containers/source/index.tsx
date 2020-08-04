@@ -12,7 +12,6 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useReducer,
   useState,
 } from 'react';
@@ -118,115 +117,6 @@ export const indicesExistOrDataTemporarilyUnavailable = (
 const EMPTY_BROWSER_FIELDS = {};
 const EMPTY_DOCVALUE_FIELD: DocValueFields[] = [];
 
-interface UseWithSourceState {
-  browserFields: BrowserFields;
-  docValueFields: DocValueFields[];
-  errorMessage: string | null;
-  indexPattern: IIndexPattern;
-  indicesExist: boolean | undefined | null;
-  loading: boolean;
-}
-
-export const useWithSource = (
-  sourceId = 'default',
-  indexToAdd?: string[] | null,
-  onlyCheckIndexToAdd?: boolean,
-  // Fun fact: When using this hook multiple times within a component (e.g. add_exception_modal & edit_exception_modal),
-  // the apolloClient will perform queryDeduplication and prevent the first query from executing. A deep compare is not
-  // performed on `indices`, so another field must be passed to circumvent this.
-  // For details, see https://github.com/apollographql/react-apollo/issues/2202
-  queryDeduplication = 'default'
-) => {
-  const [configIndex] = useUiSetting$<string[]>(DEFAULT_INDEX_KEY);
-  const defaultIndex = useMemo<string[]>(() => {
-    const filterIndexAdd = (indexToAdd ?? []).filter((item) => item !== NO_ALERT_INDEX);
-    if (!isEmpty(filterIndexAdd)) {
-      return onlyCheckIndexToAdd ? filterIndexAdd : [...configIndex, ...filterIndexAdd];
-    }
-    return configIndex;
-  }, [configIndex, indexToAdd, onlyCheckIndexToAdd]);
-
-  const [state, setState] = useState<UseWithSourceState>({
-    browserFields: EMPTY_BROWSER_FIELDS,
-    docValueFields: EMPTY_DOCVALUE_FIELD,
-    errorMessage: null,
-    indexPattern: getIndexFields(defaultIndex.join(), []),
-    indicesExist: indicesExistOrDataTemporarilyUnavailable(undefined),
-    loading: true,
-  });
-
-  const apolloClient = useApolloClient();
-
-  useEffect(() => {
-    let isSubscribed = true;
-    const abortCtrl = new AbortController();
-
-    async function fetchSource() {
-      if (!apolloClient) return;
-      setState((prevState) => ({ ...prevState, loading: true }));
-
-      try {
-        const result = await apolloClient.query<
-          SourceQuery.Query,
-          SourceQuery.Variables & { queryDeduplication: string }
-        >({
-          query: sourceQuery,
-          fetchPolicy: 'cache-first',
-          variables: {
-            sourceId,
-            defaultIndex,
-            queryDeduplication,
-          },
-          context: {
-            fetchOptions: {
-              signal: abortCtrl.signal,
-            },
-          },
-        });
-
-        if (isSubscribed) {
-          setState({
-            loading: false,
-            indicesExist: indicesExistOrDataTemporarilyUnavailable(
-              get('data.source.status.indicesExist', result)
-            ),
-            browserFields: getBrowserFields(
-              defaultIndex.join(),
-              get('data.source.status.indexFields', result)
-            ),
-            docValueFields: getDocValueFields(
-              defaultIndex.join(),
-              get('data.source.status.indexFields', result)
-            ),
-            indexPattern: getIndexFields(
-              defaultIndex.join(),
-              get('data.source.status.indexFields', result)
-            ),
-            errorMessage: null,
-          });
-        }
-      } catch (error) {
-        if (isSubscribed) {
-          setState((prevState) => ({
-            ...prevState,
-            loading: false,
-            errorMessage: error.message,
-          }));
-        }
-      }
-    }
-
-    fetchSource();
-
-    return () => {
-      isSubscribed = false;
-      return abortCtrl.abort();
-    };
-  }, [apolloClient, sourceId, defaultIndex, queryDeduplication]);
-
-  return state;
-};
-
 interface ManageSource {
   browserFields: BrowserFields;
   docValueFields: DocValueFields[];
@@ -303,19 +193,25 @@ const reducerManageSource = (state: ManageSourceById, action: ActionManageSource
 };
 
 export interface UseSourceManager {
-  getManageSourceById: (id: string) => ManageSource;
   getActiveIndexPatternId: () => string;
   getAvailableIndexPatternIds: () => string[];
-  setActiveIndexPatternId: (id: string) => void;
+  getManageSourceById: (id: string) => ManageSource;
   initializeSource: (
     id: string,
     indexToAdd?: string[] | null,
     onlyCheckIndexToAdd?: boolean
   ) => void;
+  setActiveIndexPatternId: (id: string) => void;
   updateIndicies: (id: string, updatedIndicies: string[]) => void;
 }
 
-export const APP_INDEX_ID = 'default';
+export enum SourceGroups {
+  default = 'default',
+  host = 'host',
+  detections = 'detections',
+  timeline = 'timeline',
+  network = 'network',
+}
 
 export const useSourceManager = (): UseSourceManager => {
   const [configIndex] = useUiSetting$<string[]>(DEFAULT_INDEX_KEY);
@@ -331,7 +227,7 @@ export const useSourceManager = (): UseSourceManager => {
     [configIndex]
   );
   const [state, dispatch] = useReducer(reducerManageSource, initManageSource);
-  const [activeIndexPatternId, setActiveIndexPatternId] = useState<string>(APP_INDEX_ID);
+  const [activeIndexPatternId, setActiveIndexPatternId] = useState<string>(SourceGroups.default);
 
   const apolloClient = useApolloClient();
   const setIsSourceLoading = useCallback(({ id, loading }: { id: string; loading: boolean }) => {
@@ -381,6 +277,7 @@ export const useSourceManager = (): UseSourceManager => {
                   get('data.source.status.indexFields', result)
                 ),
                 errorMessage: null,
+                id,
                 indexPattern: getIndexFields(
                   defaultIndex.join(),
                   get('data.source.status.indexFields', result)
@@ -390,7 +287,6 @@ export const useSourceManager = (): UseSourceManager => {
                   get('data.source.status.indicesExist', result)
                 ),
                 loading: false,
-                id,
               },
             });
           }
@@ -477,7 +373,7 @@ export const useSourceManager = (): UseSourceManager => {
 };
 
 const init: UseSourceManager = {
-  getActiveIndexPatternId: () => APP_INDEX_ID,
+  getActiveIndexPatternId: () => SourceGroups.default,
   getAvailableIndexPatternIds: () => [],
   getManageSourceById: (id: string) => getSourceDefaults(id, []),
   initializeSource: () => noop,
@@ -501,3 +397,112 @@ export const ManageSource = ({ children }: ManageSourceProps) => {
     </ManageSourceContext.Provider>
   );
 };
+
+// interface UseWithSourceState {
+//   browserFields: BrowserFields;
+//   docValueFields: DocValueFields[];
+//   errorMessage: string | null;
+//   indexPattern: IIndexPattern;
+//   indicesExist: boolean | undefined | null;
+//   loading: boolean;
+// }
+//
+// export const useWithSource = (
+//   sourceId = 'default',
+//   indexToAdd?: string[] | null,
+//   onlyCheckIndexToAdd?: boolean,
+//   // Fun fact: When using this hook multiple times within a component (e.g. add_exception_modal & edit_exception_modal),
+//   // the apolloClient will perform queryDeduplication and prevent the first query from executing. A deep compare is not
+//   // performed on `indices`, so another field must be passed to circumvent this.
+//   // For details, see https://github.com/apollographql/react-apollo/issues/2202
+//   queryDeduplication = 'default'
+// ) => {
+//   const [configIndex] = useUiSetting$<string[]>(DEFAULT_INDEX_KEY);
+//   const defaultIndex = useMemo<string[]>(() => {
+//     const filterIndexAdd = (indexToAdd ?? []).filter((item) => item !== NO_ALERT_INDEX);
+//     if (!isEmpty(filterIndexAdd)) {
+//       return onlyCheckIndexToAdd ? filterIndexAdd : [...configIndex, ...filterIndexAdd];
+//     }
+//     return configIndex;
+//   }, [configIndex, indexToAdd, onlyCheckIndexToAdd]);
+//
+//   const [state, setState] = useState<UseWithSourceState>({
+//     browserFields: EMPTY_BROWSER_FIELDS,
+//     docValueFields: EMPTY_DOCVALUE_FIELD,
+//     errorMessage: null,
+//     indexPattern: getIndexFields(defaultIndex.join(), []),
+//     indicesExist: indicesExistOrDataTemporarilyUnavailable(undefined),
+//     loading: true,
+//   });
+//
+//   const apolloClient = useApolloClient();
+//
+//   useEffect(() => {
+//     let isSubscribed = true;
+//     const abortCtrl = new AbortController();
+//
+//     async function fetchSource() {
+//       if (!apolloClient) return;
+//       setState((prevState) => ({ ...prevState, loading: true }));
+//
+//       try {
+//         const result = await apolloClient.query<
+//           SourceQuery.Query,
+//           SourceQuery.Variables & { queryDeduplication: string }
+//         >({
+//           query: sourceQuery,
+//           fetchPolicy: 'cache-first',
+//           variables: {
+//             sourceId,
+//             defaultIndex,
+//             queryDeduplication,
+//           },
+//           context: {
+//             fetchOptions: {
+//               signal: abortCtrl.signal,
+//             },
+//           },
+//         });
+//
+//         if (isSubscribed) {
+//           setState({
+//             loading: false,
+//             indicesExist: indicesExistOrDataTemporarilyUnavailable(
+//               get('data.source.status.indicesExist', result)
+//             ),
+//             browserFields: getBrowserFields(
+//               defaultIndex.join(),
+//               get('data.source.status.indexFields', result)
+//             ),
+//             docValueFields: getDocValueFields(
+//               defaultIndex.join(),
+//               get('data.source.status.indexFields', result)
+//             ),
+//             indexPattern: getIndexFields(
+//               defaultIndex.join(),
+//               get('data.source.status.indexFields', result)
+//             ),
+//             errorMessage: null,
+//           });
+//         }
+//       } catch (error) {
+//         if (isSubscribed) {
+//           setState((prevState) => ({
+//             ...prevState,
+//             loading: false,
+//             errorMessage: error.message,
+//           }));
+//         }
+//       }
+//     }
+//
+//     fetchSource();
+//
+//     return () => {
+//       isSubscribed = false;
+//       return abortCtrl.abort();
+//     };
+//   }, [apolloClient, sourceId, defaultIndex, queryDeduplication]);
+//
+//   return state;
+// };

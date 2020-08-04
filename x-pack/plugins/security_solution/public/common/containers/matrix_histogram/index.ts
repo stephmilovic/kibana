@@ -4,18 +4,16 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { isEmpty } from 'lodash/fp';
 import { useEffect, useMemo, useState, useRef } from 'react';
 
-import { DEFAULT_INDEX_KEY } from '../../../../common/constants';
 import { MatrixHistogramQueryProps } from '../../components/matrix_histogram/types';
 import { errorToToaster, useStateToaster } from '../../components/toasters';
-import { useUiSetting$ } from '../../lib/kibana';
 import { createFilter } from '../helpers';
 import { useApolloClient } from '../../utils/apollo_context';
 import { inputsModel } from '../../store';
 import { MatrixHistogramGqlQuery } from './index.gql_query';
 import { GetMatrixHistogramQuery, MatrixOverTimeHistogramData } from '../../../graphql/types';
+import { useManageSource } from '../source';
 
 export const useQuery = ({
   endDate,
@@ -27,13 +25,19 @@ export const useQuery = ({
   stackByField,
   startDate,
 }: MatrixHistogramQueryProps) => {
-  const [configIndex] = useUiSetting$<string[]>(DEFAULT_INDEX_KEY);
-  const defaultIndex = useMemo<string[]>(() => {
-    if (indexToAdd != null && !isEmpty(indexToAdd)) {
-      return [...configIndex, ...indexToAdd];
-    }
-    return configIndex;
-  }, [configIndex, indexToAdd]);
+  // const [configIndex] = useUiSetting$<string[]>(DEFAULT_INDEX_KEY);
+  // const defaultIndex = useMemo<string[]>(() => {
+  //   if (indexToAdd != null && !isEmpty(indexToAdd)) {
+  //     return [...configIndex, ...indexToAdd];
+  //   }
+  //   return configIndex;
+  // }, [configIndex, indexToAdd]);
+  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+  const { indexPatterns } = useMemo(() => getManageSourceById(indexPatternId), [
+    getManageSourceById,
+    indexPatternId,
+  ]);
 
   const [, dispatchToaster] = useStateToaster();
   const refetch = useRef<inputsModel.Refetch>();
@@ -52,7 +56,7 @@ export const useQuery = ({
         from: startDate!,
         to: endDate!,
       },
-      defaultIndex,
+      defaultIndex: indexPatterns,
       inspect: isInspected,
       stackByField,
       histogramType,
@@ -104,7 +108,7 @@ export const useQuery = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    defaultIndex,
+    indexPatterns,
     errorMessage,
     filterQuery,
     histogramType,
