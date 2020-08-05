@@ -77,8 +77,8 @@ export const IPDetailsComponent: React.FC<IPDetailsComponentProps & PropsFromRed
     setIpDetailsTablesActivePageToZero();
   }, [detailName, setIpDetailsTablesActivePageToZero]);
 
-  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
-  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+  const { getActiveSourceGroupId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
   const { docValueFields, indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
     () => getManageSourceById(indexPatternId),
     [getManageSourceById, indexPatternId]

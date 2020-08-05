@@ -19,7 +19,7 @@ import memoizeOne from 'memoize-one';
 import { IIndexPattern } from 'src/plugins/data/public';
 
 import { DEFAULT_INDEX_KEY, NO_ALERT_INDEX } from '../../../../common/constants';
-import { useUiSetting$ } from '../../lib/kibana';
+import { useKibana, useUiSetting$ } from '../../lib/kibana';
 
 import { IndexField, SourceQuery } from '../../../graphql/types';
 
@@ -157,7 +157,7 @@ type ActionManageSource =
       payload: ManageSourceInit;
     }
   | {
-      type: 'SET_IS_LOADING';
+      type: 'SET_IS_SOURCE_LOADING';
       id: string;
       payload: boolean;
     };
@@ -178,7 +178,7 @@ const reducerManageSource = (state: ManageSourceById, action: ActionManageSource
           ...action.payload,
         },
       };
-    case 'SET_IS_LOADING':
+    case 'SET_IS_SOURCE_LOADING':
       return {
         ...state,
         [action.id]: {
@@ -193,15 +193,17 @@ const reducerManageSource = (state: ManageSourceById, action: ActionManageSource
 };
 
 export interface UseSourceManager {
-  getActiveIndexPatternId: () => string;
-  getAvailableIndexPatternIds: () => string[];
+  getActiveSourceGroupId: () => string;
+  getAvailableIndexPatterns: () => string[];
+  getAvailableSourceGroupIds: () => string[];
   getManageSourceById: (id: string) => ManageSource;
   initializeSource: (
     id: string,
     indexToAdd?: string[] | null,
     onlyCheckIndexToAdd?: boolean
   ) => void;
-  setActiveIndexPatternId: (id: string) => void;
+  isIndexPatternsLoading: boolean;
+  setActiveSourceGroupId: (id: string) => void;
   updateIndicies: (id: string, updatedIndicies: string[]) => void;
 }
 
@@ -213,7 +215,47 @@ export enum SourceGroups {
   network = 'network',
 }
 
+const sourceGroups = {
+  [SourceGroups.default]: [
+    'apm-*-transaction*',
+    'auditbeat-*',
+    'endgame-*',
+    'filebeat-*',
+    'logs-*',
+    'packetbeat-*',
+    'winlogbeat-*',
+  ],
+  [SourceGroups.host]: [
+    'apm-*-transaction*',
+    'endgame-*',
+    'logs-*',
+    'packetbeat-*',
+    'winlogbeat-*',
+  ],
+  [SourceGroups.detections]: ['signals-*'],
+  [SourceGroups.timeline]: [
+    'apm-*-transaction*',
+    'auditbeat-*',
+    'endgame-*',
+    'filebeat-*',
+    'logs-*',
+    'packetbeat-*',
+    'winlogbeat-*',
+  ],
+  [SourceGroups.network]: ['auditbeat-*', 'filebeat-*'],
+};
+
+export interface IndexPatternRefs {
+  id: string;
+  title: string;
+}
+
 export const useSourceManager = (): UseSourceManager => {
+  const {
+    services: {
+      data: { indexPatterns },
+    },
+  } = useKibana();
   const [configIndex] = useUiSetting$<string[]>(DEFAULT_INDEX_KEY);
 
   const getDefaultIndex = useCallback(
@@ -227,18 +269,42 @@ export const useSourceManager = (): UseSourceManager => {
     [configIndex]
   );
   const [state, dispatch] = useReducer(reducerManageSource, initManageSource);
-  const [activeIndexPatternId, setActiveIndexPatternId] = useState<string>(SourceGroups.default);
-
+  const [activeSourceGroupId, setActiveSourceGroupId] = useState<string>(SourceGroups.default);
+  const [isIndexPatternsLoading, setIsIndexPatternsLoading] = useState<boolean>(true);
   const apolloClient = useApolloClient();
   const setIsSourceLoading = useCallback(({ id, loading }: { id: string; loading: boolean }) => {
     dispatch({
-      type: 'SET_IS_LOADING',
+      type: 'SET_IS_SOURCE_LOADING',
       id,
       payload: loading,
     });
   }, []);
+  // Kibana Index Patterns
+  const [availableIndexPatterns, setAvailableIndexPatterns] = useState<string[]>([]);
+  const getAvailableIndexPatterns = useCallback(() => availableIndexPatterns, [
+    availableIndexPatterns,
+  ]);
+  const getKibanaIndexPatterns = useCallback(() => {
+    setIsIndexPatternsLoading(true);
+    const abortCtrl = new AbortController();
+    async function fetchTitles() {
+      try {
+        const result = await indexPatterns.getTitles();
+        setAvailableIndexPatterns(result);
+        setIsIndexPatternsLoading(false);
+      } catch (error) {
+        setIsIndexPatternsLoading(false);
+      }
+    }
 
-  const setIndexPatterns = useCallback(
+    fetchTitles();
+
+    return () => {
+      return abortCtrl.abort();
+    };
+  }, [indexPatterns]);
+  // Security Solution Source
+  const enrichSource = useCallback(
     (id: string, indexToAdd?: string[] | null, onlyCheckIndexToAdd?: boolean) => {
       let isSubscribed = true;
       const abortCtrl = new AbortController();
@@ -318,16 +384,17 @@ export const useSourceManager = (): UseSourceManager => {
 
   const initializeSource = useCallback(
     (id: string, indexToAdd?: string[] | null, onlyCheckIndexToAdd?: boolean) =>
-      setIndexPatterns(id, indexToAdd, onlyCheckIndexToAdd),
-    [setIndexPatterns]
+      enrichSource(id, indexToAdd, onlyCheckIndexToAdd),
+    [enrichSource]
   );
 
-  const updateIndicies = useCallback(
-    (id: string, updatedIndicies: string[]) => setIndexPatterns(id, updatedIndicies, true),
-    [setIndexPatterns]
+  const updateSourceIndicies = useCallback(
+    (id: string, updatedIndicies: string[]) => enrichSource(id, updatedIndicies, true),
+    [enrichSource]
   );
+  // Security Solution Source Groups
   const getManageSourceById = useCallback(
-    (id = 'default'): ManageSource => {
+    (id = SourceGroups.default): ManageSource => {
       if (state[id] != null) {
         return { ...getSourceDefaults(id, getDefaultIndex()), ...state[id] };
       }
@@ -336,49 +403,62 @@ export const useSourceManager = (): UseSourceManager => {
     [getDefaultIndex, state]
   );
 
-  const getAvailableIndexPatternIds = useCallback(() => {
+  const getAvailableSourceGroupIds = useCallback(() => {
     return Object.keys(state);
   }, [state]);
 
-  const getActiveIndexPatternId = useCallback(() => activeIndexPatternId, [activeIndexPatternId]);
+  const getActiveSourceGroupId = useCallback(() => activeSourceGroupId, [activeSourceGroupId]);
 
-  const setTheIpId = useCallback(
+  const setSourceGroupId = useCallback(
     (id: string) => {
-      if (getAvailableIndexPatternIds().includes(id)) {
-        setActiveIndexPatternId(id);
+      if (getAvailableSourceGroupIds().includes(id)) {
+        setActiveSourceGroupId(id);
       }
     },
-    [getAvailableIndexPatternIds]
+    [getAvailableSourceGroupIds]
   );
 
   // load initial default index
   useEffect(() => {
-    initializeSource(activeIndexPatternId);
+    getKibanaIndexPatterns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('state', state);
-  }, [state]);
+    if (!isIndexPatternsLoading) {
+      Object.entries(sourceGroups).forEach(([key, value]) => initializeSource(key, value, true));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isIndexPatternsLoading]);
 
   return {
-    getActiveIndexPatternId,
-    getAvailableIndexPatternIds,
+    getActiveSourceGroupId,
+    getAvailableIndexPatterns,
+    getAvailableSourceGroupIds,
     getManageSourceById,
     initializeSource,
-    setActiveIndexPatternId: setTheIpId,
-    updateIndicies,
+    isIndexPatternsLoading,
+    setActiveSourceGroupId: setSourceGroupId,
+    updateIndicies: updateSourceIndicies,
   };
 };
 
 const init: UseSourceManager = {
-  getActiveIndexPatternId: () => SourceGroups.default,
-  getAvailableIndexPatternIds: () => [],
+  getActiveSourceGroupId: () => SourceGroups.default,
+  getAvailableIndexPatterns: () => [],
+  getAvailableSourceGroupIds: () => [],
   getManageSourceById: (id: string) => getSourceDefaults(id, []),
   initializeSource: () => noop,
-  setActiveIndexPatternId: (id: string) => noop,
+  isIndexPatternsLoading: true,
+  setActiveSourceGroupId: (id: string) => noop,
   updateIndicies: () => noop,
+};
+
+const faker = {
+  activeSourceGroupId: SourceGroups.default,
+  availableIndexPatterns: ['auditbeat-*', 'filebeat-*'],
+  availableSourceGroupIds: [],
+  sourceGroupsById: {},
 };
 
 const ManageSourceContext = createContext<UseSourceManager>(init);

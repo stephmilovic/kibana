@@ -49,8 +49,8 @@ const OverviewComponent: React.FC<PropsFromRedux> = ({
 
   const { from, deleteQuery, setQuery, to } = useGlobalTime();
 
-  const { getActiveIndexPatternId, getManageSourceById, initializeSource } = useManageSource();
-  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+  const { getActiveSourceGroupId, getManageSourceById, initializeSource } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
   const { indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
     () => getManageSourceById(indexPatternId),
     [getManageSourceById, indexPatternId]

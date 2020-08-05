@@ -22,7 +22,7 @@ import { useGetUrlSearch } from '../navigation/use_get_url_search';
 import { useKibana } from '../../lib/kibana';
 import { APP_ID, ADD_DATA_PATH, APP_DETECTIONS_PATH } from '../../../../common/constants';
 import { LinkAnchor } from '../links';
-import { IndexPatternizerPopover } from '../index_patternizer/popover';
+import { Sourcerer } from '../index_patternizer/file';
 
 const Wrapper = styled.header<{ show: boolean }>`
   ${({ show, theme }) => css`
@@ -44,8 +44,8 @@ interface HeaderGlobalProps {
   hideDetectionEngine?: boolean;
 }
 export const HeaderGlobal = React.memo<HeaderGlobalProps>(({ hideDetectionEngine = false }) => {
-  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
-  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+  const { getActiveSourceGroupId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
   const { indicesExist } = useMemo(() => getManageSourceById(indexPatternId), [
     getManageSourceById,
     indexPatternId,
@@ -95,7 +95,7 @@ export const HeaderGlobal = React.memo<HeaderGlobalProps>(({ hideDetectionEngine
               )}
 
               <FlexItem grow={false}>
-                <IndexPatternizerPopover />
+                <Sourcerer />
               </FlexItem>
 
               <FlexItem grow={false}>

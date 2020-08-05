@@ -67,8 +67,8 @@ export const HomePage: React.FC<HomePageProps> = ({ children }) => {
 
   const [showTimeline] = useShowTimeline();
 
-  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
-  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+  const { getActiveSourceGroupId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
   const { browserFields, indexPattern, indicesExist } = useMemo(
     () => getManageSourceById(indexPatternId),
     [getManageSourceById, indexPatternId]

@@ -10,11 +10,8 @@ import {
   EuiHorizontalRule,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiBadgeGroup,
-  EuiBadge,
   EuiButton,
   EuiButtonEmpty,
-  EuiButtonIcon,
   EuiLoadingSpinner,
 } from '@elastic/eui';
 import styled, { css } from 'styled-components';
@@ -26,10 +23,6 @@ import { useManageSource } from '../../containers/source';
 
 export const CommonUseField = getUseField({ component: Field });
 
-interface IndexPatternizerProps {
-  disabled?: boolean;
-}
-
 const MyFlexGroup = styled(EuiFlexGroup)`
   ${({ theme }) => css`
     margin-top: ${theme.eui.euiSizeM};
@@ -39,16 +32,27 @@ const MyFlexGroup = styled(EuiFlexGroup)`
   `}
 `;
 
-export const IndexPatternizer = React.memo(({ disabled = false }: IndexPatternizerProps) => {
-  const [isEditIndexPatterns, setIsEditIndexPatterns] = useState(false);
+interface IndexPatternizerProps {
+  onCancel: () => void;
+}
 
-  const { getActiveIndexPatternId, getManageSourceById, updateIndicies } = useManageSource();
+export const IndexPatternizer = React.memo(({ onCancel }: IndexPatternizerProps) => {
+  const {
+    getActiveSourceGroupId,
+    getAvailableIndexPatterns,
+    getManageSourceById,
+    updateIndicies,
+    isIndexPatternsLoading,
+  } = useManageSource();
 
-  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+  const sourceGroupId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
+  const availableIndexPatterns = useMemo(() => getAvailableIndexPatterns(), [
+    getAvailableIndexPatterns,
+  ]);
 
   const { indexPatterns, loading: loadingIndices } = useMemo(
-    () => getManageSourceById(indexPatternId),
-    [getManageSourceById, indexPatternId]
+    () => getManageSourceById(sourceGroupId),
+    [getManageSourceById, sourceGroupId]
   );
 
   const { form } = useForm({
@@ -56,19 +60,22 @@ export const IndexPatternizer = React.memo(({ disabled = false }: IndexPatterniz
     options: { stripEmptyFields: false },
     schema,
   });
+  useEffect(() => {
+    form.setFieldValue('indexPatterns', indexPatterns);
+  }, [form, indexPatterns]);
   const { submit } = form;
 
   const onSubmitIndexPatterns = useCallback(async () => {
     const { isValid, data: newData } = await submit();
     if (isValid && newData.indexPatterns) {
-      updateIndicies(indexPatternId, newData.indexPatterns);
-      setIsEditIndexPatterns(false);
+      updateIndicies(sourceGroupId, newData.indexPatterns);
+      onCancel();
     }
-  }, [indexPatternId, submit, updateIndicies]);
+  }, [onCancel, sourceGroupId, submit, updateIndicies]);
   const [options, setOptions] = useState<Array<{ label: string }>>(
-    loadingIndices
+    isIndexPatternsLoading || availableIndexPatterns.length === 0
       ? []
-      : indexPatterns.map((label: string) => ({
+      : availableIndexPatterns.map((label: string) => ({
           label,
         }))
   );
@@ -76,13 +83,13 @@ export const IndexPatternizer = React.memo(({ disabled = false }: IndexPatterniz
   useEffect(
     () =>
       setOptions(
-        loadingIndices
+        isIndexPatternsLoading || availableIndexPatterns.length === 0
           ? []
-          : indexPatterns.map((label: string) => ({
+          : availableIndexPatterns.map((label: string) => ({
               label,
             }))
       ),
-    [loadingIndices, indexPatterns]
+    [isIndexPatternsLoading, availableIndexPatterns]
   );
 
   return (
@@ -92,104 +99,220 @@ export const IndexPatternizer = React.memo(({ disabled = false }: IndexPatterniz
           <h4>{i18n.INDEX_PATTERNS}</h4>
         </EuiFlexItem>
         {loadingIndices && <EuiLoadingSpinner data-test-subj="index-pattern-list-loading" />}
-        {!loadingIndices && (
-          <EuiFlexItem data-test-subj="index-pattern-list-edit" grow={false}>
-            <EuiButtonIcon
-              data-test-subj="index-pattern-list-edit-button"
-              isDisabled={disabled}
-              aria-label={i18n.INDEX_PATTERNS_HELP}
-              iconType={'pencil'}
-              onClick={setIsEditIndexPatterns.bind(null, true)}
-            />
-          </EuiFlexItem>
-        )}
       </EuiFlexGroup>
       <EuiHorizontalRule margin="xs" />
-      <MyFlexGroup gutterSize="xs" data-test-subj="case-index-patterns">
-        {indexPatterns.length === 0 && !isEditIndexPatterns && (
+      <MyFlexGroup gutterSize="xs" data-test-subj="index-patterns">
+        {indexPatterns.length === 0 && (
           <p data-test-subj="no-index-patterns">{i18n.NO_INDEX_PATTERNS}</p>
         )}
-        <EuiBadgeGroup>
-          {indexPatterns.length > 0 &&
-            !isEditIndexPatterns &&
-            indexPatterns.map((pattern, key) => (
-              <EuiBadge key={key} data-test-subj={`case-pattern-${pattern}`} color="hollow">
-                {pattern}
-              </EuiBadge>
-            ))}
-        </EuiBadgeGroup>
-        {isEditIndexPatterns && (
-          <EuiFlexGroup data-test-subj="edit-index-patterns" direction="column">
-            <EuiFlexItem>
-              <Form form={form}>
-                <CommonUseField
-                  path="indexPatterns"
-                  componentProps={{
-                    idAria: 'indexPatterns',
-                    'data-test-subj': 'indexPatterns',
-                    euiFieldProps: {
-                      fullWidth: true,
-                      placeholder: '',
-                      options,
-                      noSuggestions: false,
-                    },
-                  }}
-                />
-                <FormDataProvider pathsToWatch="indexPatterns">
-                  {({ indexPatterns: anotherIndexPatterns }) => {
-                    const current: string[] = options.map((opt) => opt.label);
-                    const newOptions = anotherIndexPatterns.reduce(
-                      (acc: string[], item: string) => {
-                        if (!acc.includes(item)) {
-                          return [...acc, item];
-                        }
-                        return acc;
-                      },
-                      current
-                    );
-                    if (!isEqual(current, newOptions)) {
-                      setOptions(
-                        newOptions.map((label: string) => ({
-                          label,
-                        }))
-                      );
+        <EuiFlexGroup data-test-subj="edit-index-patterns" direction="column">
+          <EuiFlexItem>
+            <Form form={form}>
+              <CommonUseField
+                path="indexPatterns"
+                componentProps={{
+                  idAria: 'indexPatterns',
+                  'data-test-subj': 'indexPatterns',
+                  euiFieldProps: {
+                    fullWidth: true,
+                    isLoading: isIndexPatternsLoading,
+                    noSuggestions: false,
+                    options,
+                    placeholder: '',
+                  },
+                }}
+              />
+              <FormDataProvider pathsToWatch="indexPatterns">
+                {({ indexPatterns: anotherIndexPatterns }) => {
+                  const current: string[] = options.map((opt) => opt.label);
+                  const newOptions = anotherIndexPatterns.reduce((acc: string[], item: string) => {
+                    if (!acc.includes(item)) {
+                      return [...acc, item];
                     }
-                    return null;
-                  }}
-                </FormDataProvider>
-              </Form>
-            </EuiFlexItem>
-            <EuiFlexItem>
-              <EuiFlexGroup gutterSize="s" alignItems="center">
-                <EuiFlexItem grow={false}>
-                  <EuiButton
-                    color="secondary"
-                    data-test-subj="edit-index-patterns-submit"
-                    fill
-                    iconType="save"
-                    onClick={onSubmitIndexPatterns}
-                    size="s"
-                  >
-                    {i18n.SAVE}
-                  </EuiButton>
-                </EuiFlexItem>
-                <EuiFlexItem grow={false}>
-                  <EuiButtonEmpty
-                    data-test-subj="edit-index-patterns-cancel"
-                    iconType="cross"
-                    onClick={setIsEditIndexPatterns.bind(null, false)}
-                    size="s"
-                  >
-                    {i18n.CANCEL}
-                  </EuiButtonEmpty>
-                </EuiFlexItem>
-              </EuiFlexGroup>
-            </EuiFlexItem>
-          </EuiFlexGroup>
+                    return acc;
+                  }, current);
+                  if (!isEqual(current, newOptions)) {
+                    setOptions(
+                      newOptions.map((label: string) => ({
+                        label,
+                      }))
+                    );
+                  }
+                  return null;
+                }}
+              </FormDataProvider>
+            </Form>
+          </EuiFlexItem>
+          <EuiFlexItem>
+            <EuiFlexGroup gutterSize="s" alignItems="center">
+              <EuiFlexItem grow={false}>
+                <EuiButton
+                  color="secondary"
+                  data-test-subj="edit-index-patterns-submit"
+                  fill
+                  iconType="save"
+                  onClick={onSubmitIndexPatterns}
+                  size="s"
+                >
+                  {i18n.SAVE}
+                </EuiButton>
+              </EuiFlexItem>
+              <EuiFlexItem grow={false}>
+                <EuiButtonEmpty
+                  data-test-subj="edit-index-patterns-cancel"
+                  iconType="cross"
+                  onClick={onCancel}
+                  size="s"
+                >
+                  {i18n.CANCEL}
+                </EuiButtonEmpty>
+              </EuiFlexItem>
+            </EuiFlexGroup>
+          </EuiFlexItem>
+        </EuiFlexGroup>
+      </MyFlexGroup>
+    </EuiText>
+  );
+});
+
+export const IndexPatternizerComplex = React.memo(({ onCancel }: IndexPatternizerProps) => {
+  const {
+    getActiveSourceGroupId,
+    getAvailableIndexPatterns,
+    getManageSourceById,
+    updateIndicies,
+    isIndexPatternsLoading,
+  } = useManageSource();
+
+  const sourceGroupId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
+  const availableIndexPatterns = useMemo(() => getAvailableIndexPatterns(), [
+    getAvailableIndexPatterns,
+  ]);
+
+  const { indexPatterns, loading: loadingIndices } = useMemo(
+    () => getManageSourceById(sourceGroupId),
+    [getManageSourceById, sourceGroupId]
+  );
+
+  const { form } = useForm({
+    defaultValue: { indexPatterns },
+    options: { stripEmptyFields: false },
+    schema,
+  });
+  useEffect(() => {
+    form.setFieldValue('indexPatterns', indexPatterns);
+  }, [form, indexPatterns]);
+  const { submit } = form;
+
+  const onSubmitIndexPatterns = useCallback(async () => {
+    const { isValid, data: newData } = await submit();
+    if (isValid && newData.indexPatterns) {
+      updateIndicies(sourceGroupId, newData.indexPatterns);
+      onCancel();
+    }
+  }, [onCancel, sourceGroupId, submit, updateIndicies]);
+  const [options, setOptions] = useState<Array<{ label: string }>>(
+    isIndexPatternsLoading || availableIndexPatterns.length === 0
+      ? []
+      : availableIndexPatterns.map((label: string) => ({
+          label,
+        }))
+  );
+
+  useEffect(
+    () =>
+      setOptions(
+        isIndexPatternsLoading || availableIndexPatterns.length === 0
+          ? []
+          : availableIndexPatterns.map((label: string) => ({
+              label,
+            }))
+      ),
+    [isIndexPatternsLoading, availableIndexPatterns]
+  );
+
+  return (
+    <EuiText data-test-subj="index-patternizer">
+      <EuiFlexGroup alignItems="center" gutterSize="xs" justifyContent="spaceBetween">
+        <EuiFlexItem grow={false}>
+          <h4>{i18n.INDEX_PATTERNS}</h4>
+        </EuiFlexItem>
+        {loadingIndices && <EuiLoadingSpinner data-test-subj="index-pattern-list-loading" />}
+      </EuiFlexGroup>
+      <EuiHorizontalRule margin="xs" />
+      <MyFlexGroup gutterSize="xs" data-test-subj="index-patterns">
+        {indexPatterns.length === 0 && (
+          <p data-test-subj="no-index-patterns">{i18n.NO_INDEX_PATTERNS}</p>
         )}
+        <EuiFlexGroup data-test-subj="edit-index-patterns" direction="column">
+          <EuiFlexItem>
+            <Form form={form}>
+              <CommonUseField
+                path="indexPatterns"
+                componentProps={{
+                  idAria: 'indexPatterns',
+                  'data-test-subj': 'indexPatterns',
+                  euiFieldProps: {
+                    fullWidth: true,
+                    isLoading: isIndexPatternsLoading,
+                    noSuggestions: false,
+                    options,
+                    placeholder: '',
+                  },
+                }}
+              />
+              <FormDataProvider pathsToWatch="indexPatterns">
+                {({ indexPatterns: anotherIndexPatterns }) => {
+                  const current: string[] = options.map((opt) => opt.label);
+                  const newOptions = anotherIndexPatterns.reduce((acc: string[], item: string) => {
+                    if (!acc.includes(item)) {
+                      return [...acc, item];
+                    }
+                    return acc;
+                  }, current);
+                  if (!isEqual(current, newOptions)) {
+                    setOptions(
+                      newOptions.map((label: string) => ({
+                        label,
+                      }))
+                    );
+                  }
+                  return null;
+                }}
+              </FormDataProvider>
+            </Form>
+          </EuiFlexItem>
+          <EuiFlexItem>
+            <EuiFlexGroup gutterSize="s" alignItems="center">
+              <EuiFlexItem grow={false}>
+                <EuiButton
+                  color="secondary"
+                  data-test-subj="edit-index-patterns-submit"
+                  fill
+                  iconType="save"
+                  onClick={onSubmitIndexPatterns}
+                  size="s"
+                >
+                  {i18n.SAVE}
+                </EuiButton>
+              </EuiFlexItem>
+              <EuiFlexItem grow={false}>
+                <EuiButtonEmpty
+                  data-test-subj="edit-index-patterns-cancel"
+                  iconType="cross"
+                  onClick={onCancel}
+                  size="s"
+                >
+                  {i18n.CANCEL}
+                </EuiButtonEmpty>
+              </EuiFlexItem>
+            </EuiFlexGroup>
+          </EuiFlexItem>
+        </EuiFlexGroup>
       </MyFlexGroup>
     </EuiText>
   );
 });
 
 IndexPatternizer.displayName = 'IndexPatternizer';
+IndexPatternizerComplex.displayName = 'IndexPatternizerComplex';

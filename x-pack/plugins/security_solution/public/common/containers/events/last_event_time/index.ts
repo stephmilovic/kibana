@@ -45,8 +45,8 @@ export function useLastEventTimeQuery(
   const [currentIndexKey, updateCurrentIndexKey] = useState<LastEventIndexKey | null>(null);
   const [defaultIndex] = useUiSetting$<string[]>(DEFAULT_INDEX_KEY);
   const apolloClient = useApolloClient();
-  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
-  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+  const { getActiveSourceGroupId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
   const { docValueFields } = useMemo(() => getManageSourceById(indexPatternId), [
     getManageSourceById,
     indexPatternId,

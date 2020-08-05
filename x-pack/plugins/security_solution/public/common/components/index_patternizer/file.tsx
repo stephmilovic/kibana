@@ -5,98 +5,99 @@
  */
 
 import { i18n } from '@kbn/i18n';
-import React, { useState } from 'react';
-import {
-  EuiButtonEmpty,
-  EuiPopover,
-  EuiPopoverTitle,
-  EuiSelectable,
-  EuiButtonEmptyProps,
-} from '@elastic/eui';
-import { EuiSelectableProps } from '@elastic/eui/src/components/selectable/selectable';
+import React, { useCallback, useMemo, useState } from 'react';
+import { EuiButtonEmpty, EuiPopover, EuiPopoverTitle, EuiSelectable } from '@elastic/eui';
+import { EuiSelectableOption } from '@elastic/eui/src/components/selectable/selectable_option';
+import { useManageSource } from '../../containers/source';
 
-export interface IndexPatternRef {
-  id: string;
-  title: string;
-}
+export const Sourcerer = React.memo(() => {
+  const {
+    getActiveSourceGroupId,
+    getAvailableIndexPatterns,
+    getManageSourceById,
+    updateIndicies,
+    isIndexPatternsLoading,
+  } = useManageSource();
 
-export type ChangeIndexPatternTriggerProps = EuiButtonEmptyProps & {
-  label: string;
-  title?: string;
-};
+  const sourceGroupId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
+  const options = useMemo(() => getAvailableIndexPatterns(), [getAvailableIndexPatterns]);
 
-// TODO: refactor to shared component with ../../../../../../../../x-pack/legacy/plugins/lens/public/indexpattern_plugin/change_indexpattern
+  const { indexPatterns: selectedOptions, loading: loadingIndices } = useMemo(
+    () => getManageSourceById(sourceGroupId),
+    [getManageSourceById, sourceGroupId]
+  );
 
-export function ChangeIndexPattern({
-  indexPatternRefs,
-  indexPatternIds,
-  onChangeIndexPattern,
-  trigger,
-  selectableProps,
-}: {
-  trigger: ChangeIndexPatternTriggerProps;
-  indexPatternRefs: IndexPatternRef[];
-  onChangeIndexPattern: (newIds: string[]) => void;
-  indexPatternIds?: string[];
-  selectableProps?: EuiSelectableProps;
-}) {
+  const onChangeIndexPattern = useCallback(
+    (newIndexPatterns: string[]) => {
+      updateIndicies(sourceGroupId, newIndexPatterns);
+    },
+    [sourceGroupId, updateIndicies]
+  );
+
+  const loading = useMemo(() => loadingIndices || isIndexPatternsLoading, [
+    isIndexPatternsLoading,
+    loadingIndices,
+  ]);
+
   const [isPopoverOpen, setPopoverIsOpen] = useState(false);
-
-  const createTrigger = function () {
-    const { label, title, ...rest } = trigger;
-    return (
+  const trigger = useMemo(
+    () => (
       <EuiButtonEmpty
-        className="eui-textTruncate"
         flush="left"
-        color="text"
         iconSide="right"
-        iconType="arrowDown"
-        title={title}
+        iconType="indexSettings"
+        size="l"
+        title="Sourcerer"
         onClick={() => setPopoverIsOpen(!isPopoverOpen)}
-        {...rest}
       >
-        {label}
+        {'Sourcerer'}
       </EuiButtonEmpty>
-    );
-  };
-
+    ),
+    [isPopoverOpen]
+  );
+  const aOptions: EuiSelectableOption[] = useMemo(
+    () =>
+      options.map((title, id) => ({
+        label: title,
+        key: `${title}-${id}`,
+        value: title,
+        checked: selectedOptions && selectedOptions.includes(title) ? 'on' : undefined,
+      })),
+    [options, selectedOptions]
+  );
+  const aOnChange = useCallback(
+    (choices: EuiSelectableOption[]) => {
+      const choice = choices.reduce<string[]>(
+        (acc, { checked, label }) => (checked === 'on' ? [...acc, label] : acc),
+        []
+      );
+      onChangeIndexPattern(choice);
+    },
+    [onChangeIndexPattern]
+  );
   return (
     <EuiPopover
-      button={createTrigger()}
+      button={trigger}
       isOpen={isPopoverOpen}
       closePopover={() => setPopoverIsOpen(false)}
-      className="eui-textTruncate"
-      anchorClassName="eui-textTruncate"
       display="block"
       panelPaddingSize="s"
       ownFocus
     >
       <div style={{ width: 320 }}>
         <EuiPopoverTitle>
-          {i18n.translate('discover.fieldChooser.indexPattern.changeIndexPatternTitle', {
-            defaultMessage: 'Change index pattern',
+          {i18n.translate('securitySolution.fieldChooser.indexPattern.changeIndexPatternTitle', {
+            defaultMessage: 'Change index patterns',
           })}
         </EuiPopoverTitle>
         <EuiSelectable
           data-test-subj="indexPattern-switcher"
-          {...selectableProps}
           searchable
-          options={indexPatternRefs.map(({ title, id }) => ({
-            label: title,
-            key: id,
-            value: id,
-            checked: indexPatternIds && indexPatternIds.includes(id) ? 'on' : undefined,
-          }))}
-          onChange={(choices) => {
-            const choice = choices.reduce<string[]>(
-              (acc, { checked, value }) => (checked === 'on' ? [...acc, value as string] : acc),
-              []
-            );
-            onChangeIndexPattern(choice);
-          }}
+          isLoading={loading}
+          options={aOptions}
+          onChange={aOnChange}
           searchProps={{
             compressed: true,
-            ...(selectableProps ? selectableProps.searchProps : undefined),
           }}
         >
           {(list, search) => (
@@ -109,4 +110,5 @@ export function ChangeIndexPattern({
       </div>
     </EuiPopover>
   );
-}
+});
+Sourcerer.displayName = 'Sourcerer';

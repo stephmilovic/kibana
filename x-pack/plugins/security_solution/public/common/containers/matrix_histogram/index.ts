@@ -32,8 +32,8 @@ export const useQuery = ({
   //   }
   //   return configIndex;
   // }, [configIndex, indexToAdd]);
-  const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
-  const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+  const { getActiveSourceGroupId, getManageSourceById } = useManageSource();
+  const indexPatternId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
   const { indexPatterns } = useMemo(() => getManageSourceById(indexPatternId), [
     getManageSourceById,
     indexPatternId,

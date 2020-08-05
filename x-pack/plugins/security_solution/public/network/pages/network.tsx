@@ -87,8 +87,8 @@ const NetworkComponent = React.memo<NetworkComponentProps & PropsFromRedux>(
       [setAbsoluteRangeDatePicker]
     );
 
-    const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
-    const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+    const { getActiveSourceGroupId, getManageSourceById } = useManageSource();
+    const indexPatternId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
     const { indicesExist, indexPattern, loading: isLoadingIndicies } = useMemo(
       () => getManageSourceById(indexPatternId),
       [getManageSourceById, indexPatternId]

@@ -85,8 +85,8 @@ interface FlyoutButtonProps {
 export const FlyoutButton = React.memo<FlyoutButtonProps>(
   ({ onOpen, show, dataProviders, timelineId }) => {
     const badgeCount = useMemo(() => getBadgeCount(dataProviders), [dataProviders]);
-    const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
-    const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+    const { getActiveSourceGroupId, getManageSourceById } = useManageSource();
+    const indexPatternId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
     const { browserFields } = useMemo(() => getManageSourceById(indexPatternId), [
       getManageSourceById,
       indexPatternId,

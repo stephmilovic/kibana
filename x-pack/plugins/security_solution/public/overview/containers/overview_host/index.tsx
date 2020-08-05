@@ -37,8 +37,8 @@ export interface OverviewHostProps extends QueryTemplateProps {
 
 const OverviewHostComponentQuery = React.memo<OverviewHostProps & PropsFromRedux>(
   ({ id = ID, children, filterQuery, isInspected, sourceId, startDate, endDate }) => {
-    const { getActiveIndexPatternId, getManageSourceById } = useManageSource();
-    const indexPatternId = useMemo(() => getActiveIndexPatternId(), [getActiveIndexPatternId]);
+    const { getActiveSourceGroupId, getManageSourceById } = useManageSource();
+    const indexPatternId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
     const { indexPatterns } = useMemo(() => getManageSourceById(indexPatternId), [
       getManageSourceById,
       indexPatternId,
