@@ -4,12 +4,11 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { i18n } from '@kbn/i18n';
 import React, { useCallback, useMemo, useState } from 'react';
 import { EuiButtonEmpty, EuiPopover, EuiPopoverTitle, EuiSelectable } from '@elastic/eui';
 import { EuiSelectableOption } from '@elastic/eui/src/components/selectable/selectable_option';
 import { useManageSource } from '../../containers/source';
-
+import * as i18n from './translations';
 export const Sourcerer = React.memo(() => {
   const {
     getActiveSourceGroupId,
@@ -19,19 +18,18 @@ export const Sourcerer = React.memo(() => {
     isIndexPatternsLoading,
   } = useManageSource();
 
-  const sourceGroupId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
-  const options = useMemo(() => getAvailableIndexPatterns(), [getAvailableIndexPatterns]);
+  const activeSourceGroupId = useMemo(() => getActiveSourceGroupId(), [getActiveSourceGroupId]);
 
   const { indexPatterns: selectedOptions, loading: loadingIndices } = useMemo(
-    () => getManageSourceById(sourceGroupId),
-    [getManageSourceById, sourceGroupId]
+    () => getManageSourceById(activeSourceGroupId),
+    [getManageSourceById, activeSourceGroupId]
   );
 
   const onChangeIndexPattern = useCallback(
     (newIndexPatterns: string[]) => {
-      updateIndicies(sourceGroupId, newIndexPatterns);
+      updateIndicies(activeSourceGroupId, newIndexPatterns);
     },
-    [sourceGroupId, updateIndicies]
+    [activeSourceGroupId, updateIndicies]
   );
 
   const loading = useMemo(() => loadingIndices || isIndexPatternsLoading, [
@@ -43,29 +41,31 @@ export const Sourcerer = React.memo(() => {
   const trigger = useMemo(
     () => (
       <EuiButtonEmpty
+        aria-label={i18n.SOURCERER}
         flush="left"
         iconSide="right"
         iconType="indexSettings"
-        size="l"
-        title="Sourcerer"
         onClick={() => setPopoverIsOpen(!isPopoverOpen)}
+        size="l"
+        title={i18n.SOURCERER}
       >
-        {'Sourcerer'}
+        {i18n.SOURCERER}
       </EuiButtonEmpty>
     ),
     [isPopoverOpen]
   );
-  const aOptions: EuiSelectableOption[] = useMemo(
+  const options: EuiSelectableOption[] = useMemo(
     () =>
-      options.map((title, id) => ({
+      getAvailableIndexPatterns().map((title, id) => ({
         label: title,
         key: `${title}-${id}`,
         value: title,
         checked: selectedOptions && selectedOptions.includes(title) ? 'on' : undefined,
       })),
-    [options, selectedOptions]
+    [getAvailableIndexPatterns, selectedOptions]
   );
-  const aOnChange = useCallback(
+
+  const onChange = useCallback(
     (choices: EuiSelectableOption[]) => {
       const choice = choices.reduce<string[]>(
         (acc, { checked, label }) => (checked === 'on' ? [...acc, label] : acc),
@@ -85,17 +85,13 @@ export const Sourcerer = React.memo(() => {
       ownFocus
     >
       <div style={{ width: 320 }}>
-        <EuiPopoverTitle>
-          {i18n.translate('securitySolution.fieldChooser.indexPattern.changeIndexPatternTitle', {
-            defaultMessage: 'Change index patterns',
-          })}
-        </EuiPopoverTitle>
+        <EuiPopoverTitle>{i18n.CHANGE_INDEX_PATTERNS}</EuiPopoverTitle>
         <EuiSelectable
           data-test-subj="indexPattern-switcher"
           searchable
           isLoading={loading}
-          options={aOptions}
-          onChange={aOnChange}
+          options={options}
+          onChange={onChange}
           searchProps={{
             compressed: true,
           }}

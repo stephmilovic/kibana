@@ -22,7 +22,7 @@ import { useGetUrlSearch } from '../navigation/use_get_url_search';
 import { useKibana } from '../../lib/kibana';
 import { APP_ID, ADD_DATA_PATH, APP_DETECTIONS_PATH } from '../../../../common/constants';
 import { LinkAnchor } from '../links';
-import { Sourcerer } from '../index_patternizer/file';
+import { Sourcerer } from '../sourcerer';
 
 const Wrapper = styled.header<{ show: boolean }>`
   ${({ show, theme }) => css`

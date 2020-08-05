@@ -453,14 +453,6 @@ const init: UseSourceManager = {
   setActiveSourceGroupId: (id: string) => noop,
   updateIndicies: () => noop,
 };
-
-const faker = {
-  activeSourceGroupId: SourceGroups.default,
-  availableIndexPatterns: ['auditbeat-*', 'filebeat-*'],
-  availableSourceGroupIds: [],
-  sourceGroupsById: {},
-};
-
 const ManageSourceContext = createContext<UseSourceManager>(init);
 
 export const useManageSource = () => useContext(ManageSourceContext);
