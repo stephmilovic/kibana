@@ -7,30 +7,32 @@
 import { EuiButtonEmpty, EuiFlexGroup, EuiFlexItem, EuiIcon } from '@elastic/eui';
 import { pickBy } from 'lodash/fp';
 import React, { useCallback, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
+import { OutPortal } from 'react-reverse-portal';
 
 import { gutterTimeline } from '../../lib/helpers';
 import { navTabs } from '../../../app/home/home_navigations';
+import { useFullScreen } from '../../containers/use_full_screen';
 import { SecurityPageName } from '../../../app/types';
 import { getAppOverviewUrl } from '../link_to';
 import { MlPopover } from '../ml_popover/ml_popover';
 import { SiemNavigation } from '../navigation';
 import * as i18n from './translations';
 import { useManageSource } from '../../containers/source';
-import { useFullScreen } from '../../containers/use_full_screen';
 import { useGetUrlSearch } from '../navigation/use_get_url_search';
 import { useKibana } from '../../lib/kibana';
 import { APP_ID, ADD_DATA_PATH, APP_DETECTIONS_PATH } from '../../../../common/constants';
+import { useGlobalHeaderPortal } from '../../hooks/use_global_header_portal';
 import { LinkAnchor } from '../links';
 import { Sourcerer } from '../sourcerer';
 
-const Wrapper = styled.header<{ show: boolean }>`
-  ${({ show, theme }) => css`
+const Wrapper = styled.header<{ $globalFullScreen: boolean }>`
+  ${({ $globalFullScreen, theme }) => `
     background: ${theme.eui.euiColorEmptyShade};
     border-bottom: ${theme.eui.euiBorderThin};
-    padding: ${theme.eui.paddingSizes.m} ${gutterTimeline} ${theme.eui.paddingSizes.m}
-      ${theme.eui.paddingSizes.l};
-    ${show ? '' : 'display: none;'};
+    padding-top: ${$globalFullScreen ? theme.eui.paddingSizes.s : theme.eui.paddingSizes.m};
+    width: 100%;
+    z-index: ${theme.eui.euiZNavigation};
   `}
 `;
 Wrapper.displayName = 'Wrapper';
@@ -39,6 +41,18 @@ const FlexItem = styled(EuiFlexItem)`
   min-width: 0;
 `;
 FlexItem.displayName = 'FlexItem';
+
+const FlexGroup = styled(EuiFlexGroup)<{ $globalFullScreen: boolean }>`
+  ${({ $globalFullScreen, theme }) => `
+    border-bottom: ${theme.eui.euiBorderThin};
+    margin-bottom: 1px;
+    padding-bottom: 4px;
+    padding-left: ${theme.eui.paddingSizes.l};
+    padding-right: ${gutterTimeline};
+    ${$globalFullScreen ? 'display: none;' : ''}
+  `}
+`;
+FlexGroup.displayName = 'FlexGroup';
 
 interface HeaderGlobalProps {
   hideDetectionEngine?: boolean;
@@ -50,6 +64,7 @@ export const HeaderGlobal = React.memo<HeaderGlobalProps>(({ hideDetectionEngine
     getManageSourceById,
     indexPatternId,
   ]);
+  const { globalHeaderPortalNode } = useGlobalHeaderPortal();
   const { globalFullScreen } = useFullScreen();
   const search = useGetUrlSearch(navTabs.overview);
   const { navigateToApp } = useKibana().services.application;
@@ -62,8 +77,13 @@ export const HeaderGlobal = React.memo<HeaderGlobalProps>(({ hideDetectionEngine
   );
 
   return (
-    <Wrapper className="siemHeaderGlobal" show={!globalFullScreen}>
-      <EuiFlexGroup alignItems="center" justifyContent="spaceBetween" wrap>
+    <Wrapper className="siemHeaderGlobal" $globalFullScreen={globalFullScreen}>
+      <FlexGroup
+        alignItems="center"
+        $globalFullScreen={globalFullScreen}
+        justifyContent="spaceBetween"
+        wrap
+      >
         <>
           <FlexItem>
             <EuiFlexGroup alignItems="center" responsive={false}>
@@ -110,7 +130,10 @@ export const HeaderGlobal = React.memo<HeaderGlobalProps>(({ hideDetectionEngine
             </EuiFlexGroup>
           </FlexItem>
         </>
-      </EuiFlexGroup>
+      </FlexGroup>
+      <div>
+        <OutPortal node={globalHeaderPortalNode} />
+      </div>
     </Wrapper>
   );
 });

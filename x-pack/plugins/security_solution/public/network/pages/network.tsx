@@ -9,7 +9,6 @@ import { noop } from 'lodash/fp';
 import React, { useCallback, useMemo } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import { StickyContainer } from 'react-sticky';
 
 import { esQuery } from '../../../../../../src/plugins/data/public';
 import { SecurityPageName } from '../../app/types';
@@ -109,12 +108,9 @@ const NetworkComponent = React.memo<NetworkComponentProps & PropsFromRedux>(
     return (
       <>
         {indicesExist || isLoadingIndicies ? (
-          <StickyContainer>
+          <>
             <EuiWindowEvent event="resize" handler={noop} />
-            <FiltersGlobal
-              globalFullScreen={globalFullScreen}
-              show={showGlobalFilters({ globalFullScreen, graphEventId })}
-            >
+            <FiltersGlobal show={showGlobalFilters({ globalFullScreen, graphEventId })}>
               <SiemSearchBar indexPattern={indexPattern} id="global" />
             </FiltersGlobal>
 
@@ -185,7 +181,7 @@ const NetworkComponent = React.memo<NetworkComponentProps & PropsFromRedux>(
                 <NetworkRoutesLoading />
               )}
             </WrapperPage>
-          </StickyContainer>
+          </>
         ) : (
           <WrapperPage>
             <HeaderPage border title={i18n.PAGE_TITLE} />

@@ -7,7 +7,6 @@
 import { EuiFlexGroup, EuiFlexItem, EuiSpacer } from '@elastic/eui';
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { StickyContainer } from 'react-sticky';
 import { Query, Filter } from 'src/plugins/data/public';
 import styled from 'styled-components';
 
@@ -80,8 +79,8 @@ const OverviewComponent: React.FC<PropsFromRedux> = ({
   return (
     <>
       {indicesExist || isLoadingIndicies ? (
-        <StickyContainer>
-          <FiltersGlobal globalFullScreen={false}>
+        <>
+          <FiltersGlobal>
             <SiemSearchBar id="global" indexPattern={indexPattern} />
           </FiltersGlobal>
 
@@ -152,7 +151,7 @@ const OverviewComponent: React.FC<PropsFromRedux> = ({
               </EuiFlexItem>
             </EuiFlexGroup>
           </WrapperPage>
-        </StickyContainer>
+        </>
       ) : (
         <OverviewEmpty />
       )}
