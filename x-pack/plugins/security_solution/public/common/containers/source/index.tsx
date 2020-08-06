@@ -25,6 +25,7 @@ import { IndexField, SourceQuery } from '../../../graphql/types';
 
 import { sourceQuery } from './index.gql_query';
 import { useApolloClient } from '../../utils/apollo_context';
+import { SOURCERER_FEATURE_FLAG_ON } from '../../components/sourcerer/constants';
 
 export { sourceQuery };
 
@@ -461,7 +462,7 @@ interface ManageSourceProps {
   children: React.ReactNode;
 }
 
-export const ManageSource = ({ children }: ManageSourceProps) => {
+export const MaybeManageSource = ({ children }: ManageSourceProps) => {
   const indexPatternManager = useSourceManager();
   return (
     <ManageSourceContext.Provider value={indexPatternManager}>
@@ -469,6 +470,9 @@ export const ManageSource = ({ children }: ManageSourceProps) => {
     </ManageSourceContext.Provider>
   );
 };
+export const ManageSource = SOURCERER_FEATURE_FLAG_ON
+  ? MaybeManageSource
+  : ({ children }: ManageSourceProps) => <>{children}</>;
 
 // interface UseWithSourceState {
 //   browserFields: BrowserFields;
