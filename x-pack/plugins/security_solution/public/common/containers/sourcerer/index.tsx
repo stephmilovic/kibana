@@ -221,7 +221,14 @@ export const useSourceManager = (): UseSourceManager => {
         const result = await indexPatterns.getTitles();
         setAvailableIndexPatterns(result);
         setIsIndexPatternsLoading(false);
+        const specToIndexPattern = await indexPatterns.specToIndexPattern({
+          title: 'winlogbeat-*',
+          timeFieldName: '@timestamp',
+        });
+        await specToIndexPattern.refreshFields();
+        console.log('specToIndexPattern', specToIndexPattern);
       } catch (error) {
+        console.log('error', error);
         setIsIndexPatternsLoading(false);
       }
     }
