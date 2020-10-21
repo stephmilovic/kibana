@@ -5,34 +5,34 @@
  */
 
 import {
-  CaseResponse,
-  CasesResponse,
-  CasesFindResponse,
+  ActionTypeExecutorResult,
+  CaseExternalServiceRequest,
   CasePatchRequest,
   CasePostRequest,
+  CaseResponse,
+  CasesFindResponse,
+  CasesResponse,
   CasesStatusResponse,
-  CommentRequest,
-  User,
   CaseUserActionsResponse,
-  CaseExternalServiceRequest,
+  CommentRequest,
   ServiceConnectorCaseParams,
   ServiceConnectorCaseResponse,
-  ActionTypeExecutorResult,
+  User,
 } from '../../../../case/common/api';
 
 import {
-  CASE_STATUS_URL,
-  CASES_URL,
-  CASE_TAGS_URL,
-  CASE_REPORTERS_URL,
   ACTION_TYPES_URL,
   ACTION_URL,
+  CASE_REPORTERS_URL,
+  CASE_STATUS_URL,
+  CASE_TAGS_URL,
+  CASES_URL,
 } from '../../../../case/common/constants';
 
 import {
+  getCaseCommentsUrl,
   getCaseDetailsUrl,
   getCaseUserActionUrl,
-  getCaseCommentsUrl,
 } from '../../../../case/common/api/helpers';
 
 import { KibanaServices } from '../../common/lib/kibana';
@@ -43,18 +43,18 @@ import {
   BulkUpdateStatus,
   Case,
   CasesStatus,
+  CaseUserActions,
   FetchCasesProps,
   SortFieldCase,
-  CaseUserActions,
 } from './types';
 
 import {
-  convertToCamelCase,
   convertAllCasesToCamel,
   convertArrayToCamelCase,
+  convertToCamelCase,
   decodeCaseResponse,
-  decodeCasesResponse,
   decodeCasesFindResponse,
+  decodeCasesResponse,
   decodeCasesStatusResponse,
   decodeCaseUserActionsResponse,
   decodeServiceConnectorCaseResponse,
@@ -265,3 +265,32 @@ export const getActionLicense = async (signal: AbortSignal): Promise<ActionLicen
   });
   return response;
 };
+const users: User[] = [
+  {
+    username: 'jesse',
+    full_name: 'Jesse Pinkman',
+    email: 'jesse@pinkman.com',
+  },
+  {
+    username: 'walt',
+    full_name: 'Walter White',
+    email: 'walter@white.com',
+  },
+  {
+    username: 'gus',
+    full_name: 'Gus Fring',
+    email: 'gus@fring.com',
+  },
+  {
+    username: 'hank',
+    full_name: 'Hank Schrader',
+    email: 'hank@schrader.com',
+  },
+  {
+    username: 'flynn',
+    full_name: 'Walter Junior',
+    email: 'walter@junior.com',
+  },
+];
+export const getUsers = async (signal: AbortSignal): Promise<User[]> =>
+  new Promise((res) => res(users));

@@ -82,6 +82,8 @@ export const createToasterPlainError = (message: string) => new ToasterError([me
 
 export const decodeCaseResponse = (respCase?: CaseResponse) =>
   pipe(CaseResponseRt.decode(respCase), fold(throwErrors(createToasterPlainError), identity));
+export const decodeUserResponse = (respCase?: CaseResponse) =>
+  pipe(CaseResponseRt.decode(respCase), fold(throwErrors(createToasterPlainError), identity));
 
 export const decodeCasesResponse = (respCase?: CasesResponse) =>
   pipe(CasesResponseRt.decode(respCase), fold(throwErrors(createToasterPlainError), identity));
