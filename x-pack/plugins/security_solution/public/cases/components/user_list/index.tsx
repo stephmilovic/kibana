@@ -23,13 +23,15 @@ import styled, { css } from 'styled-components';
 import { ElasticUser } from '../../containers/types';
 import * as i18n from './translations';
 
-interface UserListProps {
+export interface UserListProps {
+  disabled?: boolean;
   email: {
     subject: string;
     body: string;
   };
   headline: string;
   loading?: boolean;
+  setIsEdit?: (isEdit: boolean) => void;
   users: ElasticUser[];
 }
 
@@ -77,33 +79,59 @@ const renderUsers = (
     </MyFlexGroup>
   ));
 
-export const UserList = React.memo(({ email, headline, loading, users }: UserListProps) => {
-  const handleSendEmail = useCallback(
-    (emailAddress: string | undefined | null) => {
-      if (emailAddress && emailAddress != null) {
-        window.open(`mailto:${emailAddress}?subject=${email.subject}&body=${email.body}`, '_blank');
+export const UserList = React.memo(
+  ({ disabled, email, headline, loading, setIsEdit, users }: UserListProps) => {
+    const handleSendEmail = useCallback(
+      (emailAddress: string | undefined | null) => {
+        if (emailAddress && emailAddress != null) {
+          window.open(
+            `mailto:${emailAddress}?subject=${email.subject}&body=${email.body}`,
+            '_blank'
+          );
+        }
+      },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [email.subject]
+    );
+    const handleSetIsEdit = useCallback(() => {
+      if (setIsEdit != null) {
+        setIsEdit(true);
       }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [email.subject]
-  );
-  return users.filter(({ username }) => username != null && username !== '').length > 0 ? (
-    <EuiText>
-      <h4>{headline}</h4>
-      <EuiHorizontalRule margin="xs" />
-      {loading && (
+    }, [setIsEdit]);
+    return users.filter(({ username }) => username != null && username !== '').length > 0 ? (
+      <EuiText>
         <EuiFlexGroup>
           <EuiFlexItem>
-            <EuiLoadingSpinner />
+            <h4>{headline}</h4>
           </EuiFlexItem>
+          {setIsEdit != null && loading && <EuiLoadingSpinner />}
+          {setIsEdit != null && !loading && (
+            <EuiFlexItem data-test-subj="user-list-edit" grow={false}>
+              <EuiButtonIcon
+                data-test-subj="user-list-edit-button"
+                isDisabled={disabled}
+                aria-label={i18n.EDIT_ASSIGNEES}
+                iconType={'pencil'}
+                onClick={handleSetIsEdit}
+              />
+            </EuiFlexItem>
+          )}
         </EuiFlexGroup>
-      )}
-      {renderUsers(
-        users.filter(({ username }) => username != null && username !== ''),
-        handleSendEmail
-      )}
-    </EuiText>
-  ) : null;
-});
+        <EuiHorizontalRule margin="xs" />
+        {loading && (
+          <EuiFlexGroup>
+            <EuiFlexItem>
+              <EuiLoadingSpinner />
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        )}
+        {renderUsers(
+          users.filter(({ username }) => username != null && username !== ''),
+          handleSendEmail
+        )}
+      </EuiText>
+    ) : null;
+  }
+);
 
 UserList.displayName = 'UserList';

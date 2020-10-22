@@ -156,6 +156,10 @@ export const UNKNOWN = i18n.translate('xpack.securitySolution.case.caseView.unkn
   defaultMessage: 'Unknown',
 });
 
+export const ASSIGNEES = i18n.translate('xpack.securitySolution.case.caseView.assignees', {
+  defaultMessage: 'Assignees',
+});
+
 export const CHANGED_CONNECTOR_FIELD = i18n.translate(
   'xpack.securitySolution.case.caseView.fieldChanged',
   {

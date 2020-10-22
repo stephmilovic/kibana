@@ -41,6 +41,8 @@ import {
   normalizeActionConnector,
   getNoneConnector,
 } from '../configure_cases/utils';
+import { useGetUsers } from '../../containers/use_get_users';
+import { UserSelector } from '../user_selector';
 
 interface Props {
   caseId: string;
@@ -93,6 +95,7 @@ export const CaseComponent = React.memo<CaseProps>(
       isLoading: isLoadingUserActions,
       participants,
     } = useGetCaseUserActions(caseId, caseData.connector.id);
+    const { users: assigneeOptions } = useGetUsers();
 
     const { isLoading, updateKey, updateCaseProperty } = useUpdateCase({
       caseId,
@@ -378,6 +381,13 @@ export const CaseComponent = React.memo<CaseProps>(
                 )}
               </EuiFlexItem>
               <EuiFlexItem grow={2}>
+                <UserSelector
+                  data-test-subj="fun-new-list"
+                  disabled={!userCanCrud}
+                  email={emailContent}
+                  headline={i18n.ASSIGNEES}
+                  users={assigneeOptions}
+                />
                 <UserList
                   data-test-subj="case-view-user-list-reporter"
                   email={emailContent}

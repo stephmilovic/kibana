@@ -9,16 +9,16 @@ import { useEffect, useReducer } from 'react';
 import { errorToToaster, useStateToaster } from '../../common/components/toasters';
 import { getUsers } from './api';
 import * as i18n from './translations';
-import { User } from '../../../../case/common/api';
+import { ElasticUser } from './types';
 
 export interface UsersState {
-  users: User[];
+  users: ElasticUser[];
   isLoading: boolean;
   isError: boolean;
 }
 type Action =
   | { type: 'FETCH_INIT' }
-  | { type: 'FETCH_SUCCESS'; payload: User[] }
+  | { type: 'FETCH_SUCCESS'; payload: ElasticUser[] }
   | { type: 'FETCH_FAILURE' };
 
 export interface UseGetUsers extends UsersState {
@@ -50,7 +50,7 @@ const dataFetchReducer = (state: UsersState, action: Action): UsersState => {
       return state;
   }
 };
-const initialData: User[] = [];
+const initialData: ElasticUser[] = [];
 
 export const useGetUsers = (): UseGetUsers => {
   const [state, dispatch] = useReducer(dataFetchReducer, {

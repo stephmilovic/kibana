@@ -11,3 +11,6 @@ export const SEND_EMAIL_ARIA = (user: string) =>
     values: { user },
     defaultMessage: 'click to send an email to {user}',
   });
+export const EDIT_ASSIGNEES = i18n.translate('xpack.securitySolution.case.caseView.editAssignees', {
+  defaultMessage: 'Edit assignees',
+});

@@ -44,6 +44,7 @@ import {
   Case,
   CasesStatus,
   CaseUserActions,
+  ElasticUser,
   FetchCasesProps,
   SortFieldCase,
 } from './types';
@@ -292,5 +293,5 @@ const users: User[] = [
     email: 'walter@junior.com',
   },
 ];
-export const getUsers = async (signal: AbortSignal): Promise<User[]> =>
-  new Promise((res) => res(users));
+export const getUsers = async (signal: AbortSignal): Promise<ElasticUser[]> =>
+  new Promise((res) => res(convertArrayToCamelCase(users) as ElasticUser[]));
