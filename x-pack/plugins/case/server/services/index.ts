@@ -19,14 +19,16 @@ import {
 
 import { AuthenticatedUser, SecurityPluginSetup } from '../../../security/server';
 import {
-  ESCaseAttributes,
+  CaseUserAttributes,
   CommentAttributes,
+  ESCaseAttributes,
   SavedObjectFindOptions,
   User,
 } from '../../common/api';
 import { CASE_SAVED_OBJECT, CASE_COMMENT_SAVED_OBJECT } from '../saved_object_types';
 import { readReporters } from './reporters/read_reporters';
 import { readTags } from './tags/read_tags';
+import { CASE_USER_SAVED_OBJECT } from '../saved_object_types/case_user';
 
 export { CaseConfigureService, CaseConfigureServiceSetup } from './configure';
 export { CaseUserActionService, CaseUserActionServiceSetup } from './user_actions';
@@ -55,6 +57,11 @@ interface FindCommentsArgs extends GetCaseArgs {
 interface FindCasesArgs extends ClientArgs {
   options?: SavedObjectFindOptions;
 }
+
+interface GetAllCaseUsersArgs extends GetCaseArgs {
+  userActivity: string;
+  options?: SavedObjectFindOptions;
+}
 interface GetCommentArgs extends ClientArgs {
   commentId: string;
 }
@@ -67,7 +74,17 @@ interface PostCommentArgs extends ClientArgs {
   attributes: CommentAttributes;
   references: SavedObjectReference[];
 }
+interface GetCaseUserArgs extends ClientArgs {
+  options?: SavedObjectFindOptions;
+}
 
+interface PostCaseUserArgs extends ClientArgs {
+  attributes: CaseUserAttributes;
+  references: SavedObjectReference[];
+}
+interface PatchCaseUserArgs extends PostCaseUserArgs {
+  id: string;
+}
 interface PatchCase {
   caseId: string;
   updatedAttributes: Partial<ESCaseAttributes & PushedArgs>;
@@ -110,6 +127,10 @@ export interface CaseServiceSetup {
   getCase(args: GetCaseArgs): Promise<SavedObject<ESCaseAttributes>>;
   getCases(args: GetCasesArgs): Promise<SavedObjectsBulkResponse<ESCaseAttributes>>;
   getComment(args: GetCommentArgs): Promise<SavedObject<CommentAttributes>>;
+  getCaseUser(args: GetCaseUserArgs): Promise<SavedObjectsFindResponse<CaseUserAttributes>>;
+  getAllCaseUsers(args: GetAllCaseUsersArgs): Promise<SavedObjectsFindResponse<CaseUserAttributes>>;
+  patchCaseUser(args: PatchCaseUserArgs): Promise<SavedObjectsUpdateResponse<CaseUserAttributes>>;
+  postNewCaseUser(args: PostCaseUserArgs): Promise<SavedObject<CaseUserAttributes>>;
   getTags(args: ClientArgs): Promise<string[]>;
   getReporters(args: ClientArgs): Promise<User[]>;
   getUser(args: GetUserArgs): Promise<AuthenticatedUser | User>;
@@ -250,6 +271,49 @@ export class CaseService {
         return await client.create(CASE_COMMENT_SAVED_OBJECT, attributes, { references });
       } catch (error) {
         this.log.debug(`Error on POST a new comment: ${error}`);
+        throw error;
+      }
+    },
+    getCaseUser: async ({ client, options }: GetCaseUserArgs) => {
+      try {
+        this.log.debug(`Attempting to GET case user ${options!.search}`);
+        return await client.find({ ...options, type: CASE_USER_SAVED_OBJECT });
+      } catch (error) {
+        this.log.debug(`Error on GET case user: ${error}`);
+        throw error;
+      }
+    },
+    postNewCaseUser: async ({ client, attributes, references }: PostCaseUserArgs) => {
+      try {
+        this.log.debug(`Attempting to POST a new comment`);
+        return await client.create(CASE_USER_SAVED_OBJECT, attributes, { references });
+      } catch (error) {
+        this.log.debug(`Error on POST a new comment: ${error}`);
+        throw error;
+      }
+    },
+    patchCaseUser: async ({ client, attributes, references, id }: PatchCaseUserArgs) => {
+      try {
+        this.log.debug(`Attempting to PATCH case user ${attributes.username}`);
+        return await client.update(CASE_USER_SAVED_OBJECT, id, attributes, { references });
+      } catch (error) {
+        this.log.debug(`Error on PATCH case user ${attributes.username}: ${error}`);
+        throw error;
+      }
+    },
+    getAllCaseUsers: async ({ client, caseId, options, userActivity }: GetAllCaseUsersArgs) => {
+      try {
+        this.log.debug(`Attempting to GET all comments for case ${caseId}`);
+        return await client.find({
+          ...options,
+          type: CASE_USER_SAVED_OBJECT,
+          hasReference: {
+            type: `${userActivity}-${CASE_SAVED_OBJECT}`,
+            id: caseId,
+          },
+        });
+      } catch (error) {
+        this.log.debug(`Error on GET all comments for case ${caseId}: ${error}`);
         throw error;
       }
     },

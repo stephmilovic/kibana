@@ -22,6 +22,8 @@ import { initGetAllCommentsApi } from './cases/comments/get_all_comment';
 import { initGetCommentApi } from './cases/comments/get_comment';
 import { initPatchCommentApi } from './cases/comments/patch_comment';
 import { initPostCommentApi } from './cases/comments/post_comment';
+import { initPostCaseUserApi } from './cases/case_users/post_case_user';
+import { initGetAllCaseUsersApi } from './cases/case_users/get_all_case_users';
 
 import { initCaseConfigureGetActionConnector } from './cases/configure/get_connectors';
 import { initGetCaseConfigure } from './cases/configure/get_configure';
@@ -47,6 +49,9 @@ export function initCaseApi(deps: RouteDeps) {
   initGetAllCommentsApi(deps);
   initPatchCommentApi(deps);
   initPostCommentApi(deps);
+  // Cases Users
+  initPostCaseUserApi(deps);
+  initGetAllCaseUsersApi(deps);
   // Cases Configure
   initCaseConfigureGetActionConnector(deps);
   initGetCaseConfigure(deps);

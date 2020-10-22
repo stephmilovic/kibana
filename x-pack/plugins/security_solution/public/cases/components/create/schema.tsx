@@ -18,6 +18,13 @@ export const schemaTags = {
   labelAppend: OptionalFieldLabel,
 };
 
+export const schemaAssignees = {
+  type: FIELD_TYPES.COMBO_BOX,
+  label: i18n.ASSIGNEES,
+  helpText: i18n.ASSIGNEES_HELP,
+  labelAppend: OptionalFieldLabel,
+};
+
 export type FormProps = Omit<CasePostRequest, 'connector'> & { connectorId: string };
 
 export const schema: FormSchema<FormProps> = {
@@ -39,6 +46,7 @@ export const schema: FormSchema<FormProps> = {
     ],
   },
   tags: schemaTags,
+  assignees: schemaAssignees,
   connectorId: {
     type: FIELD_TYPES.SUPER_SELECT,
     label: i18n.CONNECTORS,

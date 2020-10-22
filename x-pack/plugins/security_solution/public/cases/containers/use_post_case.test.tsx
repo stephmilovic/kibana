@@ -15,6 +15,7 @@ jest.mock('./api');
 describe('usePostCase', () => {
   const abortCtrl = new AbortController();
   const samplePost = {
+    assignees: [],
     description: 'description',
     tags: ['tags'],
     title: 'title',

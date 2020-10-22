@@ -53,6 +53,7 @@ export const basicComment: Comment = {
 };
 
 export const basicCase: Case = {
+  assignees: [],
   closedAt: null,
   closedBy: null,
   id: basicCaseId,
@@ -67,6 +68,7 @@ export const basicCase: Case = {
   },
   description: 'Security banana Issue',
   externalService: null,
+  subscribers: [],
   status: 'open',
   tags,
   title: 'Another horrible breach!!',
@@ -204,6 +206,8 @@ export const basicCaseSnake: CaseResponse = {
   status: 'open' as Status,
   closed_at: null,
   closed_by: null,
+  assignees: [],
+  subscribers: [],
   comments: [basicCommentSnake],
   connector: {
     id: '123',

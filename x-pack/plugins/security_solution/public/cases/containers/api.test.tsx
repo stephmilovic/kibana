@@ -372,6 +372,7 @@ describe('Case Configuration API', () => {
       fetchMock.mockResolvedValue(basicCaseSnake);
     });
     const data = {
+      assignees: [],
       description: 'description',
       tags: ['tag'],
       title: 'title',

@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   EuiButton,
   EuiButtonEmpty,
+  EuiComboBoxOptionOption,
   EuiFlexGroup,
   EuiFlexItem,
   EuiLoadingSpinner,
@@ -43,9 +44,10 @@ import {
   getNoneConnector,
   normalizeActionConnector,
 } from '../configure_cases/utils';
-import { ActionConnector } from '../../containers/types';
+import { ActionConnector, ElasticUser } from '../../containers/types';
 import { ConnectorFields } from '../../../../../case/common/api/connectors';
 import * as i18n from './translations';
+import { useGetUsers } from '../../containers/use_get_users';
 
 export const CommonUseField = getUseField({ component: Field });
 
@@ -67,12 +69,26 @@ const MySpinner = styled(EuiLoadingSpinner)`
 `;
 
 const initialCaseValue: FormProps = {
+  assignees: [],
   description: '',
   tags: [],
   title: '',
   connectorId: 'none',
 };
-
+const theAcc: EuiComboBoxOptionOption[] = [];
+export const mapUsersToOptions = (users: ElasticUser[]): EuiComboBoxOptionOption[] =>
+  users.reduce(
+    (acc, user) =>
+      user.username != null
+        ? [
+            ...acc,
+            {
+              label: user.username,
+            },
+          ]
+        : acc,
+    theAcc
+  );
 export const Create = React.memo(() => {
   const history = useHistory();
   const { caseData, isLoading, postCase } = usePostCase();
@@ -81,24 +97,25 @@ export const Create = React.memo(() => {
   const { tags: tagOptions } = useGetTags();
 
   const [connector, setConnector] = useState<ActionConnector | null>(null);
-  const [options, setOptions] = useState(
+  const [optionsTags, setOptionsTags] = useState(
     tagOptions.map((label) => ({
       label,
     }))
   );
-
+  const { users: assigneeOptions } = useGetUsers();
+  const [optionsAssignees, setOptionsAssignees] = useState(mapUsersToOptions(assigneeOptions));
   // This values uses useEffect to update, not useMemo,
   // because we need to setState on it from the jsx
   useEffect(
     () =>
-      setOptions(
+      setOptionsTags(
         tagOptions.map((label) => ({
           label,
         }))
       ),
     [tagOptions]
   );
-
+  useEffect(() => setOptionsAssignees(mapUsersToOptions(assigneeOptions)), [assigneeOptions]);
   const [fields, setFields] = useState<ConnectorFields>(null);
 
   const { form } = useForm<FormProps>({
@@ -164,7 +181,7 @@ export const Create = React.memo(() => {
           <CommonUseField
             path="title"
             componentProps={{
-              idAria: 'caseTitle',
+              'aria-label': 'caseTitle',
               'data-test-subj': 'caseTitle',
               euiFieldProps: {
                 fullWidth: false,
@@ -176,20 +193,20 @@ export const Create = React.memo(() => {
             <CommonUseField
               path="tags"
               componentProps={{
-                idAria: 'caseTags',
+                'aria-label': 'caseTags',
                 'data-test-subj': 'caseTags',
                 euiFieldProps: {
-                  fullWidth: true,
-                  placeholder: '',
                   disabled: isLoading,
-                  options,
+                  fullWidth: true,
                   noSuggestions: false,
+                  options: optionsTags,
+                  placeholder: '',
                 },
               }}
             />
             <FormDataProvider pathsToWatch="tags">
               {({ tags: anotherTags }) => {
-                const current: string[] = options.map((opt) => opt.label);
+                const current: string[] = optionsTags.map((opt) => opt.label);
                 const newOptions = anotherTags.reduce((acc: string[], item: string) => {
                   if (!acc.includes(item)) {
                     return [...acc, item];
@@ -197,7 +214,7 @@ export const Create = React.memo(() => {
                   return acc;
                 }, current);
                 if (!isEqual(current, newOptions)) {
-                  setOptions(
+                  setOptionsTags(
                     newOptions.map((label: string) => ({
                       label,
                     }))
@@ -213,7 +230,7 @@ export const Create = React.memo(() => {
               component={MarkdownEditorForm}
               componentProps={{
                 dataTestSubj: 'caseDescription',
-                idAria: 'caseDescription',
+                'aria-label': 'caseDescription',
                 isDisabled: isLoading,
                 onClickTimeline: handleTimelineClick,
                 onCursorPositionUpdate: handleCursorChange,
@@ -223,7 +240,7 @@ export const Create = React.memo(() => {
         </>
       ),
     }),
-    [isLoading, options, handleCursorChange, handleTimelineClick]
+    [isLoading, optionsTags, handleCursorChange, handleTimelineClick]
   );
 
   const secondStep = useMemo(
@@ -241,7 +258,7 @@ export const Create = React.memo(() => {
                   dataTestSubj: 'caseConnectors',
                   defaultValue: currentConnectorId,
                   disabled: isLoadingConnectors,
-                  idAria: 'caseConnectors',
+                  'aria-label': 'caseConnectors',
                   isLoading,
                 }}
                 onChange={onChangeConnector}
@@ -272,7 +289,55 @@ export const Create = React.memo(() => {
     ]
   );
 
-  const allSteps = useMemo(() => [firstStep, secondStep], [firstStep, secondStep]);
+  const thirdStep = useMemo(
+    () => ({
+      title: i18n.STEP_THREE_TITLE,
+      children: (
+        <Container>
+          <CommonUseField
+            path="assignees"
+            componentProps={{
+              'aria-label': 'caseAssignees',
+              'data-test-subj': 'caseAssignees',
+              euiFieldProps: {
+                disabled: isLoading,
+                fullWidth: true,
+                noSuggestions: false,
+                options: optionsAssignees,
+                placeholder: '',
+              },
+            }}
+          />
+          {/* <FormDataProvider pathsToWatch="assignees">*/}
+          {/*  {({ assignees: anotherUsers }) => {*/}
+          {/*    const current: string[] = optionsAssignees.map((opt) => opt.label);*/}
+          {/*    const newOptions = anotherUsers.reduce((acc: string[], item: string) => {*/}
+          {/*      if (!acc.includes(item)) {*/}
+          {/*        return [...acc, item];*/}
+          {/*      }*/}
+          {/*      return acc;*/}
+          {/*    }, current);*/}
+          {/*    if (!isEqual(current, newOptions)) {*/}
+          {/*      setOptionsAssignees(*/}
+          {/*        newOptions.map((label: string) => ({*/}
+          {/*          label,*/}
+          {/*        }))*/}
+          {/*      );*/}
+          {/*    }*/}
+          {/*    return null;*/}
+          {/*  }}*/}
+          {/* </FormDataProvider>*/}
+        </Container>
+      ),
+    }),
+    [isLoading, optionsAssignees]
+  );
+
+  const allSteps = useMemo(() => [firstStep, secondStep, thirdStep], [
+    firstStep,
+    secondStep,
+    thirdStep,
+  ]);
 
   if (caseData != null && caseData.id) {
     history.push(getCaseDetailsUrl({ id: caseData.id }));

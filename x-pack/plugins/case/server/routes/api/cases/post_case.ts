@@ -33,7 +33,7 @@ export function initPostCaseApi({
     async (context, request, response) => {
       try {
         const client = context.core.savedObjects.client;
-        const query = pipe(
+        const { assignees, ...query } = pipe(
           excess(CasePostRequestRt).decode(request.body),
           fold(throwErrors(Boom.badRequest), identity)
         );
@@ -71,6 +71,9 @@ export function initPostCaseApi({
             }),
           ],
         });
+
+        // await assignees;
+        console.log('POST ASSIGNEES CALL', assignees); // TO DO
 
         return response.ok({
           body: CaseResponseRt.encode(

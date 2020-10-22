@@ -41,7 +41,7 @@ export interface CaseExternalService {
   externalUrl: string;
 }
 export interface Case {
-  id: string;
+  assignees: string[];
   closedAt: string | null;
   closedBy: ElasticUser | null;
   comments: Comment[];
@@ -50,7 +50,9 @@ export interface Case {
   createdBy: ElasticUser;
   description: string;
   externalService: CaseExternalService | null;
+  id: string;
   status: string;
+  subscribers: string[];
   tags: string[];
   title: string;
   totalComment: number;

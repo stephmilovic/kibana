@@ -58,10 +58,11 @@ export const CaseAttributesRt = rt.intersection([
 ]);
 
 export const CasePostRequestRt = rt.type({
+  assignees: rt.array(rt.string),
+  connector: CaseConnectorRt,
   description: rt.string,
   tags: rt.array(rt.string),
   title: rt.string,
-  connector: CaseConnectorRt,
 });
 
 export const CaseExternalServiceRequestRt = CaseExternalServiceBasicRt;
@@ -86,6 +87,8 @@ export const CaseResponseRt = rt.intersection([
     id: rt.string,
     totalComment: rt.number,
     version: rt.string,
+    assignees: rt.array(rt.string),
+    subscribers: rt.array(rt.string),
   }),
   rt.partial({
     comments: rt.array(CommentResponseRt),

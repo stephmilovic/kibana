@@ -3,10 +3,9 @@
  * or more contributor license agreements. Licensed under the Elastic License;
  * you may not use this file except in compliance with the Elastic License.
  */
+import { FormSchema } from '../../../shared_imports';
+import { schemaAssignees } from '../create/schema';
 
-export * from './case';
-export * from './case_user';
-export * from './configure';
-export * from './comment';
-export * from './status';
-export * from './user_actions';
+export const schema: FormSchema = {
+  users: schemaAssignees,
+};

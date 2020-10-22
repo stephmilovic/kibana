@@ -22,6 +22,8 @@ import {
   CommentAttributes,
   ESCaseConnector,
   ESCaseAttributes,
+  CaseUserAttributes,
+  AllCaseUsersResponse,
 } from '../../../common/api';
 import { transformESConnectorToCaseConnector } from './cases/helpers';
 
@@ -40,7 +42,7 @@ export const transformNewCase = ({
   createdDate: string;
   email?: string | null;
   full_name?: string | null;
-  newCase: CasePostRequest;
+  newCase: Omit<CasePostRequest, 'assignees'>;
   username?: string | null;
 }): ESCaseAttributes => ({
   ...newCase,
@@ -119,12 +121,16 @@ export const flattenCaseSavedObjects = (
   }, []);
 
 export const flattenCaseSavedObject = ({
-  savedObject,
+  assignees = [],
   comments = [],
+  savedObject,
+  subscribers = [],
   totalComment = 0,
 }: {
-  savedObject: SavedObject<ESCaseAttributes>;
+  assignees?: string[];
   comments?: Array<SavedObject<CommentAttributes>>;
+  savedObject: SavedObject<ESCaseAttributes>;
+  subscribers?: string[];
   totalComment?: number;
 }): CaseResponse => ({
   id: savedObject.id,
@@ -133,6 +139,8 @@ export const flattenCaseSavedObject = ({
   totalComment,
   ...savedObject.attributes,
   connector: transformESConnectorToCaseConnector(savedObject.attributes.connector),
+  assignees,
+  subscribers,
 });
 
 export const transformComments = (
@@ -158,6 +166,17 @@ export const flattenCommentSavedObject = (
   version: savedObject.version ?? '0',
   ...savedObject.attributes,
 });
+
+export const flattenCaseUsersSavedObjects = (
+  savedObjects: Array<SavedObject<CaseUserAttributes>>
+): AllCaseUsersResponse =>
+  savedObjects.reduce(
+    (acc: AllCaseUsersResponse, savedObject: SavedObject<CaseUserAttributes>) => [
+      ...acc,
+      savedObject.attributes.username,
+    ],
+    []
+  );
 
 export const sortToSnake = (sortField: string): SortFieldCase => {
   switch (sortField) {

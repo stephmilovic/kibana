@@ -17,12 +17,7 @@ import { escapeHatch, transformNewComment, wrapError, flattenCaseSavedObject } f
 import { RouteDeps } from '../../types';
 import { CASE_COMMENTS_URL } from '../../../../../common/constants';
 
-export function initPostCommentApi({
-  caseConfigureService,
-  caseService,
-  router,
-  userActionService,
-}: RouteDeps) {
+export function initPostCommentApi({ caseService, router, userActionService }: RouteDeps) {
   router.post(
     {
       path: CASE_COMMENTS_URL,

@@ -78,6 +78,18 @@ export const DESCRIPTION = i18n.translate('xpack.securitySolution.case.caseView.
   defaultMessage: 'Description',
 });
 
+export const ASSIGNEES = i18n.translate('xpack.securitySolution.case.caseView.assignees', {
+  defaultMessage: 'Assignees',
+});
+
+export const ASSIGNEES_HELP = i18n.translate(
+  'xpack.securitySolution.case.createCase.fieldAssigneesHelpText',
+  {
+    defaultMessage:
+      'Type one or more Elastic users for this case. Press enter after each tag to begin a new one.',
+  }
+);
+
 export const DESCRIPTION_REQUIRED = i18n.translate(
   'xpack.securitySolution.case.createCase.descriptionFieldRequiredError',
   {

@@ -21,3 +21,10 @@ export const STEP_TWO_TITLE = i18n.translate(
     defaultMessage: 'External incident management system fields',
   }
 );
+
+export const STEP_THREE_TITLE = i18n.translate(
+  'xpack.securitySolution.components.create.stepThreeTitle',
+  {
+    defaultMessage: 'Assignment',
+  }
+);

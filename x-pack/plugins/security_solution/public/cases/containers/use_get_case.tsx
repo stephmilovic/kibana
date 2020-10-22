@@ -55,6 +55,7 @@ const dataFetchReducer = (state: CaseState, action: Action): CaseState => {
   }
 };
 export const initialData: Case = {
+  assignees: [],
   id: '',
   closedAt: null,
   closedBy: null,
@@ -67,6 +68,7 @@ export const initialData: Case = {
   description: '',
   externalService: null,
   status: '',
+  subscribers: [],
   tags: [],
   title: '',
   totalComment: 0,

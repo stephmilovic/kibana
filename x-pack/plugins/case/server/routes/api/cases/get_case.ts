@@ -8,7 +8,7 @@ import { schema } from '@kbn/config-schema';
 
 import { CaseResponseRt } from '../../../../common/api';
 import { RouteDeps } from '../types';
-import { flattenCaseSavedObject, wrapError } from '../utils';
+import { flattenCaseSavedObject, flattenCaseUsersSavedObjects, wrapError } from '../utils';
 import { CASE_DETAILS_URL } from '../../../../common/constants';
 
 export function initGetCaseApi({ caseConfigureService, caseService, router }: RouteDeps) {
@@ -29,18 +29,33 @@ export function initGetCaseApi({ caseConfigureService, caseService, router }: Ro
         const client = context.core.savedObjects.client;
         const includeComments = JSON.parse(request.query.includeComments);
 
-        const [theCase] = await Promise.all([
+        const [theCase, theAssignees, theSubscribers] = await Promise.all([
           caseService.getCase({
             client,
             caseId: request.params.case_id,
           }),
+          caseService.getAllCaseUsers({
+            client,
+            caseId: request.params.case_id,
+            userActivity: 'assignee',
+          }),
+          caseService.getAllCaseUsers({
+            client,
+            caseId: request.params.case_id,
+            userActivity: 'subscriber',
+          }),
         ]);
+
+        const assignees = flattenCaseUsersSavedObjects(theAssignees.saved_objects);
+        const subscribers = flattenCaseUsersSavedObjects(theSubscribers.saved_objects);
 
         if (!includeComments) {
           return response.ok({
             body: CaseResponseRt.encode(
               flattenCaseSavedObject({
                 savedObject: theCase,
+                assignees,
+                subscribers,
               })
             ),
           });
@@ -58,8 +73,10 @@ export function initGetCaseApi({ caseConfigureService, caseService, router }: Ro
         return response.ok({
           body: CaseResponseRt.encode(
             flattenCaseSavedObject({
-              savedObject: theCase,
+              assignees,
               comments: theComments.saved_objects,
+              savedObject: theCase,
+              subscribers,
               totalComment: theComments.total,
             })
           ),
