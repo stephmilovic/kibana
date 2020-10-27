@@ -6,19 +6,31 @@
 
 import { useEffect, useReducer } from 'react';
 
+import { EuiComboBoxOptionOption } from '@elastic/eui';
 import { errorToToaster, useStateToaster } from '../../common/components/toasters';
 import { getUsers } from './api';
 import * as i18n from './translations';
 import { ElasticUser } from './types';
 
-export interface UsersState {
-  users: ElasticUser[];
+interface UserIndex {
+  [key: string]: ElasticUser;
+}
+
+interface UsersData {
+  indexedUsers: UserIndex;
+  usersOptions: EuiComboBoxOptionOption[];
+}
+
+export interface UsersState extends UsersData {
   isLoading: boolean;
   isError: boolean;
 }
 type Action =
   | { type: 'FETCH_INIT' }
-  | { type: 'FETCH_SUCCESS'; payload: ElasticUser[] }
+  | {
+      type: 'FETCH_SUCCESS';
+      payload: UsersData;
+    }
   | { type: 'FETCH_FAILURE' };
 
 export interface UseGetUsers extends UsersState {
@@ -38,7 +50,7 @@ const dataFetchReducer = (state: UsersState, action: Action): UsersState => {
         ...state,
         isLoading: false,
         isError: false,
-        users: action.payload,
+        ...action.payload,
       };
     case 'FETCH_FAILURE':
       return {
@@ -50,13 +62,34 @@ const dataFetchReducer = (state: UsersState, action: Action): UsersState => {
       return state;
   }
 };
-const initialData: ElasticUser[] = [];
-
+const formatThatData = (usersArray: ElasticUser[]): UsersData =>
+  usersArray.reduce(
+    (acc: UsersData, user) =>
+      user.username != null
+        ? {
+            indexedUsers: {
+              ...acc.indexedUsers,
+              [user.username]: user,
+            },
+            usersOptions: [
+              ...acc.usersOptions,
+              {
+                label: user.username,
+              },
+            ],
+          }
+        : acc,
+    {
+      indexedUsers: {},
+      usersOptions: [],
+    }
+  );
 export const useGetUsers = (): UseGetUsers => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isLoading: true,
     isError: false,
-    users: initialData,
+    indexedUsers: {},
+    usersOptions: [],
   });
   const [, dispatchToaster] = useStateToaster();
 
@@ -69,7 +102,10 @@ export const useGetUsers = (): UseGetUsers => {
       try {
         const response = await getUsers(abortCtrl.signal);
         if (!didCancel) {
-          dispatch({ type: 'FETCH_SUCCESS', payload: response });
+          dispatch({
+            type: 'FETCH_SUCCESS',
+            payload: formatThatData(response),
+          });
         }
       } catch (error) {
         if (!didCancel) {

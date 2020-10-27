@@ -86,7 +86,19 @@ export const ASSIGNEES_HELP = i18n.translate(
   'xpack.securitySolution.case.createCase.fieldAssigneesHelpText',
   {
     defaultMessage:
-      'Type one or more Elastic users for this case. Press enter after each tag to begin a new one.',
+      'Type one or more Elastic users to assign to this case. Press enter after each user to begin a new one.',
+  }
+);
+
+export const SUBSCRIBERS = i18n.translate('xpack.securitySolution.case.caseView.subscrib ers', {
+  defaultMessage: 'Subscribers',
+});
+
+export const SUBSCRIBERS_HELP = i18n.translate(
+  'xpack.securitySolution.case.createCase.fieldSubscribersHelpText',
+  {
+    defaultMessage:
+      'Type one or more Elastic users to receive updates about this case. Press enter after each user to begin a new one.',
   }
 );
 

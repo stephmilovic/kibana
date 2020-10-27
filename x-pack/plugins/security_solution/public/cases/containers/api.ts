@@ -266,32 +266,33 @@ export const getActionLicense = async (signal: AbortSignal): Promise<ActionLicen
   });
   return response;
 };
-const users: User[] = [
+
+export const tempUserData: User[] = [
   {
-    username: 'jesse',
-    full_name: 'Jesse Pinkman',
-    email: 'jesse@pinkman.com',
+    username: 'smilovic',
+    full_name: 'Steph M',
+    email: 'sm@sm.com',
   },
   {
-    username: 'walt',
-    full_name: 'Walter White',
-    email: 'walter@white.com',
+    username: 'yoyo',
+    full_name: '',
+    email: '',
   },
   {
-    username: 'gus',
-    full_name: 'Gus Fring',
-    email: 'gus@fring.com',
+    username: 'endgame_user',
+    full_name: 'Endgame Platform',
+    email: null,
   },
   {
-    username: 'hank',
-    full_name: 'Hank Schrader',
-    email: 'hank@schrader.com',
+    username: 'fleet_enroll',
+    full_name: null,
+    email: null,
   },
   {
-    username: 'flynn',
-    full_name: 'Walter Junior',
-    email: 'walter@junior.com',
+    username: 'casetester',
+    full_name: 'Case Tester',
+    email: 'case@test.er',
   },
 ];
 export const getUsers = async (signal: AbortSignal): Promise<ElasticUser[]> =>
-  new Promise((res) => res(convertArrayToCamelCase(users) as ElasticUser[]));
+  new Promise((res) => res(convertArrayToCamelCase(tempUserData) as ElasticUser[]));

@@ -20,6 +20,7 @@ import {
 } from '../../../../case/common/api/cases';
 import { UseGetCasesState, DEFAULT_FILTER_OPTIONS, DEFAULT_QUERY_PARAMS } from './use_get_cases';
 import { ConnectorTypes } from '../../../../case/common/api/connectors';
+import { User } from '../../../../case/common/api';
 export { connectorsMock } from './configure/mock';
 
 export const basicCaseId = 'basic-case-id';
@@ -329,3 +330,31 @@ export const basicCaseClosed: Case = {
   closedBy: elasticUser,
   status: 'closed',
 };
+
+export const mockUserData: User[] = [
+  {
+    username: 'smilovic',
+    full_name: 'Steph M',
+    email: 'sm@sm.com',
+  },
+  {
+    username: 'yoyo',
+    full_name: '',
+    email: '',
+  },
+  {
+    username: 'endgame_user',
+    full_name: 'Endgame Platform',
+    email: null,
+  },
+  {
+    username: 'fleet_enroll',
+    full_name: null,
+    email: null,
+  },
+  {
+    username: 'casetester',
+    full_name: 'Case Tester',
+    email: 'case@test.er',
+  },
+];

@@ -95,7 +95,18 @@ export const CaseComponent = React.memo<CaseProps>(
       isLoading: isLoadingUserActions,
       participants,
     } = useGetCaseUserActions(caseId, caseData.connector.id);
-    const { users: assigneeOptions } = useGetUsers();
+    const { indexedUsers, usersOptions } = useGetUsers();
+
+    const { assigneeSelectedOptions, subscriberSelectedOptions } = useMemo(() => {
+      return Object.keys(indexedUsers).length > 0
+        ? {
+            assigneeSelectedOptions: caseData.assignees.map((username) => indexedUsers[username]),
+            subscriberSelectedOptions: caseData.subscribers.map(
+              (username) => indexedUsers[username]
+            ),
+          }
+        : { assigneeSelectedOptions: [], subscriberSelectedOptions: [] };
+    }, [caseData.assignees, caseData.subscribers, indexedUsers]);
 
     const { isLoading, updateKey, updateCaseProperty } = useUpdateCase({
       caseId,
@@ -382,11 +393,24 @@ export const CaseComponent = React.memo<CaseProps>(
               </EuiFlexItem>
               <EuiFlexItem grow={2}>
                 <UserSelector
-                  data-test-subj="fun-new-list"
+                  data-test-subj="case-assignees"
                   disabled={!userCanCrud}
                   email={emailContent}
                   headline={i18n.ASSIGNEES}
-                  users={assigneeOptions}
+                  usersType="assignees"
+                  usersOptions={usersOptions}
+                  users={assigneeSelectedOptions} // temp for UserList
+                  selectedUsers={caseData.assignees}
+                />
+                <UserSelector
+                  data-test-subj="case-subscribers"
+                  disabled={!userCanCrud}
+                  email={emailContent}
+                  headline={i18n.SUBSCRIBERS}
+                  usersType="subscribers"
+                  usersOptions={usersOptions}
+                  users={subscriberSelectedOptions} // temp for UserList
+                  selectedUsers={caseData.subscribers}
                 />
                 <UserList
                   data-test-subj="case-view-user-list-reporter"

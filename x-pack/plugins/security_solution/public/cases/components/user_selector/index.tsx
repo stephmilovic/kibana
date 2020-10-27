@@ -9,30 +9,37 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   EuiButton,
   EuiButtonEmpty,
+  EuiComboBoxOptionOption,
   EuiFlexGroup,
   EuiFlexItem,
   EuiHorizontalRule,
   EuiLoadingSpinner,
   EuiText,
 } from '@elastic/eui';
-import { isEqual } from 'lodash/fp';
 import { UserList, UserListProps } from '../user_list';
-import { Form, FormDataProvider, useForm } from '../../../shared_imports';
-import { CommonUseField, mapUsersToOptions } from '../create';
+import { Form, useForm } from '../../../shared_imports';
+import { CommonUseField } from '../create';
 import * as i18n from '../tag_list/translations';
-import { schema } from './schema';
+import { getUserSchema } from './schema';
 
-export const UserSelector = React.memo((props: UserListProps) => {
-  const { headline, loading, users } = props;
-  const initialState = { users };
+interface UserSelectorProps extends UserListProps {
+  usersOptions: EuiComboBoxOptionOption[];
+  usersType: 'assignees' | 'subscribers';
+  'data-test-subj': string;
+  selectedUsers: string[];
+}
+export const UserSelector = React.memo((props: UserSelectorProps) => {
+  const { headline, loading, usersOptions, usersType, selectedUsers } = props;
+  const initialState = { users: selectedUsers };
+
   const { form } = useForm({
     defaultValue: initialState,
     options: { stripEmptyFields: false },
-    schema,
+    schema: getUserSchema(usersType),
   });
   const { submit } = form;
   const [isEdit, setIsEdit] = useState(false);
-  const [options, setOptions] = useState(mapUsersToOptions(users));
+  const [options, setOptions] = useState(usersOptions);
   const handleCancelEdit = useCallback(() => {
     setIsEdit(false);
   }, []);
@@ -45,8 +52,9 @@ export const UserSelector = React.memo((props: UserListProps) => {
     }
   }, [submit]);
   useEffect(() => {
-    setOptions(mapUsersToOptions(users));
-  }, [users]);
+    setOptions(usersOptions);
+  }, [usersOptions]);
+  console.log('form', { options, getu: getUserSchema(usersType), form });
   return isEdit ? (
     <EuiText>
       <h4>{headline}</h4>
@@ -58,41 +66,22 @@ export const UserSelector = React.memo((props: UserListProps) => {
           </EuiFlexItem>
         </EuiFlexGroup>
       )}
-      <EuiFlexGroup data-test-subj="edit-assignees" direction="column">
+      <EuiFlexGroup data-test-subj="edit-users" direction="column">
         <EuiFlexItem>
           <Form form={form}>
             <CommonUseField
-              path="assignees"
+              path="users"
               componentProps={{
-                idAria: 'caseAssignees',
-                'data-test-subj': 'caseAssignees',
+                idAria: props['data-test-subj'],
+                'data-test-subj': props['data-test-subj'],
                 euiFieldProps: {
                   fullWidth: true,
-                  placeholder: '',
-                  options,
                   noSuggestions: false,
+                  options,
+                  placeholder: '',
                 },
               }}
             />
-            <FormDataProvider pathsToWatch="assignees">
-              {({ users: anotherUsers }) => {
-                const current: string[] = options.map((opt) => opt.label);
-                const newOptions = anotherUsers.reduce((acc: string[], item: string) => {
-                  if (!acc.includes(item)) {
-                    return [...acc, item];
-                  }
-                  return acc;
-                }, current);
-                if (!isEqual(current, newOptions)) {
-                  setOptions(
-                    newOptions.map((label: string) => ({
-                      label,
-                    }))
-                  );
-                }
-                return null;
-              }}
-            </FormDataProvider>
           </Form>
         </EuiFlexItem>
         <EuiFlexItem>
@@ -100,7 +89,7 @@ export const UserSelector = React.memo((props: UserListProps) => {
             <EuiFlexItem grow={false}>
               <EuiButton
                 color="secondary"
-                data-test-subj="edit-assignees-submit"
+                data-test-subj="edit-users-submit"
                 fill
                 iconType="save"
                 onClick={onSubmitUsers}
@@ -111,7 +100,7 @@ export const UserSelector = React.memo((props: UserListProps) => {
             </EuiFlexItem>
             <EuiFlexItem grow={false}>
               <EuiButtonEmpty
-                data-test-subj="edit-assignees-cancel"
+                data-test-subj="edit-users-cancel"
                 iconType="cross"
                 onClick={handleCancelEdit}
                 size="s"
