@@ -4,26 +4,24 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import Boom from 'boom';
-import { pipe } from 'fp-ts/lib/pipeable';
-import { fold } from 'fp-ts/lib/Either';
-import { identity } from 'fp-ts/lib/function';
+import { wrapError, escapeHatch } from '../utils';
 
-import { flattenCaseSavedObject, transformNewCase, wrapError, escapeHatch } from '../utils';
-
-import { CasePostRequestRt, throwErrors, excess, CaseResponseRt } from '../../../../common/api';
-import { buildCaseUserActionItem } from '../../../services/user_actions/helpers';
 import { RouteDeps } from '../types';
 import { CASES_URL } from '../../../../common/constants';
-import { getConnectorFromConfiguration, transformCaseConnectorToEsConnector } from './helpers';
+import { CasePostRequest } from '../../../../common/api';
 import { CASE_SAVED_OBJECT } from '../../../saved_object_types';
+interface CaseUserSuccess {
+  statusCode: 200;
+  assignee: string;
+}
 
-export function initPostCaseApi({
-  caseService,
-  caseConfigureService,
-  router,
-  userActionService,
-}: RouteDeps) {
+interface CaseUserFailed {
+  statusCode: 404;
+  assignee: string;
+}
+
+type CaseUserPromise = CaseUserSuccess | CaseUserFailed;
+export function initPostCaseApi({ caseService, router }: RouteDeps) {
   router.post(
     {
       path: CASES_URL,
@@ -32,60 +30,16 @@ export function initPostCaseApi({
       },
     },
     async (context, request, response) => {
+      if (!context.case) {
+        return response.badRequest({ body: 'RouteHandlerContext is not registered for cases' });
+      }
+      const client = context.core.savedObjects.client;
+      const caseClient = context.case.getCaseClient();
+      const theCase = request.body as CasePostRequest;
       try {
-        const client = context.core.savedObjects.client;
-        const { assignees, ...query } = pipe(
-          excess(CasePostRequestRt).decode(request.body),
-          fold(throwErrors(Boom.badRequest), identity)
-        );
-
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        const { username, full_name, email } = await caseService.getUser({ request, response });
-        const createdDate = new Date().toISOString();
-        const myCaseConfigure = await caseConfigureService.find({ client });
-        const caseConfigureConnector = getConnectorFromConfiguration(myCaseConfigure);
-
-        const newCase = await caseService.postNewCase({
-          client,
-          attributes: transformNewCase({
-            createdDate,
-            newCase: query,
-            username,
-            full_name,
-            email,
-            connector: transformCaseConnectorToEsConnector(
-              query.connector ?? caseConfigureConnector
-            ),
-          }),
-        });
-
-        await userActionService.postUserActions({
-          client,
-          actions: [
-            buildCaseUserActionItem({
-              action: 'create',
-              actionAt: createdDate,
-              actionBy: { username, full_name, email },
-              caseId: newCase.id,
-              fields: ['description', 'status', 'tags', 'title', 'connector'],
-              newValue: JSON.stringify(query),
-            }),
-          ],
-        });
-        interface CaseUserSuccess {
-          statusCode: 200;
-          assignee: string;
-        }
-
-        interface CaseUserFailed {
-          statusCode: 404;
-          assignee: string;
-        }
-
-        type CaseUserPromise = CaseUserSuccess | CaseUserFailed;
-        // await assignees;
+        const newCase = await caseClient.create({ theCase });
         const caseUsers = await Promise.all(
-          assignees.reduce<Array<Promise<CaseUserPromise>>>((acc, assignee) => {
+          theCase.assignees.reduce<Array<Promise<CaseUserPromise>>>((acc, assignee) => {
             if (assignee == null) {
               return acc;
             }
@@ -132,15 +86,13 @@ export function initPostCaseApi({
         );
 
         return response.ok({
-          body: CaseResponseRt.encode(
-            flattenCaseSavedObject({
-              assignees: caseUsers.reduce<string[]>(
-                (acc, resp) => (resp.statusCode === 200 ? [...acc, resp.assignee] : acc),
-                []
-              ),
-              savedObject: newCase,
-            })
-          ),
+          body: {
+            ...newCase,
+            assignees: caseUsers.reduce<string[]>(
+              (acc, resp) => (resp.statusCode === 200 ? [...acc, resp.assignee] : acc),
+              []
+            ),
+          },
         });
       } catch (error) {
         return response.customError(wrapError(error));

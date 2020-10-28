@@ -125,7 +125,7 @@ export const flattenCaseSavedObject = ({
   comments = [],
   savedObject,
   subscribers = [],
-  totalComment = 0,
+  totalComment = comments.length,
 }: {
   assignees?: string[];
   comments?: Array<SavedObject<CommentAttributes>>;
