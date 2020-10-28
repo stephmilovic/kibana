@@ -209,7 +209,7 @@ const JiraConnectorFields: React.FC<ActionConnectorFieldsProps<JiraActionConnect
           <EuiFlexGroup>
             <EuiFlexItem data-test-subj="case-jira-mappings">
               <FieldMapping
-                disabled={true}
+                disabled={false}
                 connectorConfiguration={connectorConfiguration}
                 mapping={mapping as CasesConfigurationMapping[]}
                 onChangeMapping={handleOnChangeMappingConfig}

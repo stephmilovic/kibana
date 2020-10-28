@@ -18,6 +18,7 @@ export interface ThirdPartyField {
   validSourceFields: CaseField[];
   defaultSourceField: CaseField;
   defaultActionType: ThirdPartySupportedActions;
+  validActionTypes?: ThirdPartySupportedActions[];
 }
 
 export interface ConnectorConfiguration extends ActionType {

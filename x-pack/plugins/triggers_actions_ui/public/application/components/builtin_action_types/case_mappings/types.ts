@@ -13,6 +13,7 @@ export interface ThirdPartyField {
   validSourceFields: string[];
   defaultSourceField: string;
   defaultActionType: string;
+  validActionTypes?: string[];
 }
 export interface CasesConfigurationMapping {
   source: string;

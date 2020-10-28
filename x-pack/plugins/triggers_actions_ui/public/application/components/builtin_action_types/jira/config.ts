@@ -33,6 +33,7 @@ export const connectorConfiguration = {
       validSourceFields: ['comments'],
       defaultSourceField: 'comments',
       defaultActionType: 'append',
+      validActionTypes: ['append', 'nothing'],
     },
   },
 };

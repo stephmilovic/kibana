@@ -15,13 +15,14 @@ import { setActionTypeToMapping, setThirdPartyToMapping } from './utils';
 import { ThirdPartyField as ConnectorConfigurationThirdPartyField } from './types';
 import { CasesConfigurationMapping } from './types';
 import { createDefaultMapping } from './utils';
+import { ActionType, CaseField } from '../../../../../../case/common/api/cases';
 
 const FieldRowWrapper = styled.div`
   margin-top: 8px;
   font-size: 14px;
 `;
 
-const actionTypeOptions: Array<EuiSuperSelectOption<string>> = [
+const actionTypeOptions: Array<EuiSuperSelectOption<ActionType>> = [
   {
     value: 'nothing',
     inputDisplay: <>{i18n.FIELD_MAPPING_EDIT_NOTHING}</>,
@@ -38,6 +39,15 @@ const actionTypeOptions: Array<EuiSuperSelectOption<string>> = [
     'data-test-subj': 'edit-update-option-append',
   },
 ];
+const getActionTypeOptions = (
+  field: ConnectorConfigurationThirdPartyField
+): Array<EuiSuperSelectOption<ActionType>> =>
+  field != null && field.validActionTypes != null
+    ? actionTypeOptions.reduce<Array<EuiSuperSelectOption<ActionType>>>(
+        (acc, opt) => (field.validActionTypes.includes(opt.value) ? [...acc, opt] : acc),
+        []
+      )
+    : actionTypeOptions;
 
 const getThirdPartyOptions = (
   caseField: string,
@@ -102,6 +112,11 @@ const FieldMappingComponent: React.FC<FieldMappingProps> = ({
     selectedConnector.fields,
   ]);
 
+  const handleActionTypeOptions = useCallback(
+    (source: CaseField) => getActionTypeOptions(selectedConnector.fields[source]),
+    [selectedConnector.fields]
+  );
+
   return (
     <>
       <EuiFormRow fullWidth data-test-subj="case-configure-field-mapping-cols">
@@ -125,7 +140,7 @@ const FieldMappingComponent: React.FC<FieldMappingProps> = ({
             disabled={disabled}
             securitySolutionField={item.source}
             thirdPartyOptions={getThirdPartyOptions(item.source, selectedConnector.fields as any)}
-            actionTypeOptions={actionTypeOptions}
+            actionTypeOptions={handleActionTypeOptions(item.source)}
             onChangeActionType={onChangeActionType}
             onChangeThirdParty={onChangeThirdParty}
             selectedActionType={item.actionType}

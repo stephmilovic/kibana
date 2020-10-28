@@ -48,6 +48,16 @@ const actionTypeOptions: Array<EuiSuperSelectOption<ActionType>> = [
   },
 ];
 
+const getActionTypeOptions = (
+  field: ConnectorConfigurationThirdPartyField
+): Array<EuiSuperSelectOption<ActionType>> =>
+  field != null && field.validActionTypes != null
+    ? actionTypeOptions.reduce<Array<EuiSuperSelectOption<ActionType>>>(
+        (acc, opt) => (field.validActionTypes.includes(opt.value) ? [...acc, opt] : acc),
+        []
+      )
+    : actionTypeOptions;
+
 const getThirdPartyOptions = (
   caseField: CaseField,
   thirdPartyFields: Record<string, ConnectorConfigurationThirdPartyField>
@@ -113,6 +123,11 @@ const FieldMappingComponent: React.FC<FieldMappingProps> = ({
     selectedConnector.fields,
   ]);
 
+  const handleActionTypeOptions = useCallback(
+    (source: CaseField) => getActionTypeOptions(selectedConnector.fields[source]),
+    [selectedConnector.fields]
+  );
+
   return (
     <>
       <EuiFormRow fullWidth data-test-subj="case-configure-field-mapping-cols">
@@ -136,7 +151,7 @@ const FieldMappingComponent: React.FC<FieldMappingProps> = ({
             disabled={disabled}
             securitySolutionField={item.source}
             thirdPartyOptions={getThirdPartyOptions(item.source, selectedConnector.fields)}
-            actionTypeOptions={actionTypeOptions}
+            actionTypeOptions={handleActionTypeOptions(item.source)}
             onChangeActionType={onChangeActionType}
             onChangeThirdParty={onChangeThirdParty}
             selectedActionType={item.actionType}
