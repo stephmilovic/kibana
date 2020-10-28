@@ -46,15 +46,13 @@ export const UserSelector = React.memo((props: UserSelectorProps) => {
   const onSubmitUsers = useCallback(async () => {
     const { isValid, data: newData } = await submit();
     if (isValid && newData.users) {
-      // onSubmit(newData.users);
-      console.log('SUBMIT!!', newData.users); // TO DO
+      // onSubmit(newData.users); // TO DO
       setIsEdit(false);
     }
   }, [submit]);
   useEffect(() => {
     setOptions(usersOptions);
   }, [usersOptions]);
-  console.log('form', { options, getu: getUserSchema(usersType), form });
   return isEdit ? (
     <EuiText>
       <h4>{headline}</h4>

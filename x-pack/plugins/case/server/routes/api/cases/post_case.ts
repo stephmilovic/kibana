@@ -16,6 +16,7 @@ import { buildCaseUserActionItem } from '../../../services/user_actions/helpers'
 import { RouteDeps } from '../types';
 import { CASES_URL } from '../../../../common/constants';
 import { getConnectorFromConfiguration, transformCaseConnectorToEsConnector } from './helpers';
+import { CASE_SAVED_OBJECT } from '../../../saved_object_types';
 
 export function initPostCaseApi({
   caseService,
@@ -71,13 +72,72 @@ export function initPostCaseApi({
             }),
           ],
         });
+        interface CaseUserSuccess {
+          statusCode: 200;
+          assignee: string;
+        }
 
+        interface CaseUserFailed {
+          statusCode: 404;
+          assignee: string;
+        }
+
+        type CaseUserPromise = CaseUserSuccess | CaseUserFailed;
         // await assignees;
-        console.log('POST ASSIGNEES CALL', assignees); // TO DO
+        const caseUsers = await Promise.all(
+          assignees.reduce<Array<Promise<CaseUserPromise>>>((acc, assignee) => {
+            if (assignee == null) {
+              return acc;
+            }
+            const caseUserPromise = new Promise<CaseUserPromise>(async (resolve) => {
+              try {
+                const myCaseUser = await caseService.getCaseUser({
+                  client,
+                  options: {
+                    search: assignee,
+                    searchFields: ['username'],
+                  },
+                });
+                const postArgs = {
+                  client,
+                  attributes: {
+                    username: assignee,
+                  },
+                  references: [
+                    {
+                      type: `assignee-${CASE_SAVED_OBJECT}`,
+                      name: `assignee-${CASE_SAVED_OBJECT}`,
+                      id: newCase.id,
+                    },
+                  ],
+                };
+                if (myCaseUser.total === 0) {
+                  await caseService.postNewCaseUser(postArgs);
+                } else {
+                  await caseService.patchCaseUser({
+                    ...postArgs,
+                    id: myCaseUser.saved_objects[0].id,
+                  });
+                }
+                resolve({
+                  statusCode: 200,
+                  assignee,
+                });
+              } catch {
+                resolve({ statusCode: 404, assignee });
+              }
+            });
+            return [...acc, caseUserPromise];
+          }, [])
+        );
 
         return response.ok({
           body: CaseResponseRt.encode(
             flattenCaseSavedObject({
+              assignees: caseUsers.reduce<string[]>(
+                (acc, resp) => (resp.statusCode === 200 ? [...acc, resp.assignee] : acc),
+                []
+              ),
               savedObject: newCase,
             })
           ),

@@ -81,7 +81,6 @@ const renderUsers = (
 
 export const UserList = React.memo(
   ({ disabled, email, headline, loading, setIsEdit, users }: UserListProps) => {
-    console.log('usersS', users);
     const handleSendEmail = useCallback(
       (emailAddress: string | undefined | null) => {
         if (emailAddress && emailAddress != null) {

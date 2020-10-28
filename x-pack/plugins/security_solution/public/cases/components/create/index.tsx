@@ -7,7 +7,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   EuiButton,
   EuiButtonEmpty,
-  EuiComboBoxOptionOption,
   EuiFlexGroup,
   EuiFlexItem,
   EuiLoadingSpinner,
@@ -44,7 +43,7 @@ import {
   getNoneConnector,
   normalizeActionConnector,
 } from '../configure_cases/utils';
-import { ActionConnector, ElasticUser } from '../../containers/types';
+import { ActionConnector } from '../../containers/types';
 import { ConnectorFields } from '../../../../../case/common/api/connectors';
 import * as i18n from './translations';
 import { useGetUsers } from '../../containers/use_get_users';
@@ -75,20 +74,6 @@ const initialCaseValue: FormProps = {
   title: '',
   connectorId: 'none',
 };
-const theAcc: EuiComboBoxOptionOption[] = [];
-export const mapUsersToOptions = (users: ElasticUser[]): EuiComboBoxOptionOption[] =>
-  users.reduce(
-    (acc, user) =>
-      user.username != null
-        ? [
-            ...acc,
-            {
-              label: user.username,
-            },
-          ]
-        : acc,
-    theAcc
-  );
 export const Create = React.memo(() => {
   const history = useHistory();
   const { caseData, isLoading, postCase } = usePostCase();
@@ -102,8 +87,8 @@ export const Create = React.memo(() => {
       label,
     }))
   );
-  const { users: assigneeOptions } = useGetUsers();
-  const [optionsAssignees, setOptionsAssignees] = useState(mapUsersToOptions(assigneeOptions));
+  const { usersOptions } = useGetUsers();
+  const [optionsAssignees, setOptionsAssignees] = useState(usersOptions);
   // This values uses useEffect to update, not useMemo,
   // because we need to setState on it from the jsx
   useEffect(
@@ -115,7 +100,7 @@ export const Create = React.memo(() => {
       ),
     [tagOptions]
   );
-  useEffect(() => setOptionsAssignees(mapUsersToOptions(assigneeOptions)), [assigneeOptions]);
+  useEffect(() => setOptionsAssignees(usersOptions), [usersOptions]);
   const [fields, setFields] = useState<ConnectorFields>(null);
 
   const { form } = useForm<FormProps>({

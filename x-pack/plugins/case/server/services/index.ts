@@ -124,22 +124,22 @@ export interface CaseServiceSetup {
   deleteComment(args: GetCommentArgs): Promise<{}>;
   findCases(args: FindCasesArgs): Promise<SavedObjectsFindResponse<ESCaseAttributes>>;
   getAllCaseComments(args: FindCommentsArgs): Promise<SavedObjectsFindResponse<CommentAttributes>>;
+  getAllCaseUsers(args: GetAllCaseUsersArgs): Promise<SavedObjectsFindResponse<CaseUserAttributes>>;
   getCase(args: GetCaseArgs): Promise<SavedObject<ESCaseAttributes>>;
   getCases(args: GetCasesArgs): Promise<SavedObjectsBulkResponse<ESCaseAttributes>>;
-  getComment(args: GetCommentArgs): Promise<SavedObject<CommentAttributes>>;
   getCaseUser(args: GetCaseUserArgs): Promise<SavedObjectsFindResponse<CaseUserAttributes>>;
-  getAllCaseUsers(args: GetAllCaseUsersArgs): Promise<SavedObjectsFindResponse<CaseUserAttributes>>;
-  patchCaseUser(args: PatchCaseUserArgs): Promise<SavedObjectsUpdateResponse<CaseUserAttributes>>;
-  postNewCaseUser(args: PostCaseUserArgs): Promise<SavedObject<CaseUserAttributes>>;
-  getTags(args: ClientArgs): Promise<string[]>;
+  getComment(args: GetCommentArgs): Promise<SavedObject<CommentAttributes>>;
   getReporters(args: ClientArgs): Promise<User[]>;
+  getTags(args: ClientArgs): Promise<string[]>;
   getUser(args: GetUserArgs): Promise<AuthenticatedUser | User>;
-  postNewCase(args: PostCaseArgs): Promise<SavedObject<ESCaseAttributes>>;
-  postNewComment(args: PostCommentArgs): Promise<SavedObject<CommentAttributes>>;
   patchCase(args: PatchCaseArgs): Promise<SavedObjectsUpdateResponse<ESCaseAttributes>>;
   patchCases(args: PatchCasesArgs): Promise<SavedObjectsBulkUpdateResponse<ESCaseAttributes>>;
+  patchCaseUser(args: PatchCaseUserArgs): Promise<SavedObjectsUpdateResponse<CaseUserAttributes>>;
   patchComment(args: UpdateCommentArgs): Promise<SavedObjectsUpdateResponse<CommentAttributes>>;
   patchComments(args: PatchComments): Promise<SavedObjectsBulkUpdateResponse<CommentAttributes>>;
+  postNewCase(args: PostCaseArgs): Promise<SavedObject<ESCaseAttributes>>;
+  postNewCaseUser(args: PostCaseUserArgs): Promise<SavedObject<CaseUserAttributes>>;
+  postNewComment(args: PostCommentArgs): Promise<SavedObject<CommentAttributes>>;
 }
 
 export class CaseService {
