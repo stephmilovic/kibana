@@ -30,6 +30,7 @@ import { context as contextType } from '../../../../../../kibana_react/public';
 import { IndexPatternCreationConfig } from '../../../../../../../plugins/index_pattern_management/public';
 import { MatchedItem } from '../../types';
 import { IndexPatternManagmentContextValue } from '../../../../types';
+import { useCreateIndexPattern } from '../../lib/use_create_index_pattern';
 
 interface StepIndexPatternProps {
   allIndices: MatchedItem[];
@@ -78,7 +79,7 @@ export const canPreselectTimeField = (indices: MatchedItem[]) => {
   return preselectStatus.canPreselect ? preselectStatus.timeFieldName : undefined;
 };
 
-export class StepIndexPattern extends Component<StepIndexPatternProps, StepIndexPatternState> {
+export class StepIndexPatternClass extends Component<StepIndexPatternProps, StepIndexPatternState> {
   static contextType = contextType;
 
   public readonly context!: IndexPatternManagmentContextValue;
@@ -101,7 +102,7 @@ export class StepIndexPattern extends Component<StepIndexPatternProps, StepIndex
   constructor(props: StepIndexPatternProps, context: IndexPatternManagmentContextValue) {
     super(props, context);
     const { indexPatternCreationType, initialQuery } = this.props;
-
+    this.props.patternHook.initialize(context.services.http);
     this.state.query =
       initialQuery || context.services.uiSettings.get(UI_SETTINGS.INDEXPATTERN_PLACEHOLDER);
     this.state.indexPatternName = indexPatternCreationType.getIndexPatternName();
@@ -134,9 +135,14 @@ export class StepIndexPattern extends Component<StepIndexPatternProps, StepIndex
   };
 
   fetchIndices = async (query: string) => {
-    const { indexPatternCreationType } = this.props;
+    const { indexPatternCreationType, patternHook } = this.props;
     const { existingIndexPatterns } = this.state;
-
+    const rightHere = await patternHook.fetchIndices(
+      query,
+      indexPatternCreationType.getIndexTags,
+      this.state.isIncludingSystemIndices
+    );
+    console.log('rightHere', rightHere);
     if ((existingIndexPatterns as string[]).includes(query)) {
       this.setState({ indexPatternExists: true });
       return;
@@ -358,6 +364,7 @@ export class StepIndexPattern extends Component<StepIndexPatternProps, StepIndex
 
   render() {
     const { allIndices } = this.props;
+    console.log('this.props', this.props);
     const { partialMatchedIndices, exactMatchedIndices, isIncludingSystemIndices } = this.state;
 
     const matchedIndices = getMatchedIndices(
@@ -380,3 +387,11 @@ export class StepIndexPattern extends Component<StepIndexPatternProps, StepIndex
     );
   }
 }
+
+export const withHooksHOC = (Comp: React.ReactNode) => {
+  return (props: any, context: any) => {
+    const patternHook = useCreateIndexPattern();
+    return <Comp patternHook={patternHook} {...props} />;
+  };
+};
+export const StepIndexPattern = withHooksHOC(StepIndexPatternClass);
