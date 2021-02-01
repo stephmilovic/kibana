@@ -58,9 +58,13 @@ export class IndexPatternsFetcher {
     rollupIndex?: string;
   }): Promise<FieldDescriptor[]> {
     const { pattern, metaFields, fieldCapsOptions, type, rollupIndex } = options;
+    const patternList = Array.isArray(pattern) ? pattern : pattern.split(',');
+    console.log('patternList', patternList);
+    const patternListActive = await this.validatePatternListActive(patternList);
+    console.log('patternListActive', patternListActive);
     const fieldCapsResponse = await getFieldCapabilities(
       this.elasticsearchClient,
-      pattern,
+      patternListActive,
       metaFields,
       {
         allow_no_indices: fieldCapsOptions
@@ -117,5 +121,29 @@ export class IndexPatternsFetcher {
       throw createNoMatchingIndicesError(pattern);
     }
     return await getFieldCapabilities(this.elasticsearchClient, indices, metaFields);
+  }
+
+  /**
+   *  Get a list of field objects for a time pattern
+   *
+   *  @param patternList
+   *  @return {Promise<Array<string>>}
+   */
+  async validatePatternListActive(patternList: string[]) {
+    const result = await Promise.all(
+      patternList.map((pattern) =>
+        this.elasticsearchClient.transport.request({
+          method: 'GET',
+          path: `/_resolve/index/${encodeURIComponent(pattern)}`,
+        })
+      )
+    );
+    return result.reduce(
+      (acc: string[], { body: indexLookup }, patternListIndex) =>
+        indexLookup.indices && indexLookup.indices.length > 0
+          ? [...acc, patternList[patternListIndex]]
+          : acc,
+      []
+    );
   }
 }
