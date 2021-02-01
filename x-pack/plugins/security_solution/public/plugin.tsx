@@ -417,7 +417,6 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
    */
   private async store(coreStart: CoreStart, startPlugins: StartPlugins): Promise<SecurityAppStore> {
     if (!this._store) {
-      const defaultIndicesName = coreStart.uiSettings.get(DEFAULT_INDEX_KEY);
       const [
         { composeLibs, createStore, createInitialState },
         kibanaIndexPatterns,
@@ -428,19 +427,10 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
           timelines: timelinesSubPlugin,
           management: managementSubPlugin,
         },
-        configIndexPatterns,
       ] = await Promise.all([
         this.lazyApplicationDependencies(),
         startPlugins.data.indexPatterns.getIdsWithTitle(),
         this.subPlugins(),
-        startPlugins.data.search
-          .search<IndexFieldsStrategyRequest, IndexFieldsStrategyResponse>(
-            { indices: defaultIndicesName, onlyCheckIfIndicesExist: true },
-            {
-              strategy: 'securitySolutionIndexFields',
-            }
-          )
-          .toPromise(),
       ]);
 
       let signal: { name: string | null } = { name: null };
@@ -484,7 +474,6 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
           },
           {
             kibanaIndexPatterns,
-            configIndexPatterns: configIndexPatterns.indicesExist,
             signalIndexName: signal.name,
           }
         ),

@@ -14,6 +14,7 @@ import { useUserInfo } from '../../../detections/components/user_info';
 import { timelineSelectors } from '../../../timelines/store/timeline';
 import { TimelineId } from '../../../../common/types/timeline';
 import { useDeepEqualSelector } from '../../hooks/use_selector';
+import { getSecurityIndexPattern } from '../../store/sourcerer/helpers';
 
 export const useInitSourcerer = (
   scopeId: SourcererScopeName.default | SourcererScopeName.detections = SourcererScopeName.default
@@ -22,11 +23,11 @@ export const useInitSourcerer = (
   const initialTimelineSourcerer = useRef(true);
   const initialDetectionSourcerer = useRef(true);
   const { loading: loadingSignalIndex, isSignalIndexExists, signalIndexName } = useUserInfo();
-  const getConfigIndexPatternsSelector = useMemo(
-    () => sourcererSelectors.configIndexPatternsSelector(),
+  const getKibanaIndexPatternsSelector = useMemo(
+    () => sourcererSelectors.kibanaIndexPatternsSelector(),
     []
   );
-  const ConfigIndexPatterns = useDeepEqualSelector(getConfigIndexPatternsSelector);
+  const KibanaIndexPatterns = useDeepEqualSelector(getKibanaIndexPatternsSelector);
 
   const getSignalIndexNameSelector = useMemo(
     () => sourcererSelectors.signalIndexNameSelector(),
@@ -54,15 +55,14 @@ export const useInitSourcerer = (
       !loadingSignalIndex &&
       signalIndexName != null &&
       signalIndexNameSelector == null &&
-      (activeTimeline == null ||
-        (activeTimeline != null && activeTimeline.savedObjectId == null)) &&
+      (activeTimeline == null || activeTimeline.savedObjectId == null) &&
       initialTimelineSourcerer.current
     ) {
       initialTimelineSourcerer.current = false;
       dispatch(
         sourcererActions.setSelectedIndexPatterns({
           id: SourcererScopeName.timeline,
-          selectedPatterns: [...ConfigIndexPatterns, signalIndexName],
+          selectedPatterns: [getSecurityIndexPattern(KibanaIndexPatterns), signalIndexName],
         })
       );
     } else if (signalIndexNameSelector != null && initialTimelineSourcerer.current) {
@@ -70,13 +70,13 @@ export const useInitSourcerer = (
       dispatch(
         sourcererActions.setSelectedIndexPatterns({
           id: SourcererScopeName.timeline,
-          selectedPatterns: [...ConfigIndexPatterns, signalIndexNameSelector],
+          selectedPatterns: [getSecurityIndexPattern(KibanaIndexPatterns), signalIndexNameSelector],
         })
       );
     }
   }, [
     activeTimeline,
-    ConfigIndexPatterns,
+    KibanaIndexPatterns,
     dispatch,
     loadingSignalIndex,
     signalIndexName,

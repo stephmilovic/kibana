@@ -16,15 +16,18 @@ import {
   initTimelineIndexPatterns,
 } from './actions';
 import { initialSourcererState, SourcererModel } from './model';
-import { createDefaultIndexPatterns, defaultIndexPatternByEventType } from './helpers';
+import {
+  createDefaultIndexPatterns,
+  defaultIndexPatternByEventType,
+  getSecurityIndexPattern,
+} from './helpers';
 
 export type SourcererState = SourcererModel;
 
 export const sourcererReducer = reducerWithInitialState(initialSourcererState)
-  .case(setIndexPatternsList, (state, { kibanaIndexPatterns, configIndexPatterns }) => ({
+  .case(setIndexPatternsList, (state, { kibanaIndexPatterns }) => ({
     ...state,
     kibanaIndexPatterns,
-    configIndexPatterns,
   }))
   .case(setSignalIndexName, (state, { signalIndexName }) => ({
     ...state,
@@ -77,7 +80,9 @@ export const sourcererReducer = reducerWithInitialState(initialSourcererState)
           ...state.sourcererScopes[id],
           ...sourcererScopes,
           ...(state.sourcererScopes[id].selectedPatterns.length === 0
-            ? { selectedPatterns: state.configIndexPatterns }
+            ? {
+                selectedPatterns: [getSecurityIndexPattern(state.kibanaIndexPatterns)],
+              }
             : {}),
         },
       },

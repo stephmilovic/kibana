@@ -213,8 +213,9 @@ export const useIndexFields = (sourcererScopeName: SourcererScopeName) => {
     () => sourcererSelectors.getIndexNamesSelectedSelector(),
     []
   );
-  const { indexNames, previousIndexNames } = useDeepEqualSelector<{
+  const { isLoading, indexNames, previousIndexNames } = useDeepEqualSelector<{
     indexNames: string[];
+    isLoading: boolean;
     previousIndexNames: string;
   }>((state) => indexNamesSelectedSelector(state, sourcererScopeName));
 
@@ -292,8 +293,8 @@ export const useIndexFields = (sourcererScopeName: SourcererScopeName) => {
   );
 
   useEffect(() => {
-    if (!isEmpty(indexNames) && previousIndexNames !== indexNames.sort().join()) {
+    if (!isEmpty(indexNames) && previousIndexNames !== indexNames.sort().join() && !isLoading) {
       indexFieldsSearch(indexNames);
     }
-  }, [indexNames, indexFieldsSearch, previousIndexNames]);
+  }, [indexNames, indexFieldsSearch, previousIndexNames, isLoading]);
 };

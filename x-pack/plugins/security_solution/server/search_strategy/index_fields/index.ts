@@ -31,29 +31,18 @@ export const securitySolutionIndexFieldsProvider = (): ISearchStrategy<
         new Promise<IndexFieldsStrategyResponse>(async (resolve) => {
           const indexPatternsFetcher = new IndexPatternsFetcher(esClient.asCurrentUser);
           const dedupeIndices = dedupeIndexName(request.indices);
-
-          const responsesIndexFields = await Promise.all(
-            dedupeIndices
-              .map((index) =>
-                indexPatternsFetcher.getFieldsForWildcard({
-                  pattern: index,
-                })
-              )
-              .map((p) => p.catch((e) => false))
-          );
+          const responsesIndexFields = await indexPatternsFetcher.getFieldsForWildcard({
+            pattern: dedupeIndices.join(','),
+          });
           let indexFields: IndexField[] = [];
 
           if (!request.onlyCheckIfIndicesExist) {
-            indexFields = await formatIndexFields(
-              beatFields,
-              responsesIndexFields.filter((rif) => rif !== false) as FieldDescriptor[][],
-              dedupeIndices
-            );
+            indexFields = await formatIndexFields(beatFields, responsesIndexFields);
           }
 
           return resolve({
             indexFields,
-            indicesExist: dedupeIndices.filter((index, i) => responsesIndexFields[i] !== false),
+            indicesExist: dedupeIndices,
             rawResponse: {
               timed_out: false,
               took: -1,
@@ -117,17 +106,10 @@ const missingFields: FieldDescriptor[] = [
  * in size at a time calling this function repeatedly. This function should be as optimized as possible
  * and should avoid any and all creation of new arrays, iterating over the arrays or performing
  * any n^2 operations.
- * @param indexesAlias The index alias
+ * @param beatFields The beat fields
  * @param index The index its self
- * @param indexesAliasIdx The index within the alias
  */
-export const createFieldItem = (
-  beatFields: BeatFields,
-  indexesAlias: string[],
-  index: FieldDescriptor,
-  indexesAliasIdx: number
-): IndexField => {
-  const alias = indexesAlias[indexesAliasIdx];
+export const createFieldItem = (beatFields: BeatFields, index: FieldDescriptor): IndexField => {
   const splitIndexName = index.name.split('.');
   const indexName =
     splitIndexName[splitIndexName.length - 1] === 'text'
@@ -140,7 +122,6 @@ export const createFieldItem = (
   return {
     ...beatIndex,
     ...index,
-    indexes: [alias],
   };
 };
 
@@ -222,21 +203,38 @@ export const formatSecondFields = async (fields: IndexField[]): Promise<IndexFie
   });
 };
 
+export const formatFieldsResponsibly = async (
+  beatFields: BeatFields,
+  responsesIndexFields: FieldDescriptor[]
+): Promise<IndexField[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(
+        [...missingFields, ...responsesIndexFields].reduce(
+          (accumulator: IndexField[], fieldDescriptor: FieldDescriptor) => {
+            const item = createFieldItem(beatFields, fieldDescriptor);
+            return [...accumulator, item];
+          },
+          []
+        )
+      );
+    });
+  });
+};
+
 /**
  * Formats the index fields into a format the UI wants.
  *
  * NOTE: This will have array sizes up to 4.7 megs in size at a time when being called.
  * This function should be as optimized as possible and should avoid any and all creation
  * of new arrays, iterating over the arrays or performing any n^2 operations.
+ * @param beatFields The Beat Fields
  * @param responsesIndexFields  The response index fields to format
- * @param indexesAlias The index alias
  */
 export const formatIndexFields = async (
   beatFields: BeatFields,
-  responsesIndexFields: FieldDescriptor[][],
-  indexesAlias: string[]
+  responsesIndexFields: FieldDescriptor[]
 ): Promise<IndexField[]> => {
-  const fields = await formatFirstFields(beatFields, responsesIndexFields, indexesAlias);
-  const secondFields = await formatSecondFields(fields);
-  return secondFields;
+  const fields = await formatFieldsResponsibly(beatFields, responsesIndexFields);
+  return fields;
 };

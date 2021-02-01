@@ -27,8 +27,6 @@ export interface IndexField {
   category: string;
   /** Example of field's value */
   example?: Maybe<string | number>;
-  /** whether the field's belong to an alias index */
-  indexes: Array<Maybe<string>>;
   /** The name of the field */
   name: string;
   /** The type of the field's values as recognized by Kibana */

@@ -9,7 +9,6 @@ import { sourcererSelectors } from '../../store/sourcerer';
 import { KibanaIndexPatterns, ManageScope, SourcererScopeName } from '../../store/sourcerer/model';
 
 export interface SourcererScopeSelector {
-  configIndexPatterns: string[];
   kibanaIndexPatterns: KibanaIndexPatterns;
   sourcererScope: ManageScope;
 }
@@ -17,16 +16,13 @@ export interface SourcererScopeSelector {
 export const getSourcererScopeSelector = () => {
   const getKibanaIndexPatternsSelector = sourcererSelectors.kibanaIndexPatternsSelector();
   const getScopesSelector = sourcererSelectors.scopesSelector();
-  const getConfigIndexPatternsSelector = sourcererSelectors.configIndexPatternsSelector();
 
   const mapStateToProps = (state: State, scopeId: SourcererScopeName): SourcererScopeSelector => {
     const kibanaIndexPatterns = getKibanaIndexPatternsSelector(state);
     const scope = getScopesSelector(state)[scopeId];
-    const configIndexPatterns = getConfigIndexPatternsSelector(state);
 
     return {
       kibanaIndexPatterns,
-      configIndexPatterns,
       sourcererScope: scope,
     };
   };

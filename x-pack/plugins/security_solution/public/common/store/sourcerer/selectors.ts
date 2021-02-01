@@ -8,15 +8,13 @@ import memoizeOne from 'memoize-one';
 import { createSelector } from 'reselect';
 import { State } from '../types';
 import { SourcererScopeById, ManageScope, KibanaIndexPatterns, SourcererScopeName } from './model';
+import { getSecurityIndexPattern } from './helpers';
 
 export const sourcererKibanaIndexPatternsSelector = ({ sourcerer }: State): KibanaIndexPatterns =>
   sourcerer.kibanaIndexPatterns;
 
 export const sourcererSignalIndexNameSelector = ({ sourcerer }: State): string | null =>
   sourcerer.signalIndexName;
-
-export const sourcererConfigIndexPatternsSelector = ({ sourcerer }: State): string[] =>
-  sourcerer.configIndexPatterns;
 
 export const sourcererScopeIdSelector = (
   { sourcerer }: State,
@@ -39,26 +37,23 @@ export const kibanaIndexPatternsSelector = () =>
 export const signalIndexNameSelector = () =>
   createSelector(sourcererSignalIndexNameSelector, (signalIndexName) => signalIndexName);
 
-export const configIndexPatternsSelector = () =>
-  createSelector(
-    sourcererConfigIndexPatternsSelector,
-    (configIndexPatterns) => configIndexPatterns
-  );
-
 export const getIndexNamesSelectedSelector = () => {
   const getScopeSelector = scopeIdSelector();
-  const getConfigIndexPatternsSelector = configIndexPatternsSelector();
+  const getKibanaIndexPatternsSelector = kibanaIndexPatternsSelector();
 
   const mapStateToProps = (
     state: State,
     scopeId: SourcererScopeName
-  ): { indexNames: string[]; previousIndexNames: string } => {
+  ): { previousIndexNames: string; isLoading: boolean; indexNames: string[] } => {
     const scope = getScopeSelector(state, scopeId);
-    const configIndexPatterns = getConfigIndexPatternsSelector(state);
+    const kibanaIndexPatterns = getKibanaIndexPatternsSelector(state);
     return {
       indexNames:
-        scope.selectedPatterns.length === 0 ? configIndexPatterns : scope.selectedPatterns,
+        scope.selectedPatterns.length === 0
+          ? [getSecurityIndexPattern(kibanaIndexPatterns)]
+          : scope.selectedPatterns,
       previousIndexNames: scope.indexPattern.title,
+      isLoading: scope.loading,
     };
   };
   return mapStateToProps;
@@ -66,12 +61,13 @@ export const getIndexNamesSelectedSelector = () => {
 
 export const getAllExistingIndexNamesSelector = () => {
   const getSignalIndexNameSelector = signalIndexNameSelector();
-  const getConfigIndexPatternsSelector = configIndexPatternsSelector();
+  const getKibanaIndexPatternsSelector = kibanaIndexPatternsSelector();
 
   const mapStateToProps = (state: State): string[] => {
     const signalIndexName = getSignalIndexNameSelector(state);
-    const configIndexPatterns = getConfigIndexPatternsSelector(state);
+    const kibanaIndexPatterns = getKibanaIndexPatternsSelector(state);
 
+    const configIndexPatterns = [getSecurityIndexPattern(kibanaIndexPatterns)];
     return signalIndexName != null
       ? [...configIndexPatterns, signalIndexName]
       : configIndexPatterns;

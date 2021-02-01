@@ -125,7 +125,7 @@ const PickEventTypeComponents: React.FC<PickEventTypeProps> = ({
   const [showAdvanceSettings, setAdvanceSettings] = useState(eventType === 'custom');
   const [filterEventType, setFilterEventType] = useState<TimelineEventsType>(eventType);
   const sourcererScopeSelector = useMemo(getSourcererScopeSelector, []);
-  const { configIndexPatterns, kibanaIndexPatterns, signalIndexName, sourcererScope } = useSelector<
+  const { kibanaIndexPatterns, signalIndexName, sourcererScope } = useSelector<
     State,
     SourcererScopeSelector
   >((state) => sourcererScopeSelector(state, SourcererScopeName.timeline), deepEqual);
@@ -138,17 +138,15 @@ const PickEventTypeComponents: React.FC<PickEventTypeProps> = ({
 
   const indexesPatternOptions = useMemo(
     () =>
-      [
-        ...configIndexPatterns,
-        ...kibanaIndexPatterns.map((kip) => kip.title),
-        signalIndexName,
-      ].reduce<Array<EuiComboBoxOptionOption<string>>>((acc, index) => {
+      [...kibanaIndexPatterns.map((kip) => kip.title), signalIndexName].reduce<
+        Array<EuiComboBoxOptionOption<string>>
+      >((acc, index) => {
         if (index != null && !acc.some((o) => o.label.includes(index))) {
           return [...acc, { label: index, value: index }];
         }
         return acc;
       }, []),
-    [configIndexPatterns, kibanaIndexPatterns, signalIndexName]
+    [kibanaIndexPatterns, signalIndexName]
   );
 
   const renderOption = useCallback(
@@ -169,6 +167,9 @@ const PickEventTypeComponents: React.FC<PickEventTypeProps> = ({
   const onChangeCombo = useCallback(
     (newSelectedOptions: Array<EuiComboBoxOptionOption<string>>) => {
       const localSelectedPatterns = newSelectedOptions.map((nso) => nso.label);
+      const configIndexPatterns = [
+        kibanaIndexPatterns.find((kip) => kip.id === 'security-solution')!.title,
+      ];
       if (
         localSelectedPatterns.sort().join() ===
         [...configIndexPatterns, signalIndexName].sort().join()
@@ -184,12 +185,15 @@ const PickEventTypeComponents: React.FC<PickEventTypeProps> = ({
 
       setSelectedOptions(newSelectedOptions);
     },
-    [configIndexPatterns, signalIndexName]
+    [kibanaIndexPatterns, signalIndexName]
   );
 
   const onChangeFilter = useCallback(
     (filter) => {
       setFilterEventType(filter);
+      const configIndexPatterns = [
+        kibanaIndexPatterns.find((kip) => kip.id === 'security-solution')!.title,
+      ];
       if (filter === 'all') {
         setSelectedOptions(
           [...configIndexPatterns, signalIndexName ?? ''].map((indexSelected) => ({
@@ -220,7 +224,7 @@ const PickEventTypeComponents: React.FC<PickEventTypeProps> = ({
         );
       }
     },
-    [configIndexPatterns, kibanaIndexPatterns, signalIndexName]
+    [kibanaIndexPatterns, signalIndexName]
   );
 
   const togglePopover = useCallback(

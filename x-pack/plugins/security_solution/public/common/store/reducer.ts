@@ -33,11 +33,9 @@ export const createInitialState = (
   pluginsInitState: SecuritySubPlugins['store']['initialState'],
   {
     kibanaIndexPatterns,
-    configIndexPatterns,
     signalIndexName,
   }: {
     kibanaIndexPatterns: KibanaIndexPatterns;
-    configIndexPatterns: string[];
     signalIndexName: string | null;
   }
 ): PreloadedState<State> => {
@@ -52,11 +50,10 @@ export const createInitialState = (
         ...sourcererModel.initialSourcererState.sourcererScopes,
         default: {
           ...sourcererModel.initialSourcererState.sourcererScopes.default,
-          indicesExist: configIndexPatterns.length > 0,
+          indicesExist: kibanaIndexPatterns.length > 0,
         },
       },
       kibanaIndexPatterns,
-      configIndexPatterns,
       signalIndexName,
     },
   };
