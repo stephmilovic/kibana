@@ -1,8 +1,9 @@
 /*
  * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
  * or more contributor license agreements. Licensed under the Elastic License
- * 2.0; you may not use this file except in compliance with the Elastic License
- * 2.0.
+ * 2.0 and the Server Side Public License, v 1; you may not use this file except
+ * in compliance with, at your election, the Elastic License 2.0 or the Server
+ * Side Public License, v 1.
  */
 
 import {
@@ -22,26 +23,20 @@ import {
   EuiDatePicker,
   EuiDatePickerRange,
 } from '@elastic/eui';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import moment, { Moment } from 'moment';
 
-
-import { LensMarkDownRenderer } from './processor';
+import { getRenderer } from './processor';
 import { ID } from './constants';
 import * as i18n from './translations';
-import { SavedObjectsFindOptions, SavedObjectsFindResponse } from '../types';
+import { LensPluginArgs } from './types';
 
 const ModalContainer = styled.div`
   width: ${({ theme }) => theme.eui.euiBreakpoints.m};
 `;
 
-// somehow need to pass TypedLensByValueInput['attributes'] as T
-interface PluginArgs {
-  soClient: { find: <T>(options: SavedObjectsFindOptions) => Promise<SavedObjectsFindResponse<T>> };
-}
-
-interface LensEditorProps extends PluginArgs {
+interface LensEditorProps extends LensPluginArgs {
   endDate?: Moment | null;
   id?: string | null;
   onClosePopover: () => void;
@@ -53,6 +48,7 @@ interface LensEditorProps extends PluginArgs {
 const LensEditorComponent: React.FC<LensEditorProps> = ({
   endDate: defaultEndDate,
   id,
+  lensComponent,
   onClosePopover,
   onInsert,
   soClient,
@@ -115,6 +111,8 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
     }
   }, [lensSavedObjectId, selectedOptions, onInsert, startDate, endDate]);
 
+  const LensMarkDownRenderer = useMemo(() => getRenderer(lensComponent), [lensComponent]);
+
   return (
     <ModalContainer>
       <EuiModalHeader>
@@ -166,6 +164,7 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
         </EuiFlexGroup>
         <EuiSpacer />
         <LensMarkDownRenderer
+          lensComponent={lensComponent}
           id={lensSavedObjectId}
           startDate={startDate?.format()}
           endDate={endDate?.format()}
@@ -184,7 +183,10 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
 
 const LensEditor = React.memo(LensEditorComponent);
 
-export const plugin: EuiMarkdownEditorUiPlugin = {
+export const getPlugin = ({
+  lensComponent,
+  soClient,
+}: LensPluginArgs): EuiMarkdownEditorUiPlugin => ({
   name: ID,
   button: {
     label: i18n.INSERT_LENS,
@@ -198,13 +200,15 @@ export const plugin: EuiMarkdownEditorUiPlugin = {
   editor: function editor({ node, onSave, onCancel }) {
     return (
       <LensEditor
-        id={node?.id}
-        startDate={node?.startDate}
         endDate={node?.endDate}
-        title={node?.title}
+        id={node?.id}
+        lensComponent={lensComponent}
         onClosePopover={onCancel}
         onInsert={onSave}
+        soClient={soClient}
+        startDate={node?.startDate}
+        title={node?.title}
       />
     );
   },
-};
+});

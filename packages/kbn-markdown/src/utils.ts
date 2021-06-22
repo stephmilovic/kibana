@@ -6,6 +6,10 @@
  * Side Public License, v 1.
  */
 
-export const ID = 'lens';
-export const PREFIX = `[`;
-export const LENS_VISUALIZATION_HEIGHT = 200;
+import * as styledComponents from 'styled-components';
+import { ThemedStyledComponentsModule } from 'styled-components';
+import { EuiTheme } from './types';
+
+export const {
+  createGlobalStyle,
+} = (styledComponents as unknown) as ThemedStyledComponentsModule<EuiTheme>;

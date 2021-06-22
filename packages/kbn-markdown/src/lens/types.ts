@@ -1,0 +1,37 @@
+/*
+ * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+ * or more contributor license agreements. Licensed under the Elastic License
+ * 2.0 and the Server Side Public License, v 1; you may not use this file except
+ * in compliance with, at your election, the Elastic License 2.0 or the Server
+ * Side Public License, v 1.
+ */
+
+import React from 'react';
+import { PluginArgs } from '../types';
+
+interface LensComponentProps {
+  id: string;
+  onBrushEnd?: (data: any) => void;
+  savedObjectId: string;
+  style: {
+    height: number;
+  };
+  timeRange: {
+    from: string;
+    to: string;
+    mode: string;
+  };
+}
+
+export interface LensPluginArgs extends PluginArgs {
+  lensComponent: React.FunctionComponent<LensComponentProps>;
+}
+
+export interface LensMarkDownRendererProps {
+  endDate?: string | null;
+  id?: string | null;
+  lensComponent: LensPluginArgs['lensComponent'];
+  onBrushEnd?: (data: any) => void;
+  startDate?: string | null;
+  title?: string | null;
+}

@@ -6,6 +6,14 @@
  * Side Public License, v 1.
  */
 
-export const ID = 'lens';
-export const PREFIX = `[`;
-export const LENS_VISUALIZATION_HEIGHT = 200;
+module.exports = {
+  env: {
+    web: {
+      presets: ['@kbn/babel-preset/webpack_preset'],
+    },
+    node: {
+      presets: ['@kbn/babel-preset/node_preset'],
+    },
+  },
+  ignore: ['**/*.test.ts', '**/*.test.tsx'],
+};
