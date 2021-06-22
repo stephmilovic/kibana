@@ -6,11 +6,13 @@
  * Side Public License, v 1.
  */
 
+import { find, omit } from 'lodash';
 import {
   EuiComboBox,
   EuiModalBody,
   EuiModalHeader,
   EuiModalHeaderTitle,
+  EuiMarkdownContext,
   EuiMarkdownEditorUiPlugin,
   EuiCodeBlock,
   EuiSpacer,
@@ -23,8 +25,8 @@ import {
   EuiDatePicker,
   EuiDatePickerRange,
 } from '@elastic/eui';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { i18n } from '@kbn/i18n';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import moment, { Moment } from 'moment';
 
@@ -55,7 +57,9 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
   startDate: defaultStartDate,
   title,
 }) => {
+  const markdownContext = useContext(EuiMarkdownContext);
   const [lensOptions, setLensOptions] = useState<Array<{ label: string; value: string }>>([]);
+  const [lensSavedObjects, setLensSavedObjects] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState<Array<{ label: string; value: string }>>(
     id && title ? [{ value: id, label: title }] : []
   );
@@ -65,6 +69,15 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
   );
   const [endDate, setEndDate] = useState<Moment | null>(
     defaultEndDate ? moment(defaultEndDate) : moment()
+  );
+
+  useEffect(
+    () =>
+      console.error(
+        'textarea',
+        document.querySelector<HTMLElement>('textarea.euiMarkdownEditorTextArea').value
+      ),
+    []
   );
 
   useEffect(() => {
@@ -79,6 +92,7 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
       }));
 
       setLensOptions(options);
+      setLensSavedObjects(savedObjects.map((so) => omit(so, ['client'])));
     };
     fetchLensSavedObjects();
   }, [soClient]);
@@ -97,19 +111,22 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
 
   const handleAdd = useCallback(() => {
     if (lensSavedObjectId && selectedOptions[0]) {
+      console.error(find(lensSavedObjects, ['id', lensSavedObjectId]));
       onInsert(
         `!{lens${JSON.stringify({
-          id: lensSavedObjectId,
           startDate,
           endDate,
           title: selectedOptions[0].label,
+          attributes: find(lensSavedObjects, ['id', lensSavedObjectId]).attributes,
         })}}`,
         {
           block: true,
         }
       );
     }
-  }, [lensSavedObjectId, selectedOptions, onInsert, startDate, endDate]);
+  }, [lensSavedObjectId, selectedOptions, lensSavedObjects, onInsert, startDate, endDate]);
+
+  console.error('markdownContext', markdownContext);
 
   const LensMarkDownRenderer = useMemo(() => getRenderer(lensComponent), [lensComponent]);
   const myTitle = useMemo(
@@ -168,6 +185,7 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
         </EuiFlexGroup>
         <EuiSpacer />
         <LensMarkDownRenderer
+          attributes={find(lensSavedObjects, ['id', lensSavedObjectId])}
           endDate={endDate != null ? endDate.format() : moment().format()}
           id={lensSavedObjectId}
           lensComponent={lensComponent}
@@ -191,40 +209,39 @@ const LensEditor = React.memo(LensEditorComponent);
 export const getPlugin = ({
   lensComponent,
   soClient,
-}: LensMarkdownArgs): EuiMarkdownEditorUiPlugin => {
-  return {
-    name: ID,
-    button: {
-      label: i18n.translate('packages.markdown.lens.insertLensButtonLabel', {
-        defaultMessage: 'Insert lens link',
-      }),
-      iconType: 'lensApp',
-    },
-    helpText: (
-      <EuiCodeBlock language="md" paddingSize="s" fontSize="l">
-        {'[title](url)'}
-      </EuiCodeBlock>
-    ),
-    editor: function editor({ node, onSave, onCancel }) {
-      const theNode = {
-        endDate: null,
-        id: null,
-        startDate: null,
-        title: null,
-        ...(node != null ? node : {}),
-      };
-      return (
-        <LensEditor
-          endDate={theNode.endDate}
-          id={theNode.id}
-          lensComponent={lensComponent}
-          onClosePopover={onCancel}
-          onInsert={onSave}
-          soClient={soClient}
-          startDate={theNode.startDate}
-          title={theNode.title}
-        />
-      );
-    },
-  };
-};
+}: LensMarkdownArgs): EuiMarkdownEditorUiPlugin => ({
+  name: ID,
+  button: {
+    label: i18n.translate('packages.markdown.lens.insertLensButtonLabel', {
+      defaultMessage: 'Insert lens link',
+    }),
+    iconType: 'lensApp',
+    className: 'markdownLensPlugin',
+  },
+  helpText: (
+    <EuiCodeBlock language="md" paddingSize="s" fontSize="l">
+      {'[title](url)'}
+    </EuiCodeBlock>
+  ),
+  editor: function editor({ node, onSave, onCancel }) {
+    const theNode = {
+      endDate: null,
+      id: null,
+      startDate: null,
+      title: null,
+      ...(node != null ? node : {}),
+    };
+    return (
+      <LensEditor
+        endDate={theNode.endDate}
+        id={theNode.id}
+        lensComponent={lensComponent}
+        onClosePopover={onCancel}
+        onInsert={onSave}
+        soClient={soClient}
+        startDate={theNode.startDate}
+        title={theNode.title}
+      />
+    );
+  },
+});

@@ -6,4 +6,6 @@
  * Side Public License, v 1.
  */
 
-require('../tasks/build/cli');
+import React from 'react';
+
+export const LensContext = React.createContext<string | null>(null);

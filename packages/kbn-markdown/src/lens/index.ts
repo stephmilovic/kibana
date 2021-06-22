@@ -11,8 +11,10 @@ import { LensParser } from './parser';
 import { getRenderer } from './processor';
 import { LensMarkdownArgs, LensMarkDownRendererProps } from './types';
 import { MarkdownPlugin } from '../common/types';
+import { LensContext } from './context';
 export type MarkdownArgs = LensMarkdownArgs;
 export const init = (a: LensMarkdownArgs): MarkdownPlugin<LensMarkDownRendererProps> => ({
+  context: LensContext,
   plugin: getPlugin(a),
   parser: LensParser,
   renderer: getRenderer(a.lensComponent),

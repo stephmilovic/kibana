@@ -6,4 +6,10 @@
  * Side Public License, v 1.
  */
 
-export declare function getType(node: any): string;
+export enum ElasticRequestState {
+  Loading,
+  NotFound,
+  Found,
+  Error,
+  NotFoundIndexPattern,
+}

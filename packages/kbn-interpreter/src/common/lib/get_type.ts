@@ -6,7 +6,12 @@
  * Side Public License, v 1.
  */
 
-export { Registry } from './lib/registry';
+export function getType(node: any): string {
+  if (node == null) return 'null';
+  if (typeof node === 'object') {
+    if (!node.type) throw new Error('Objects must have a type property');
+    return node.type;
+  }
 
-export { fromExpression, toExpression, Ast, ExpressionFunctionAST } from './lib/ast';
-export { getType } from './lib/get_type';
+  return typeof node;
+}
