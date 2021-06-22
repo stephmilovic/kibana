@@ -5,9 +5,9 @@
  * 2.0.
  */
 
-import { useContext } from 'react';
-import { CasesLensIntegrationContext } from '.';
+import React, { useContext } from 'react';
+import { CasesLensIntegration } from './';
 
-export const useLensContext = () => {
-  return useContext(CasesLensIntegrationContext);
+export const useLensContext = (context: React.Context<CasesLensIntegration | null>) => {
+  return useContext(context);
 };

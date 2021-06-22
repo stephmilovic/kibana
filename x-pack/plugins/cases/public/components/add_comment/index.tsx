@@ -35,17 +35,26 @@ export interface AddCommentRefObject {
 
 export interface AddCommentProps {
   caseId: string;
-  userCanCrud?: boolean;
-  onCommentSaving?: () => void;
+  disabled?: boolean;
   onCommentPosted: (newCase: Case) => void;
+  onCommentSaving?: () => void;
   showLoading?: boolean;
   subCaseId?: string;
+  userCanCrud?: boolean;
 }
 
 export const AddComment = React.memo(
   forwardRef<AddCommentRefObject, AddCommentProps>(
     (
-      { caseId, userCanCrud, onCommentPosted, onCommentSaving, showLoading = true, subCaseId },
+      {
+        caseId,
+        disabled,
+        onCommentPosted,
+        onCommentSaving,
+        showLoading = true,
+        subCaseId,
+        userCanCrud,
+      },
       ref
     ) => {
       const editorRef = useRef();

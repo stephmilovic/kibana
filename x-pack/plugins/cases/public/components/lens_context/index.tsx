@@ -18,6 +18,7 @@ interface LensProcessingPluginRendererProps {
 }
 
 export interface CasesLensIntegration {
+  editor_context: React.Context<CasesLensIntegration | null>;
   editor_plugins: {
     parsingPlugin: Plugin;
     processingPluginRenderer: React.FC<
@@ -28,16 +29,16 @@ export interface CasesLensIntegration {
 }
 
 // This context is available to all children of the stateful_event component where the provider is currently set
-export const CasesLensIntegrationContext = React.createContext<CasesLensIntegration | null>(null);
+// export const CasesLensIntegrationContext = React.createContext<CasesLensIntegration | null>(null);
 
 export const CasesLensIntegrationProvider: React.FC<{
   lensIntegration?: CasesLensIntegration;
 }> = ({ children, lensIntegration }) => {
   const [activeLensIntegration] = useState(lensIntegration ?? null);
-
-  return (
+  const CasesLensIntegrationContext = lensIntegration?.editor_context;
+  return CasesLensIntegrationContext != null ? (
     <CasesLensIntegrationContext.Provider value={activeLensIntegration}>
       {children}
     </CasesLensIntegrationContext.Provider>
-  );
+  ) : null;
 };

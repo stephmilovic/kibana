@@ -27,7 +27,12 @@ export interface LensMarkdownArgs extends PluginArgs {
   lensComponent: React.ComponentType<LensComponentProps>;
 }
 
+export interface LensSavedObject {
+  title: string;
+}
+
 export interface LensMarkDownRendererProps {
+  attributes?: LensSavedObject;
   endDate?: string | null;
   id?: string | null;
   lensComponent: LensMarkdownArgs['lensComponent'];

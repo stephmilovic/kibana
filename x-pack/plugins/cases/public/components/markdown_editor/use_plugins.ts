@@ -11,13 +11,23 @@ import {
   getDefaultEuiMarkdownUiPlugins,
 } from '@elastic/eui';
 import { useMemo } from 'react';
+import { lensMarkdown } from '@kbn/markdown';
 import { useTimelineContext } from '../timeline_context/use_timeline_context';
 import { TemporaryProcessingPluginsType } from './types';
 import { useLensContext } from '../lens_context/use_lens_context';
-
+import { useKibana } from '../../common/lib/kibana';
 export const usePlugins = () => {
+  const {
+    savedObjects: { client },
+    lens,
+  } = useKibana().services;
+  const lensMarkdownArgs: typeof lensMarkdown.MarkdownArgs = {
+    lensComponent: lens?.EmbeddableComponent!,
+    soClient: client,
+  };
+  const lensMarkdownPlugin = lensMarkdown.init(lensMarkdownArgs);
   const timelinePlugins = useTimelineContext()?.editor_plugins;
-  const lensPlugins = useLensContext()?.editor_plugins;
+  const lensPlugins = useLensContext(lensMarkdownPlugin.context)?.editor_plugins;
 
   return useMemo(() => {
     const uiPlugins = getDefaultEuiMarkdownUiPlugins();

@@ -25,14 +25,14 @@ import {
   EuiDatePicker,
   EuiDatePickerRange,
 } from '@elastic/eui';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { i18n } from '@kbn/i18n';
 import styled from 'styled-components';
 import moment, { Moment } from 'moment';
 
 import { getRenderer } from './processor';
 import { ID } from './constants';
-import { LensMarkdownArgs } from './types';
+import { LensMarkdownArgs, LensSavedObject } from './types';
 
 const ModalContainer = styled.div`
   width: 768px;
@@ -59,7 +59,7 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
 }) => {
   const markdownContext = useContext(EuiMarkdownContext);
   const [lensOptions, setLensOptions] = useState<Array<{ label: string; value: string }>>([]);
-  const [lensSavedObjects, setLensSavedObjects] = useState([]);
+  const [lensSavedObjects, setLensSavedObjects] = useState<LensSavedObject[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<Array<{ label: string; value: string }>>(
     id && title ? [{ value: id, label: title }] : []
   );
@@ -73,16 +73,13 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
 
   useEffect(
     () =>
-      console.error(
-        'textarea',
-        document.querySelector<HTMLElement>('textarea.euiMarkdownEditorTextArea').value
-      ),
+      console.error('textarea Patryk your log caused type errors so heres a super unhelpful log'),
     []
   );
 
   useEffect(() => {
     const fetchLensSavedObjects = async () => {
-      const { savedObjects } = await soClient.find<{ title: string }>({
+      const { savedObjects } = await soClient.find<LensSavedObject>({
         type: 'lens',
         perPage: 1000,
       });
@@ -112,12 +109,13 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
   const handleAdd = useCallback(() => {
     if (lensSavedObjectId && selectedOptions[0]) {
       console.error(find(lensSavedObjects, ['id', lensSavedObjectId]));
+      const so = find(lensSavedObjects, ['id', lensSavedObjectId]);
       onInsert(
         `!{lens${JSON.stringify({
           startDate,
           endDate,
           title: selectedOptions[0].label,
-          attributes: find(lensSavedObjects, ['id', lensSavedObjectId]).attributes,
+          attributes: so != null ? so.attributes : {},
         })}}`,
         {
           block: true,
@@ -216,7 +214,6 @@ export const getPlugin = ({
       defaultMessage: 'Insert lens link',
     }),
     iconType: 'lensApp',
-    className: 'markdownLensPlugin',
   },
   helpText: (
     <EuiCodeBlock language="md" paddingSize="s" fontSize="l">

@@ -35,7 +35,7 @@ export interface PluginArgs {
 }
 
 export interface MarkdownPlugin<T> {
-  context: Context<string | null>;
+  context: React.Context<string | null>;
   plugin: EuiMarkdownEditorUiPlugin;
   parser: Plugin;
   renderer: React.FC<T>;
