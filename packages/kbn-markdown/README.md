@@ -13,16 +13,15 @@ export const MyMarkdown = () => {
   const uiPlugins = getDefaultEuiMarkdownUiPlugins();
   const parsingPlugins = getDefaultEuiMarkdownParsingPlugins();
   const processingPlugins = getDefaultEuiMarkdownProcessingPlugins() as TemporaryProcessingPluginsType;
-  const lensMarkdownPlugin = lensMarkdownPlugin.init({
+  const { parser, plugin, renderer } = lensMarkdownPlugin.init({
     lensComponent: LensComponent,
     soClient: savedObjects
   })
-  uiPlugins.push(lensMarkdownPlugin.getPlugin(savedObjects));
-
-  parsingPlugins.push(lensMarkdownPlugin.parser);
+  parsingPlugins.push(parser);
+  uiPlugins.push(plugin);
 
   // This line of code is TS-compatible and it will break if [1][1] change in the future.
-  processingPlugins[1][1].components.lens = lensMarkdownPlugin.renderer;
+  processingPlugins[1][1].components.lens = renderer;
   
 
   return {
