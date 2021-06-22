@@ -9,39 +9,40 @@
 import uuid from 'uuid';
 import React from 'react';
 import { EuiText, EuiSpacer } from '@elastic/eui';
-import styled from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
 import { LENS_VISUALIZATION_HEIGHT } from './constants';
-import { EuiTheme } from '../common/types';
-import { createGlobalStyle } from '../common/utils';
-import { LensPluginArgs, LensMarkDownRendererProps } from './types';
+import { LensMarkdownArgs, LensMarkDownRendererProps } from './types';
 
 const Container = styled.div`
   min-height: ${LENS_VISUALIZATION_HEIGHT}px;
 `;
+
 // when displaying chart in modal the tooltip is render under the modal
-const LensChartTooltipFix = createGlobalStyle<EuiTheme>`
+const LensChartTooltipFix = createGlobalStyle`
   div.euiOverlayMask.euiOverlayMask--aboveHeader ~ [id^='echTooltipPortal'] {
-    z-index: ${({ theme }) => theme.eui.euiZLevel7} !important;
+    z-index: 7000 !important;
   }
 `;
 
 export const getRenderer = (
-  LensComponent: LensPluginArgs['lensComponent']
+  LensComponent: LensMarkdownArgs['lensComponent']
 ): React.FC<LensMarkDownRendererProps> =>
   React.memo(({ endDate, id, onBrushEnd, startDate, title }) => (
     <Container>
       {id ? (
         <>
-          <EuiText>
-            <h5>{title}</h5>
-          </EuiText>
+          {title != null && (
+            <EuiText>
+              <h5>{`${title} this is mine`}</h5>
+            </EuiText>
+          )}
           <EuiSpacer size="xs" />
           <LensComponent
             id={`${id}-${uuid.v4()}`}
             style={{ height: LENS_VISUALIZATION_HEIGHT }}
             timeRange={{
-              from: startDate ?? 'now-5d',
-              to: endDate ?? 'now',
+              from: startDate || 'now-5d',
+              to: endDate || 'now',
               mode: startDate ? 'absolute' : 'relative',
             }}
             savedObjectId={id}

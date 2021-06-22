@@ -6,4 +6,4 @@
  * Side Public License, v 1.
  */
 
-export * as lensMarkdownPlugin from './lens';
+export * as lensMarkdown from './lens';

@@ -2688,6 +2688,10 @@
   version "0.0.0"
   uid ""
 
+"@kbn/markdown@link:bazel-bin/packages/kbn-markdown":
+  version "0.0.0"
+  uid ""
+
 "@kbn/monaco@link:bazel-bin/packages/kbn-monaco":
   version "0.0.0"
   uid ""

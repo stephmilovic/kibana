@@ -13,7 +13,7 @@ export const MyMarkdown = () => {
   const uiPlugins = getDefaultEuiMarkdownUiPlugins();
   const parsingPlugins = getDefaultEuiMarkdownParsingPlugins();
   const processingPlugins = getDefaultEuiMarkdownProcessingPlugins() as TemporaryProcessingPluginsType;
-  const { parser, plugin, renderer } = lensMarkdownPlugin.init({
+  const { parser, plugin, renderer } = lensMarkdown.init({
     lensComponent: LensComponent,
     soClient: savedObjects
   })

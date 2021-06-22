@@ -49,7 +49,7 @@ const LensMarkDownRendererComponent: React.FC<LensMarkDownRendererProps> = ({
       {id ? (
         <>
           <EuiText>
-            <h5>{title}</h5>
+            <h5>{`${title} this is patryks`}</h5>
           </EuiText>
           <EuiSpacer size="xs" />
           <LensComponent

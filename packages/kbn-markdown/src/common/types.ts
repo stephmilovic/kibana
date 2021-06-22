@@ -7,8 +7,6 @@
  */
 
 import { EuiMarkdownEditorUiPlugin } from '@elastic/eui';
-import euiDarkVars from '@elastic/eui/dist/eui_theme_dark.json';
-import euiLightVars from '@elastic/eui/dist/eui_theme_light.json';
 import { Plugin } from 'unified';
 import React from 'react';
 
@@ -34,11 +32,6 @@ interface SoClient {
 // somehow need to pass TypedLensByValueInput['attributes'] as T
 export interface PluginArgs {
   soClient: SoClient;
-}
-
-export interface EuiTheme {
-  eui: typeof euiLightVars | typeof euiDarkVars;
-  darkMode: boolean;
 }
 
 export interface MarkdownPlugin<T> {

@@ -30,13 +30,13 @@ import moment, { Moment } from 'moment';
 
 import { getRenderer } from './processor';
 import { ID } from './constants';
-import { LensPluginArgs } from './types';
+import { LensMarkdownArgs } from './types';
 
 const ModalContainer = styled.div`
-  width: ${({ theme }) => theme.eui.euiBreakpoints.m};
+  width: 768px;
 `;
 
-interface LensEditorProps extends LensPluginArgs {
+interface LensEditorProps extends LensMarkdownArgs {
   endDate?: Moment | null;
   id?: string | null;
   onClosePopover: () => void;
@@ -59,7 +59,7 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
   const [selectedOptions, setSelectedOptions] = useState<Array<{ label: string; value: string }>>(
     id && title ? [{ value: id, label: title }] : []
   );
-  const [lensSavedObjectId, setLensSavedObjectId] = useState<string | null>(id ?? null);
+  const [lensSavedObjectId, setLensSavedObjectId] = useState<string | null>(id || null);
   const [startDate, setStartDate] = useState<Moment | null>(
     defaultStartDate ? moment(defaultStartDate) : moment().subtract(7, 'd')
   );
@@ -89,7 +89,7 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
   }, []);
 
   const handleLensDateChange = useCallback((data) => {
-    if (data.range?.length === 2) {
+    if (data.range != null && data.range.length === 2) {
       setStartDate(moment(data.range[0]));
       setEndDate(moment(data.range[1]));
     }
@@ -112,6 +112,10 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
   }, [lensSavedObjectId, selectedOptions, onInsert, startDate, endDate]);
 
   const LensMarkDownRenderer = useMemo(() => getRenderer(lensComponent), [lensComponent]);
+  const myTitle = useMemo(
+    () => (lensSavedObjectId && selectedOptions[0] ? selectedOptions[0].label : null),
+    [lensSavedObjectId, selectedOptions]
+  );
 
   return (
     <ModalContainer>
@@ -164,11 +168,12 @@ const LensEditorComponent: React.FC<LensEditorProps> = ({
         </EuiFlexGroup>
         <EuiSpacer />
         <LensMarkDownRenderer
-          lensComponent={lensComponent}
+          endDate={endDate != null ? endDate.format() : moment().format()}
           id={lensSavedObjectId}
-          startDate={startDate?.format()}
-          endDate={endDate?.format()}
+          lensComponent={lensComponent}
           onBrushEnd={handleLensDateChange}
+          startDate={startDate != null ? startDate.format() : moment().format()}
+          title={myTitle}
         />
       </EuiModalBody>
       <EuiModalFooter>
@@ -186,31 +191,40 @@ const LensEditor = React.memo(LensEditorComponent);
 export const getPlugin = ({
   lensComponent,
   soClient,
-}: LensPluginArgs): EuiMarkdownEditorUiPlugin => ({
-  name: ID,
-  button: {
-    label: i18n.translate('packages.markdown.lens.insertLensButtonLabel', {
-      defaultMessage: 'Insert lens link',
-    }),
-    iconType: 'lensApp',
-  },
-  helpText: (
-    <EuiCodeBlock language="md" paddingSize="s" fontSize="l">
-      {'[title](url)'}
-    </EuiCodeBlock>
-  ),
-  editor: function editor({ node, onSave, onCancel }) {
-    return (
-      <LensEditor
-        endDate={node?.endDate}
-        id={node?.id}
-        lensComponent={lensComponent}
-        onClosePopover={onCancel}
-        onInsert={onSave}
-        soClient={soClient}
-        startDate={node?.startDate}
-        title={node?.title}
-      />
-    );
-  },
-});
+}: LensMarkdownArgs): EuiMarkdownEditorUiPlugin => {
+  return {
+    name: ID,
+    button: {
+      label: i18n.translate('packages.markdown.lens.insertLensButtonLabel', {
+        defaultMessage: 'Insert lens link',
+      }),
+      iconType: 'lensApp',
+    },
+    helpText: (
+      <EuiCodeBlock language="md" paddingSize="s" fontSize="l">
+        {'[title](url)'}
+      </EuiCodeBlock>
+    ),
+    editor: function editor({ node, onSave, onCancel }) {
+      const theNode = {
+        endDate: null,
+        id: null,
+        startDate: null,
+        title: null,
+        ...(node != null ? node : {}),
+      };
+      return (
+        <LensEditor
+          endDate={theNode.endDate}
+          id={theNode.id}
+          lensComponent={lensComponent}
+          onClosePopover={onCancel}
+          onInsert={onSave}
+          soClient={soClient}
+          startDate={theNode.startDate}
+          title={theNode.title}
+        />
+      );
+    },
+  };
+};

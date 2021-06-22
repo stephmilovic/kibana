@@ -23,14 +23,14 @@ interface LensComponentProps {
   };
 }
 
-export interface LensPluginArgs extends PluginArgs {
-  lensComponent: React.FunctionComponent<LensComponentProps>;
+export interface LensMarkdownArgs extends PluginArgs {
+  lensComponent: React.ComponentType<LensComponentProps>;
 }
 
 export interface LensMarkDownRendererProps {
   endDate?: string | null;
   id?: string | null;
-  lensComponent: LensPluginArgs['lensComponent'];
+  lensComponent: LensMarkdownArgs['lensComponent'];
   onBrushEnd?: (data: any) => void;
   startDate?: string | null;
   title?: string | null;

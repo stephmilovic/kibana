@@ -137,6 +137,7 @@
     "@kbn/io-ts-utils": "link:bazel-bin/packages/kbn-io-ts-utils",
     "@kbn/legacy-logging": "link:bazel-bin/packages/kbn-legacy-logging",
     "@kbn/logging": "link:bazel-bin/packages/kbn-logging",
+    "@kbn/markdown": "link:bazel-bin/packages/kbn-markdown",
     "@kbn/monaco": "link:bazel-bin/packages/kbn-monaco",
     "@kbn/rule-data-utils": "link:bazel-bin/packages/kbn-rule-data-utils",
     "@kbn/securitysolution-list-constants": "link:bazel-bin/packages/kbn-securitysolution-list-constants",

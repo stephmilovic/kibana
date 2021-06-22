@@ -1,9 +1,6 @@
 {
   "browser": "./target_web/browser.js",
   "description": "Kibana flavored markdown plugins to use with the EuiMarkdown component within Kibana.",
-  "dependencies": {
-    "@kbn/test": "link:../kbn-test"
-  },
   "license": "SSPL-1.0 OR Elastic License 2.0",
   "main": "./target_node/index.js",
   "name": "@kbn/markdown",

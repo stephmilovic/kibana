@@ -27,6 +27,7 @@ filegroup(
       "//packages/kbn-legacy-logging:build",
       "//packages/kbn-logging:build",
       "//packages/kbn-mapbox-gl:build",
+      "//packages/kbn-markdown:build",
       "//packages/kbn-monaco:build",
       "//packages/kbn-plugin-generator:build",
       "//packages/kbn-rule-data-utils:build",

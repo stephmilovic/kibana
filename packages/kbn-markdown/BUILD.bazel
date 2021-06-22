@@ -35,12 +35,15 @@ SRC_DEPS = [
   "//packages/kbn-i18n",
   "@npm//@babel/core",
   "@npm//babel-loader",
+  "@npm//@elastic/eui",
   "@npm//enzyme",
   "@npm//jest",
   "@npm//lodash",
   "@npm//react",
-  "@npm//react-beautiful-dnd",
+  "@npm//styled-components",
   "@npm//tslib",
+  "@npm//unified",
+  "@npm//uuid",
 ]
 
 TYPES_DEPS = [
@@ -50,7 +53,8 @@ TYPES_DEPS = [
   "@npm//@types/lodash",
   "@npm//@types/node",
   "@npm//@types/react",
-  "@npm//@types/react-beautiful-dnd",
+  "@npm//@types/styled-components",
+  "@npm//@types/uuid"
 ]
 
 DEPS = SRC_DEPS + TYPES_DEPS

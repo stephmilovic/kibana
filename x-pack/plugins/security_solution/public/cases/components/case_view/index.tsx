@@ -9,7 +9,7 @@ import React, { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { SearchResponse } from 'elasticsearch';
 import { isEmpty } from 'lodash';
-
+import { lensMarkdown } from '@kbn/markdown';
 import {
   getCaseDetailsUrl,
   getCaseDetailsUrlWithCommentId,
@@ -38,7 +38,6 @@ import { SEND_ALERT_TO_TIMELINE } from './translations';
 import { useInsertTimeline } from '../use_insert_timeline';
 import { SpyRoute } from '../../../common/utils/route/spy_routes';
 import * as timelineMarkdownPlugin from '../../../common/components/markdown_editor/plugins/timeline';
-import * as lensMarkdownPlugin from '../../../common/components/markdown_editor/plugins/lens';
 
 interface Props {
   caseId: string;
@@ -116,6 +115,15 @@ export const CaseView = React.memo(({ caseId, subCaseId, userCanCrud }: Props) =
     caseTitle: undefined,
   });
 
+  const {
+    savedObjects: { client },
+    lens,
+  } = useKibana().services;
+  const lensMarkdownArgs: typeof lensMarkdown.MarkdownArgs = {
+    lensComponent: lens?.EmbeddableComponent!,
+    soClient: client,
+  };
+  const lensMarkdownPlugin = lensMarkdown.init(lensMarkdownArgs);
   const onCaseDataSuccess = useCallback(
     (data: Case) => {
       if (spyState.caseTitle === undefined) {
