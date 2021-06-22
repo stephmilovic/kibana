@@ -11,8 +11,8 @@ import React from 'react';
 import { EuiText, EuiSpacer } from '@elastic/eui';
 import styled from 'styled-components';
 import { LENS_VISUALIZATION_HEIGHT } from './constants';
-import { EuiTheme } from '../types';
-import { createGlobalStyle } from '../utils';
+import { EuiTheme } from '../common/types';
+import { createGlobalStyle } from '../common/utils';
 import { LensPluginArgs, LensMarkDownRendererProps } from './types';
 
 const Container = styled.div`

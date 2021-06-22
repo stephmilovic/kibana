@@ -23,13 +23,13 @@ import {
   EuiDatePicker,
   EuiDatePickerRange,
 } from '@elastic/eui';
+import { i18n } from '@kbn/i18n';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import moment, { Moment } from 'moment';
 
 import { getRenderer } from './processor';
 import { ID } from './constants';
-import * as i18n from './translations';
 import { LensPluginArgs } from './types';
 
 const ModalContainer = styled.div`
@@ -189,7 +189,9 @@ export const getPlugin = ({
 }: LensPluginArgs): EuiMarkdownEditorUiPlugin => ({
   name: ID,
   button: {
-    label: i18n.INSERT_LENS,
+    label: i18n.translate('packages.markdown.lens.insertLensButtonLabel', {
+      defaultMessage: 'Insert lens link',
+    }),
     iconType: 'lensApp',
   },
   helpText: (

@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { PluginArgs } from '../types';
+import { PluginArgs } from '../common/types';
 
 interface LensComponentProps {
   id: string;
