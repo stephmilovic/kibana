@@ -38,6 +38,7 @@ import { SEND_ALERT_TO_TIMELINE } from './translations';
 import { useInsertTimeline } from '../use_insert_timeline';
 import { SpyRoute } from '../../../common/utils/route/spy_routes';
 import * as timelineMarkdownPlugin from '../../../common/components/markdown_editor/plugins/timeline';
+import * as lensMarkdownPlugin from '../../../common/components/markdown_editor/plugins/lens';
 
 interface Props {
   caseId: string;
@@ -214,6 +215,14 @@ export const CaseView = React.memo(({ caseId, subCaseId, userCanCrud }: Props) =
           },
         },
         getCaseDetailHrefWithCommentId,
+        lensIntegration: {
+          editor_context: lensMarkdownPlugin.context,
+          editor_plugins: {
+            parsingPlugin: lensMarkdownPlugin.parser,
+            processingPluginRenderer: lensMarkdownPlugin.renderer,
+            uiPlugin: lensMarkdownPlugin.plugin,
+          },
+        },
         onCaseDataSuccess,
         onComponentInitialized,
         ruleDetailsNavigation: {
