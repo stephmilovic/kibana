@@ -23,7 +23,8 @@ describe('Overview Page', () => {
     cleanKibana();
   });
 
-  it('Host stats render with correct values', () => {
+  it.only('Host stats render with correct values', () => {
+    cy.stubSearchStrategyApi(emptyInstance, undefined, 'indexFields');
     cy.stubSearchStrategyApi(overviewFixture, 'overviewHost');
     loginAndWaitForPage(OVERVIEW_URL);
     expandHostStats();

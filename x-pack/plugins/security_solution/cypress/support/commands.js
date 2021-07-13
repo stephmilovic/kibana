@@ -30,18 +30,79 @@
 //
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+import { findIndex } from 'lodash/fp';
 
+const getFindRequestConfig = (searchStrategyName, factoryQueryType) => {
+  if (!factoryQueryType) {
+    return {
+      options: { strategy: searchStrategyName },
+    };
+  }
+
+  return {
+    options: { strategy: searchStrategyName },
+    request: { factoryQueryType },
+  };
+};
 Cypress.Commands.add(
   'stubSearchStrategyApi',
   function (stubObject, factoryQueryType, searchStrategyName = 'securitySolutionSearchStrategy') {
     cy.intercept('POST', '/internal/bsearch', (req) => {
+      // if (searchStrategyName === 'indexFields') {
+      //   req.reply(stubObject.rawResponse);
+      // } else if (factoryQueryType === 'overviewHost') {
+      //   req.reply(stubObject.overviewHost);
+      // } else if (factoryQueryType === 'overviewNetwork') {
+      //   req.reply(stubObject.overviewNetwork);
+      // }\c
+      console.log('POOOOOOOP', { factoryQueryType, stubObject, searchStrategyName });
       if (searchStrategyName === 'indexFields') {
-        req.reply(stubObject.rawResponse);
+        return req.reply(stubObject.rawResponse);
       } else if (factoryQueryType === 'overviewHost') {
-        req.reply(stubObject.overviewHost);
+        return req.reply(stubObject.overviewHost);
       } else if (factoryQueryType === 'overviewNetwork') {
-        req.reply(stubObject.overviewNetwork);
+        return req.reply(stubObject.overviewNetwork);
       }
+      // const findRequestConfig = getFindRequestConfig(searchStrategyName, factoryQueryType);
+      // const requestIndex = findIndex(findRequestConfig, req.body.batch);
+      //
+      // if (requestIndex > -1) {
+      //   return req.reply((res) => {
+      //     console.log('hello 000?', res.body)
+      //     const responseObjectsArray = res.body.split('\n').map((responseString) => {
+      //       try {
+      //         return JSON.parse(responseString);
+      //       } catch {
+      //         return responseString;
+      //       }
+      //     });
+      //     console.log('hello 1000?', responseObjectsArray)
+      //     const responseIndex = findIndex({ id: requestIndex }, responseObjectsArray);
+      //
+      //     console.log('hello 2000?', responseIndex)
+      //     const stubbedResponseObjectsArray = [...responseObjectsArray];
+      //     stubbedResponseObjectsArray[responseIndex] = {
+      //       ...stubbedResponseObjectsArray[responseIndex],
+      //       result: {
+      //         ...stubbedResponseObjectsArray[responseIndex].result,
+      //         ...stubObject,
+      //       },
+      //     };
+      //
+      //     console.log('hello 3000?', stubbedResponseObjectsArray)
+      //     const stubbedResponse = stubbedResponseObjectsArray
+      //       .map((object) => {
+      //         try {
+      //           return JSON.stringify(object);
+      //         } catch {
+      //           return object;
+      //         }
+      //       })
+      //       .join('\n');
+      //     console.log('wtf is this?', stubbedResponse)
+      //     res.send(stubbedResponse);
+      //   });
+      // }
       req.reply();
     });
   }

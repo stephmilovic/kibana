@@ -86,6 +86,7 @@ export const useHostOverview = ({
           })
           .subscribe({
             next: (response) => {
+              console.log('RESP', response);
               if (isCompleteResponse(response)) {
                 setLoading(false);
                 setHostOverviewResponse((prevResponse) => ({

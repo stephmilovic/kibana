@@ -66,7 +66,7 @@ export const reload = () => {
 
 export const cleanKibana = () => {
   const kibanaIndexUrl = `${Cypress.env('ELASTICSEARCH_URL')}/.kibana_\*`;
-
+  console.log('kibanaIndexUrl', kibanaIndexUrl)
   cy.request('GET', '/api/detection_engine/rules/_find').then((response) => {
     const rules: RuleEcs[] = response.body.data;
 
