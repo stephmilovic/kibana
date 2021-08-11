@@ -7,11 +7,12 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { EuiButtonIcon, EuiContextMenuPanel, EuiPopover, EuiToolTip } from '@elastic/eui';
+import { EuiButtonIcon, EuiContextMenu, EuiPopover, EuiToolTip } from '@elastic/eui';
 import { indexOf } from 'lodash';
 
 import { ExceptionListType } from '@kbn/securitysolution-io-ts-list-types';
 import { get, getOr } from 'lodash/fp';
+import { EuiContextMenuPanelDescriptor } from '@elastic/eui/src/components/context_menu/context_menu';
 import { buildGetAlertByIdQuery } from '../../../../common/components/exceptions/helpers';
 import { EventsTdContent } from '../../../../timelines/components/timeline/styles';
 import { DEFAULT_ICON_BUTTON_WIDTH } from '../../../../timelines/components/timeline/helpers';
@@ -31,12 +32,17 @@ import { useExceptionModal } from './use_add_exception_modal';
 import { useExceptionActions } from './use_add_exception_actions';
 import { useEventFilterModal } from './use_event_filter_modal';
 import { Status } from '../../../../../common/detection_engine/schemas/common/schemas';
-import { AddEventFilter } from './add_event_filter';
-import { AddException } from './add_exception';
-import { AddEndpointException } from './add_endpoint_exception';
+import { ATTACH_ALERT_TO_CASE_FOR_ROW } from '../../../../timelines/components/timeline/body/translations';
+import { TimelineId } from '../../../../../common';
+import { useGetUserCasesPermissions, useKibana } from '../../../../common/lib/kibana';
+import { APP_ID } from '../../../../../common/constants';
+import { useInsertTimeline } from '../../../../cases/components/use_insert_timeline';
+import { useInvestigateInResolverContextItem } from './investigate_in_resolver';
 
 interface AlertContextMenuProps {
   ariaLabel?: string;
+  ariaRowindex: number;
+  columnValues: string;
   disabled: boolean;
   ecsRowData: Ecs;
   refetch: inputsModel.Refetch;
@@ -46,6 +52,8 @@ interface AlertContextMenuProps {
 
 const AlertContextMenuComponent: React.FC<AlertContextMenuProps> = ({
   ariaLabel = i18n.MORE_ACTIONS,
+  ariaRowindex,
+  columnValues,
   disabled,
   ecsRowData,
   refetch,
@@ -53,7 +61,7 @@ const AlertContextMenuComponent: React.FC<AlertContextMenuProps> = ({
   timelineId,
 }) => {
   const [isPopoverOpen, setPopover] = useState(false);
-
+  const { timelines: timelinesUi } = useKibana().services;
   const ruleId = get(0, ecsRowData?.signal?.rule?.id);
   const ruleName = get(0, ecsRowData?.signal?.rule?.name);
 
@@ -118,6 +126,7 @@ const AlertContextMenuComponent: React.FC<AlertContextMenuProps> = ({
     eventId: ecsRowData?._id,
     timelineId,
     closePopover,
+    itemFormat: 'obj',
   });
 
   const handleOnAddExceptionTypeClick = useCallback(
@@ -142,29 +151,89 @@ const AlertContextMenuComponent: React.FC<AlertContextMenuProps> = ({
     isEndpointAlert,
     onAddExceptionTypeClick: handleOnAddExceptionTypeClick,
   });
+  const casePermissions = useGetUserCasesPermissions();
+  const insertTimelineHook = useInsertTimeline;
+  const addToCaseActionProps = useMemo(() => {
+    return {
+      ariaLabel: ATTACH_ALERT_TO_CASE_FOR_ROW({ ariaRowindex, columnValues }),
+      ecsRowData,
+      useInsertTimeline: insertTimelineHook,
+      casePermissions,
+      appId: APP_ID,
+    };
+  }, [ariaRowindex, ecsRowData, casePermissions, insertTimelineHook, columnValues]);
 
-  const items = useMemo(
+  const investigateInResolverAction = useInvestigateInResolverContextItem({
+    timelineId,
+    ecsData: ecsRowData,
+  });
+
+  const addToCaseAction = useMemo(
     () =>
-      !isEvent && ruleId
-        ? [
-            ...actionItems,
-            <AddEndpointException
-              onClick={handleEndpointExceptionModal}
-              disabled={disabledAddEndpointException}
-            />,
-            <AddException
-              onClick={handleDetectionExceptionModal}
-              disabled={disabledAddException}
-            />,
-          ]
-        : [<AddEventFilter onClick={handleOnAddEventFilterClick} />],
+      [
+        TimelineId.detectionsPage,
+        TimelineId.detectionsRulesDetailsPage,
+        TimelineId.active,
+      ].includes(timelineId as TimelineId)
+        ? [timelinesUi.getAddToCaseAction(addToCaseActionProps)]
+        : [],
+    [addToCaseActionProps, timelineId, timelinesUi]
+  );
+
+  const panels: EuiContextMenuPanelDescriptor[] = useMemo(
+    () => [
+      {
+        id: 0,
+        items:
+          !isEvent && ruleId
+            ? [
+                investigateInResolverAction,
+                // // ...addToCaseAction,
+                ...actionItems,
+                {
+                  name: i18n.ACTION_ADD_ENDPOINT_EXCEPTION,
+                  onClick: handleEndpointExceptionModal,
+                  disabled: disabledAddEndpointException,
+                },
+                {
+                  name: i18n.ACTION_ADD_EXCEPTION,
+                  onClick: handleDetectionExceptionModal,
+                  disabled: disabledAddEndpointException,
+                },
+              ]
+            : [
+                investigateInResolverAction,
+                ...actionItems,
+                // // ...addToCaseAction,
+                {
+                  name: i18n.ACTION_ADD_EVENT_FILTER,
+                  onClick: handleOnAddEventFilterClick,
+                },
+              ],
+      },
+      {
+        id: 1,
+        initialFocusedItemIndex: 1,
+        title: 'Nest panels',
+        items: [
+          {
+            name: 'Go to a link',
+            icon: 'user',
+            href: 'http://elastic.co',
+            target: '_blank',
+          },
+        ],
+      },
+    ],
     [
       actionItems,
+      addToCaseAction,
       disabledAddEndpointException,
       disabledAddException,
       handleDetectionExceptionModal,
       handleEndpointExceptionModal,
       handleOnAddEventFilterClick,
+      investigateInResolverAction,
       isEvent,
       ruleId,
     ]
@@ -183,7 +252,8 @@ const AlertContextMenuComponent: React.FC<AlertContextMenuProps> = ({
             anchorPosition="downLeft"
             repositionOnScroll
           >
-            <EuiContextMenuPanel size="s" items={items} />
+            {/* <EuiContextMenuPanel size="s" items={items} />*/}
+            <EuiContextMenu size="s" initialPanelId={0} panels={panels} />
           </EuiPopover>
         </EventsTdContent>
       </div>

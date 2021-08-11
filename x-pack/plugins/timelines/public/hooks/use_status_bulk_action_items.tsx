@@ -30,6 +30,7 @@ export interface StatusBulkActionsProps {
   setEventsDeleted: ({ eventIds, isDeleted }: SetEventsDeletedProps) => void;
   onUpdateSuccess: (updated: number, conflicts: number, status: AlertStatus) => void;
   onUpdateFailure: (status: AlertStatus, error: Error) => void;
+  itemFormat?: 'jsx' | 'obj';
 }
 
 export const getUpdateAlertsQuery = (eventIds: Readonly<string[]>) => {
@@ -44,6 +45,7 @@ export const useStatusBulkActionItems = ({
   setEventsDeleted,
   onUpdateSuccess,
   onUpdateFailure,
+  itemFormat = 'jsx',
 }: StatusBulkActionsProps) => {
   const { updateAlertStatus } = useUpdateAlertsStatus();
 
@@ -80,9 +82,10 @@ export const useStatusBulkActionItems = ({
   );
 
   const items = useMemo(() => {
-    const actionItems = [];
+    const jsxItems = [];
+    const objItems = [];
     if (currentStatus !== FILTER_OPEN) {
-      actionItems.push(
+      jsxItems.push(
         <EuiContextMenuItem
           key="open"
           data-test-subj="open-alert-status"
@@ -91,9 +94,13 @@ export const useStatusBulkActionItems = ({
           {i18n.BULK_ACTION_OPEN_SELECTED}
         </EuiContextMenuItem>
       );
+      objItems.push({
+        name: i18n.BULK_ACTION_OPEN_SELECTED,
+        onClick: () => onClickUpdate(FILTER_OPEN),
+      });
     }
     if (currentStatus !== FILTER_IN_PROGRESS) {
-      actionItems.push(
+      jsxItems.push(
         <EuiContextMenuItem
           key="progress"
           data-test-subj="in-progress-alert-status"
@@ -102,9 +109,13 @@ export const useStatusBulkActionItems = ({
           {i18n.BULK_ACTION_IN_PROGRESS_SELECTED}
         </EuiContextMenuItem>
       );
+      objItems.push({
+        name: i18n.BULK_ACTION_IN_PROGRESS_SELECTED,
+        onClick: () => onClickUpdate(FILTER_IN_PROGRESS),
+      });
     }
     if (currentStatus !== FILTER_CLOSED) {
-      actionItems.push(
+      jsxItems.push(
         <EuiContextMenuItem
           key="close"
           data-test-subj="close-alert-status"
@@ -113,9 +124,13 @@ export const useStatusBulkActionItems = ({
           {i18n.BULK_ACTION_CLOSE_SELECTED}
         </EuiContextMenuItem>
       );
+      objItems.push({
+        name: i18n.BULK_ACTION_CLOSE_SELECTED,
+        onClick: () => onClickUpdate(FILTER_CLOSED),
+      });
     }
-    return actionItems;
+    return { jsx: jsxItems, obj: objItems };
   }, [currentStatus, onClickUpdate]);
 
-  return items;
+  return items[itemFormat];
 };

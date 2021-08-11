@@ -26,7 +26,7 @@ import { CreateCaseFlyout } from './create/flyout';
 import { createUpdateSuccessToaster } from './helpers';
 import * as i18n from './translations';
 
-export interface AddToCaseActionProps {
+export interface AddToCaseContextItemProps {
   ariaLabel?: string;
   ecsRowData: Ecs;
   useInsertTimeline?: Function;
@@ -76,7 +76,7 @@ interface PostCommentArg {
   subCaseId?: string;
 }
 
-const AddToCaseActionComponent: React.FC<AddToCaseActionProps> = ({
+const AddToCaseContextItemComponent: React.FC<AddToCaseContextItemProps> = ({
   ariaLabel = i18n.ACTION_ADD_TO_CASE_ARIA_LABEL,
   ecsRowData,
   useInsertTimeline,
@@ -277,22 +277,6 @@ const AddToCaseActionComponent: React.FC<AddToCaseActionProps> = ({
     appId,
   ]);
 
-  const hey = {
-    item: (
-      <EuiContextMenuItem
-        key="add-exception-menu-item"
-        aria-label={ariaLabel}
-        data-test-subj="add-exception-menu-item"
-        id="addException"
-        onClick={openPopover}
-        disabled={isDisabled}
-        hasPanel
-      >
-        {tooltipContext}
-      </EuiContextMenuItem>
-    ),
-    panel: <EuiContextMenuPanel items={items} />,
-  };
   return (
     <>
       {userCanCrud && (
@@ -324,7 +308,7 @@ const AddToCaseActionComponent: React.FC<AddToCaseActionProps> = ({
   );
 };
 
-export const AddToCaseAction = memo(AddToCaseActionComponent);
+export const AddToCaseContextItem = memo(AddToCaseContextItemComponent);
 
 // eslint-disable-next-line import/no-default-export
-export default AddToCaseAction;
+export default AddToCaseContextItem;

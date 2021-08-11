@@ -8,6 +8,7 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 
+import { EuiContextMenuPanelItemDescriptor } from '@elastic/eui/src/components/context_menu/context_menu';
 import { useAppToasts } from '../../../../common/hooks/use_app_toasts';
 import { Status } from '../../../../../common/detection_engine/schemas/common/schemas';
 import { timelineActions } from '../../../../timelines/store/timeline';
@@ -26,10 +27,22 @@ interface Props {
   alertStatus?: Status;
   closePopover: () => void;
   eventId: string;
+  itemFormat?: 'jsx' | 'obj';
   timelineId: string;
 }
 
-export const useAlertsActions = ({ alertStatus, closePopover, eventId, timelineId }: Props) => {
+interface ActionItems {
+  // TODO: Should type better with <T>
+  actionItems: JSX.Element[] | EuiContextMenuPanelItemDescriptor[];
+}
+
+export const useAlertsActions = ({
+  alertStatus,
+  closePopover,
+  eventId,
+  itemFormat = 'jsx',
+  timelineId,
+}: Props): ActionItems => {
   const dispatch = useDispatch();
   const [, dispatchToaster] = useStateToaster();
 
@@ -104,6 +117,7 @@ export const useAlertsActions = ({ alertStatus, closePopover, eventId, timelineI
     setEventsDeleted,
     onUpdateSuccess: onAlertStatusUpdateSuccess,
     onUpdateFailure: onAlertStatusUpdateFailure,
+    itemFormat,
   });
 
   return {
