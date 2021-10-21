@@ -14,7 +14,7 @@ import {
   EuiBadge,
 } from '@elastic/eui';
 import { isEmpty } from 'lodash/fp';
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { Dispatch } from 'redux';
 import { connect, ConnectedProps, useDispatch } from 'react-redux';
@@ -165,6 +165,7 @@ export const EqlTabContentComponent: React.FC<Props> = ({
   onEventClosed,
   renderCellValue,
   rowRenderers,
+  show,
   showExpandedDetails,
   start,
   timerangeKind,
@@ -283,9 +284,11 @@ export const EqlTabContentComponent: React.FC<Props> = ({
                 <TimelineDatePickerLock />
               </EuiFlexItem>
               <EuiFlexItem grow={false}>
+                {' '}
                 <PickEventType
                   eventType={eventType}
                   onChangeEventTypeAndIndexesName={updateEventTypeAndIndexesName}
+                  show={show && activeTab === TimelineTabs.eql}
                 />
               </EuiFlexItem>
             </EuiFlexGroup>
@@ -375,6 +378,7 @@ const makeMapStateToProps = () => {
       expandedDetail,
       itemsPerPage,
       itemsPerPageOptions,
+      show,
     } = timeline;
 
     return {
@@ -390,7 +394,7 @@ const makeMapStateToProps = () => {
       itemsPerPageOptions,
       showExpandedDetails:
         !!expandedDetail[TimelineTabs.eql] && !!expandedDetail[TimelineTabs.eql]?.panelView,
-
+      show,
       start: input.timerange.from,
       timerangeKind: input.timerange.kind,
     };

@@ -362,6 +362,7 @@ export const QueryTabContentComponent: React.FC<Props> = ({
                 <PickEventType
                   eventType={eventType}
                   onChangeEventTypeAndIndexesName={updateEventTypeAndIndexesName}
+                  show={show && activeTab === TimelineTabs.query}
                 />
               </EuiFlexItem>
             </EuiFlexGroup>

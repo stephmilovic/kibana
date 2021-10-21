@@ -35,6 +35,7 @@ import { getSourcererScopeSelector, SourcererScopeSelector } from './selectors';
 import * as i18n from './translations';
 import { getScopePatternListSelection } from '../../../../common/store/sourcerer/helpers';
 import { SIEM_DATA_VIEW_LABEL } from '../../../../common/components/sourcerer/translations';
+import { useSourcererDataViewIdError } from '../../../../common/containers/sourcerer';
 
 const PopoverContent = styled.div`
   width: 600px;
@@ -125,12 +126,14 @@ interface PickEventTypeProps {
     indexNames: string[],
     dataViewId: string
   ) => void;
+  show: boolean;
 }
 // TODO: Steph/sourcerer needs tests
 // AKA TimelineSourcerer
 const PickEventTypeComponents: React.FC<PickEventTypeProps> = ({
   eventType = 'all',
   onChangeEventTypeAndIndexesName,
+  show,
 }) => {
   const [isPopoverOpen, setPopover] = useState(false);
   const [showAdvanceSettings, setAdvanceSettings] = useState(eventType === 'custom');
@@ -146,9 +149,18 @@ const PickEventTypeComponents: React.FC<PickEventTypeProps> = ({
     deepEqual
   );
 
-  const [dataViewId, setDataViewId] = useState<string>(selectedDataViewId ?? '');
+  const { checkForError } = useSourcererDataViewIdError();
+  useEffect(() => {
+    if (show) {
+      console.log('TL Sourcerer check for err', selectedDataViewId);
+      checkForError(selectedDataViewId, selectedPatterns);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDataViewId, selectedPatterns, show]);
+  const [dataViewId, setDataViewId] = useState<string>(selectedDataViewId);
   const { patternList, selectablePatterns } = useMemo(() => {
     const theDataView = kibanaDataViews.find((dataView) => dataView.id === dataViewId);
+    debugger;
     return theDataView != null
       ? {
           patternList: theDataView.title

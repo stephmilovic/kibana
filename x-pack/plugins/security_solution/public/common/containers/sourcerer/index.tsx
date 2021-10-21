@@ -221,6 +221,44 @@ export const useSourcererScope = (scope: SourcererScopeName = SourcererScopeName
   return useDeepEqualSelector((state) => sourcererScopeSelector(state, scope));
 };
 
+export const useSourcererDataViewIdError = (): {
+  checkForError: (selectedDataViewId: string | null, patterns: string[]) => void;
+} => {
+  const { addError } = useAppToasts();
+
+  const checkForError = useCallback(
+    (selectedDataViewId: string | null, patterns: string[]) => {
+      if (selectedDataViewId === null) {
+        addError(
+          {
+            body: { statusCode: 400, message: 'No data view associated with index patterns' },
+            message: `The selected index patterns (${patterns.join(
+              ', '
+            )}) are not associated with the default data view. Use the data view selector to select a data view with the desired index pattern, or add your index pattern to the default Security Data View in Stack Management > Advanced Settings > Security Solution > Elasticsearch indices.`,
+          },
+          // { message: 'message', body: { message: 'body message', statusCode: 400 } },
+          {
+            title: i18n.translate('xpack.securitySolution.sourcerer.noDataViewId.title', {
+              defaultMessage: 'No data view associated with index patterns',
+            }),
+            toastMessage: i18n.translate(
+              'xpack.securitySolution.sourcerer.noDataViewId.toastMessage',
+              {
+                defaultMessage: `Use the data view selector to select a data view with the desired index pattern, ${patterns.join(
+                  ', '
+                )}`,
+              }
+            ),
+          }
+        );
+      }
+    },
+    [addError]
+  );
+
+  return { checkForError };
+};
+
 export const getScopeFromPath = (
   pathname: string
 ): SourcererScopeName.default | SourcererScopeName.detections =>

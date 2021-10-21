@@ -31,6 +31,7 @@ import { State } from '../../store';
 import { getSourcererScopeSelector, SourcererScopeSelector } from './selectors';
 import { getScopePatternListSelection } from '../../store/sourcerer/helpers';
 import { SourcererScopeName } from '../../store/sourcerer/model';
+import { useSourcererDataViewIdError } from '../../containers/sourcerer';
 
 const PopoverContent = styled.div`
   width: 600px;
@@ -57,8 +58,16 @@ export const Sourcerer = React.memo<SourcererComponentProps>(({ scope: scopeId }
   >((state) => sourcererScopeSelector(state, scopeId), deepEqual);
   const { selectedDataViewId, selectedPatterns, loading } = sourcererScope;
   const [isPopoverOpen, setPopoverIsOpen] = useState(false);
-
-  const [dataViewId, setDataViewId] = useState<string>(selectedDataViewId ?? defaultDataView.id);
+  const { checkForError } = useSourcererDataViewIdError();
+  useEffect(() => {
+    // default will reset from a bad url state
+    // this is here for when https://github.com/elastic/kibana/pull/114805
+    // is merged and pick_events is deleted. we will need to pass
+    // show to this component
+    checkForError(selectedDataViewId, selectedPatterns);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDataViewId, selectedPatterns]);
+  const [dataViewId, setDataViewId] = useState<string>(selectedDataViewId);
 
   const { patternList, selectablePatterns } = useMemo(() => {
     const theDataView = kibanaDataViews.find((dataView) => dataView.id === dataViewId);

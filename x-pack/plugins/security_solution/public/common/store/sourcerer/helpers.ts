@@ -54,18 +54,30 @@ export const validateSelectedPatterns = (
   payload: SelectedDataViewPayload
 ): Partial<SourcererScopeById> => {
   const { id, eventType, ...rest } = payload;
-  const dataView = state.kibanaDataViews.find((p) => p.id === rest.selectedDataViewId);
+  let dataView = state.kibanaDataViews.find((p) => p.id === rest.selectedDataViewId);
   const selectedPatterns =
-    rest.selectedPatterns != null && dataView != null
+    dataView != null
       ? [...new Set(rest.selectedPatterns)].filter(
           (pattern) => dataView.patternList.includes(pattern) || state.signalIndexName == null // this is a hack, but sometimes signal index is deleted and is getting regenerated. it gets set before it is put in the dataView
         )
-      : [];
+      : // 7.16 -> 8.0 this will get hit because dataView == null
+        rest.selectedPatterns;
+  if (selectedPatterns.length > 0 && dataView == null) {
+    // we have index patterns, but not a data view
+    // find out if we have these index patterns in the defaultDataView
+    const areAllPatternsInDefault = selectedPatterns.every(
+      (pattern) => state.defaultDataView.title.indexOf(pattern) > -1
+    );
+    if (areAllPatternsInDefault) {
+      dataView = state.defaultDataView;
+    }
+  }
 
   return {
     [id]: {
       ...state.sourcererScopes[id],
       ...rest,
+      selectedDataViewId: dataView?.id ?? null,
       selectedPatterns,
       ...(isEmpty(selectedPatterns) && dataView?.id != null
         ? id === SourcererScopeName.timeline
