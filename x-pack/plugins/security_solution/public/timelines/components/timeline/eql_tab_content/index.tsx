@@ -284,7 +284,6 @@ export const EqlTabContentComponent: React.FC<Props> = ({
                 <TimelineDatePickerLock />
               </EuiFlexItem>
               <EuiFlexItem grow={false}>
-                {' '}
                 <PickEventType
                   eventType={eventType}
                   onChangeEventTypeAndIndexesName={updateEventTypeAndIndexesName}

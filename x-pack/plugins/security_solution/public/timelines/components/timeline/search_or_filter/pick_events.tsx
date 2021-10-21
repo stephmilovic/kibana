@@ -150,17 +150,18 @@ const PickEventTypeComponents: React.FC<PickEventTypeProps> = ({
   );
 
   const { checkForError } = useSourcererDataViewIdError();
+  const [dataViewId, setDataViewId] = useState<string>(selectedDataViewId);
   useEffect(() => {
+    if (dataViewId !== selectedDataViewId) {
+      setDataViewId(selectedDataViewId);
+    }
     if (show) {
-      console.log('TL Sourcerer check for err', selectedDataViewId);
       checkForError(selectedDataViewId, selectedPatterns);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDataViewId, selectedPatterns, show]);
-  const [dataViewId, setDataViewId] = useState<string>(selectedDataViewId);
   const { patternList, selectablePatterns } = useMemo(() => {
     const theDataView = kibanaDataViews.find((dataView) => dataView.id === dataViewId);
-    debugger;
     return theDataView != null
       ? {
           patternList: theDataView.title
@@ -406,6 +407,7 @@ const PickEventTypeComponents: React.FC<PickEventTypeProps> = ({
                 <EuiSuperSelect
                   data-test-subj="sourcerer-select"
                   placeholder={i18n.PICK_INDEX_PATTERNS}
+                  isInvalid={dataViewId === null}
                   fullWidth
                   options={dataViewSelectOptions}
                   valueOfSelected={dataViewId}
