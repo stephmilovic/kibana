@@ -84,8 +84,7 @@ export const getBrowserFields = memoizeOne(
       return accumulator;
     }, {});
   },
-  // Update the value only if _title has changed
-  (newArgs, lastArgs) => newArgs[0] === lastArgs[0]
+  (newArgs, lastArgs) => newArgs[0] === lastArgs[0] && newArgs[1].length === lastArgs[1].length
 );
 
 export const getDocValueFields = memoizeOne(
@@ -103,8 +102,7 @@ export const getDocValueFields = memoizeOne(
           return accumulator;
         }, [])
       : [],
-  // Update the value only if _title has changed
-  (newArgs, lastArgs) => newArgs[0] === lastArgs[0]
+  (newArgs, lastArgs) => newArgs[0] === lastArgs[0] && newArgs[1].length === lastArgs[1].length
 );
 
 export const indicesExistOrDataTemporarilyUnavailable = (
@@ -215,9 +213,12 @@ export const useFetchIndex = (
 /**
  * Sourcerer specific index fields hook/request
  * sets redux state, returns nothing
+ *
+ * @param autoCall - When false it doesn't call `indexFieldsSearch` automacally.
  */
 export const useIndexFields = (
-  sourcererScopeName: SourcererScopeName
+  sourcererScopeName: SourcererScopeName,
+  autoCall = true
 ): { indexFieldsSearch: (selectedDataViewId: string, newSignalsIndex?: string) => void } => {
   const { data } = useKibana().services;
   const abortCtrl = useRef(new AbortController());
@@ -357,18 +358,19 @@ export const useIndexFields = (
 
   useEffect(() => {
     if (
-      (dataViewId != null &&
+      autoCall &&
+      ((dataViewId != null &&
         // remove this when https://github.com/elastic/kibana/pull/114907 is merged
         sourcererScopeName !== refSourcererScopeName.current) ||
-      (dataViewId !== refDataViewId.current && selectedPatterns.length > 0) ||
-      (selectedPatterns.length > 0 && refSelectedPatterns.current.length === 0)
+        (dataViewId !== refDataViewId.current && selectedPatterns.length > 0) ||
+        (selectedPatterns.length > 0 && refSelectedPatterns.current.length === 0))
     ) {
       indexFieldsSearch(dataViewId);
     }
     refSourcererScopeName.current = sourcererScopeName;
     refSelectedPatterns.current = selectedPatterns;
     refDataViewId.current = dataViewId;
-  }, [dataViewId, indexFieldsSearch, selectedPatterns, sourcererScopeName]);
+  }, [dataViewId, indexFieldsSearch, selectedPatterns, sourcererScopeName, autoCall]);
 
   useEffect(() => {
     return () => {
