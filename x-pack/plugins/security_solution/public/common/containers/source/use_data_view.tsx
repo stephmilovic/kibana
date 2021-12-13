@@ -110,12 +110,15 @@ export const useDataView = (): {
                     runtimeMappings: response.runtimeMappings,
                   })
                 );
-
-                searchSubscription$.current[selectedDataViewId].unsubscribe();
+                if (searchSubscription$.current[selectedDataViewId]) {
+                  searchSubscription$.current[selectedDataViewId].unsubscribe();
+                }
               } else if (isErrorResponse(response)) {
                 setLoading({ id: selectedDataViewId, loading: false });
                 addWarning(i18n.ERROR_BEAT_FIELDS);
-                searchSubscription$.current[selectedDataViewId].unsubscribe();
+                if (searchSubscription$.current[selectedDataViewId]) {
+                  searchSubscription$.current[selectedDataViewId].unsubscribe();
+                }
               }
             },
             error: (msg) => {
@@ -127,7 +130,9 @@ export const useDataView = (): {
               addError(msg, {
                 title: i18n.FAIL_BEAT_FIELDS,
               });
-              searchSubscription$.current[selectedDataViewId].unsubscribe();
+              if (searchSubscription$.current[selectedDataViewId]) {
+                searchSubscription$.current[selectedDataViewId].unsubscribe();
+              }
             },
           });
         searchSubscription$.current = {
@@ -135,10 +140,11 @@ export const useDataView = (): {
           [selectedDataViewId]: subscription,
         };
       };
-      if (searchSubscription$.current[selectedDataViewId]) {
+      if (searchSubscription$.current[selectedDataViewId] != null) {
         searchSubscription$.current[selectedDataViewId].unsubscribe();
       }
-      if (abortCtrl.current[selectedDataViewId]) {
+
+      if (abortCtrl.current[selectedDataViewId] != null) {
         abortCtrl.current[selectedDataViewId].abort();
       }
       asyncSearch();

@@ -121,6 +121,12 @@ const DatePicker = styled(EuiFlexItem)`
 
 DatePicker.displayName = 'DatePicker';
 
+const SourcererFlex = styled(EuiFlexItem)`
+  align-items: flex-end;
+`;
+
+SourcererFlex.displayName = 'SourcererFlex';
+
 const VerticalRule = styled.div`
   width: 2px;
   height: 100%;
@@ -282,17 +288,17 @@ export const EqlTabContentComponent: React.FC<Props> = ({
                   setFullScreen={setTimelineFullScreen}
                 />
               )}
-              <DatePicker grow={1}>
+              <DatePicker grow={10}>
                 <SuperDatePicker id="timeline" timelineId={timelineId} />
               </DatePicker>
               <EuiFlexItem grow={false}>
                 <TimelineDatePickerLock />
               </EuiFlexItem>
-              <EuiFlexItem grow={false}>
+              <SourcererFlex grow={1}>
                 {activeTab === TimelineTabs.eql && (
                   <Sourcerer scope={SourcererScopeName.timeline} />
                 )}
-              </EuiFlexItem>
+              </SourcererFlex>
             </EuiFlexGroup>
             <TimelineHeaderContainer data-test-subj="timelineHeader">
               <EqlQueryBarTimeline timelineId={timelineId} />
