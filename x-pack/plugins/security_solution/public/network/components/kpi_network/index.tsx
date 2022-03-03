@@ -14,6 +14,7 @@ import { NetworkKpiTlsHandshakes } from './tls_handshakes';
 import { NetworkKpiUniqueFlows } from './unique_flows';
 import { NetworkKpiUniquePrivateIps } from './unique_private_ips';
 import { NetworkKpiProps } from './types';
+import { AccordionContentHider } from './accordion_content_hider';
 
 export const NetworkKpiComponent = React.memo<NetworkKpiProps>(
   ({ filterQuery, from, indexNames, to, setQuery, skip, narrowDateRange }) => (
@@ -46,15 +47,17 @@ export const NetworkKpiComponent = React.memo<NetworkKpiProps>(
         <EuiSpacer size="l" />
         <EuiFlexGroup wrap>
           <EuiFlexItem>
-            <NetworkKpiUniqueFlows
-              filterQuery={filterQuery}
-              from={from}
-              indexNames={indexNames}
-              to={to}
-              narrowDateRange={narrowDateRange}
-              setQuery={setQuery}
-              skip={skip}
-            />
+            <AccordionContentHider storageKey="unique_storage_key_1">
+              <NetworkKpiUniqueFlows
+                filterQuery={filterQuery}
+                from={from}
+                indexNames={indexNames}
+                to={to}
+                narrowDateRange={narrowDateRange}
+                setQuery={setQuery}
+                skip={skip}
+              />
+            </AccordionContentHider>
           </EuiFlexItem>
           <EuiFlexItem>
             <NetworkKpiTlsHandshakes
