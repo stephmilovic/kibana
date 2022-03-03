@@ -29,6 +29,7 @@ import {
   setFilterQuery,
   setSavedQuery,
   setSearchBarFilter,
+  setSkipQuery,
 } from './actions';
 import {
   setIsInspected,
@@ -40,6 +41,7 @@ import {
   removeTimelineLink,
   addTimelineLink,
   deleteOneQuery as helperDeleteOneQuery,
+  setIsSkip,
   updateInputFullScreen,
 } from './helpers';
 import { InputsModel, TimeRange } from './model';
@@ -187,6 +189,7 @@ export const inputsReducer = reducerWithInitialState(initialInputsState)
     upsertQuery({ inputId, id, inspect, loading, refetch, state })
   )
   .case(deleteOneQuery, (state, { inputId, id }) => helperDeleteOneQuery({ inputId, id, state }))
+  .case(setSkipQuery, (state, { inputId, id, skip }) => setIsSkip({ inputId, id, skip, state }))
   .case(setDuration, (state, { id, duration }) => ({
     ...state,
     [id]: {

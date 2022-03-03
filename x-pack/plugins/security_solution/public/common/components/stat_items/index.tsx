@@ -7,6 +7,7 @@
 
 import { ScaleType, Rotation, BrushEndListener, ElementClickListener } from '@elastic/charts';
 import {
+  EuiAccordion,
   EuiFlexGroup,
   EuiFlexItem,
   EuiPanel,
@@ -16,7 +17,7 @@ import {
   IconType,
 } from '@elastic/eui';
 import { get, getOr } from 'lodash/fp';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import deepEqual from 'fast-deep-equal';
 
@@ -31,6 +32,7 @@ import { histogramDateTimeFormatter } from '../utils';
 import { getEmptyTagValue } from '../empty_value';
 
 import { InspectButton, InspectButtonContainer } from '../inspect';
+import { useToggleStorage } from '../../../network/components/kpi_network/accordion_content_hider';
 
 const FlexItem = styled(EuiFlexItem)`
   min-width: 0;
@@ -193,7 +195,11 @@ export const useKpiMatrixStatus = (
 
   return statItemsProps;
 };
-
+const StyledEuiAccordion = styled(EuiAccordion)`
+  .euiAccordion__button {
+    display: block;
+  }
+`;
 export const StatItemsComponent = React.memo<StatItemsProps>(
   ({
     areaChart,
@@ -219,21 +225,12 @@ export const StatItemsComponent = React.memo<StatItemsProps>(
       areaChart.length &&
       areaChart.every((item) => item.value != null && item.value.length > 0);
 
-    return (
-      <FlexItem grow={grow} data-test-subj={`stat-${statKey}`}>
-        <InspectButtonContainer>
-          <EuiPanel hasBorder>
-            <EuiFlexGroup gutterSize={'none'}>
-              <EuiFlexItem>
-                <EuiTitle size="xxxs">
-                  <h6>{description}</h6>
-                </EuiTitle>
-              </EuiFlexItem>
-              <EuiFlexItem grow={false}>
-                <InspectButton queryId={id} title={`KPI ${description}`} inspectIndex={index} />
-              </EuiFlexItem>
-            </EuiFlexGroup>
+    const { storageStatus, setStorageStatus } = useToggleStorage(id);
 
+    const content = useMemo(
+      () =>
+        storageStatus ? (
+          <>
             <EuiFlexGroup>
               {fields.map((field) => (
                 <FlexItem key={`stat-items-field-${field.key}`}>
@@ -282,6 +279,100 @@ export const StatItemsComponent = React.memo<StatItemsProps>(
                 </FlexItem>
               )}
             </EuiFlexGroup>
+          </>
+        ) : null,
+      [
+        areaChart,
+        barChart,
+        enableAreaChart,
+        enableBarChart,
+        fields,
+        from,
+        isAreaChartDataAvailable,
+        isBarChartDataAvailable,
+        narrowDateRange,
+        storageStatus,
+        to,
+      ]
+    );
+
+    const buttonContent = (
+      <EuiFlexGroup gutterSize={'none'}>
+        <EuiFlexItem>
+          <EuiTitle size="xxxs">
+            <h6>{description}</h6>
+          </EuiTitle>
+        </EuiFlexItem>
+        {storageStatus && (
+          <EuiFlexItem grow={false}>
+            <InspectButton queryId={id} title={`KPI ${description}`} inspectIndex={index} />
+          </EuiFlexItem>
+        )}
+      </EuiFlexGroup>
+    );
+
+    return (
+      <FlexItem grow={grow} data-test-subj={`stat-${statKey}`}>
+        <InspectButtonContainer>
+          <EuiPanel hasBorder>
+            <StyledEuiAccordion
+              buttonContent={buttonContent}
+              id={`storageStatus-${id}`}
+              initialIsOpen={storageStatus}
+              onToggle={setStorageStatus}
+              paddingSize="none"
+            >
+              <EuiFlexGroup>
+                {fields.map((field) => (
+                  <FlexItem key={`stat-items-field-${field.key}`}>
+                    <EuiFlexGroup alignItems="center" gutterSize="m" responsive={false}>
+                      {(isAreaChartDataAvailable || isBarChartDataAvailable) && field.icon && (
+                        <FlexItem grow={false}>
+                          <EuiIcon
+                            type={field.icon}
+                            color={field.color}
+                            size="l"
+                            data-test-subj="stat-icon"
+                          />
+                        </FlexItem>
+                      )}
+
+                      <FlexItem>
+                        <StatValue>
+                          <p data-test-subj="stat-title">
+                            {field.value != null
+                              ? field.value.toLocaleString()
+                              : getEmptyTagValue()}{' '}
+                            {field.description}
+                          </p>
+                        </StatValue>
+                      </FlexItem>
+                    </EuiFlexGroup>
+                  </FlexItem>
+                ))}
+              </EuiFlexGroup>
+
+              {(enableAreaChart || enableBarChart) && <EuiHorizontalRule />}
+              <EuiFlexGroup>
+                {enableBarChart && (
+                  <FlexItem>
+                    <BarChart barChart={barChart} configs={barchartConfigs()} />
+                  </FlexItem>
+                )}
+
+                {enableAreaChart && from != null && to != null && (
+                  <FlexItem>
+                    <AreaChart
+                      areaChart={areaChart}
+                      configs={areachartConfigs({
+                        xTickFormatter: histogramDateTimeFormatter([from, to]),
+                        onBrushEnd: narrowDateRange,
+                      })}
+                    />
+                  </FlexItem>
+                )}
+              </EuiFlexGroup>
+            </StyledEuiAccordion>
           </EuiPanel>
         </InspectButtonContainer>
       </FlexItem>

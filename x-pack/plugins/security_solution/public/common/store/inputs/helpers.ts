@@ -181,13 +181,13 @@ export const addTimelineLink = (linkToId: InputsModelId, state: InputsModel): In
   },
 });
 
-export interface DeleteOneQueryParams {
+export interface OneQueryParams {
   id: string;
   inputId: InputsModelId;
   state: InputsModel;
 }
 
-export const deleteOneQuery = ({ inputId, id, state }: DeleteOneQueryParams): InputsModel => {
+export const deleteOneQuery = ({ inputId, id, state }: OneQueryParams): InputsModel => {
   const queryIndex = state[inputId].queries.findIndex((q) => q.id === id);
   return {
     ...state,
@@ -198,6 +198,30 @@ export const deleteOneQuery = ({ inputId, id, state }: DeleteOneQueryParams): In
           ? [
               ...state[inputId].queries.slice(0, queryIndex),
               ...state[inputId].queries.slice(queryIndex + 1),
+            ]
+          : [...state[inputId].queries],
+    },
+  };
+};
+export const setIsSkip = ({
+  inputId,
+  id,
+  skip,
+  state,
+}: OneQueryParams & { skip: boolean }): InputsModel => {
+  const myQueryIndex = state[inputId].queries.findIndex((q) => q.id === id);
+  const myQuery = myQueryIndex > -1 ? state[inputId].queries[myQueryIndex] : null;
+
+  return {
+    ...state,
+    [inputId]: {
+      ...get(inputId, state),
+      queries:
+        myQueryIndex > -1
+          ? [
+              ...state[inputId].queries.slice(0, myQueryIndex),
+              { ...myQuery, skip },
+              ...state[inputId].queries.slice(myQueryIndex + 1),
             ]
           : [...state[inputId].queries],
     },

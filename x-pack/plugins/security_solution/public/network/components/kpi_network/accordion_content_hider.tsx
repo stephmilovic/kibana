@@ -6,11 +6,39 @@
  */
 
 import { EuiAccordion } from '@elastic/eui';
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { useKibana } from '../../../common/lib/kibana';
 
 type STORAGE_KEY = 'unique_storage_key_1';
+
+export const getUniqueStorageKey = (id: string): string => `${id}-toggle-storage`;
+
+export const useToggleStorage = (
+  id: string
+): {
+  storageStatus: boolean;
+  setStorageStatus: (b: boolean) => void;
+} => {
+  const {
+    services: { storage },
+  } = useKibana();
+  const storageKey = getUniqueStorageKey(id);
+  const [storageValue, setStorageValue] = useState(storage.get(storageKey) ?? true);
+
+  const setStorageStatus = useCallback(
+    (isOpen: boolean) => {
+      storage.set(storageKey, isOpen);
+      setStorageValue(isOpen);
+    },
+    [storage, storageKey]
+  );
+
+  return {
+    storageStatus: storageValue,
+    setStorageStatus,
+  };
+};
 
 export const AccordionContentHiderComponent = ({
   children,
@@ -25,7 +53,7 @@ export const AccordionContentHiderComponent = ({
 
   const [storageValue, setStorageValue] = useState(storage.get(storageKey) ?? true);
 
-  const setDefaultMapVisibility = useCallback(
+  const setDefaultVisibility = useCallback(
     (isOpen: boolean) => {
       storage.set(storageKey, isOpen);
       setStorageValue(isOpen);
@@ -35,12 +63,12 @@ export const AccordionContentHiderComponent = ({
 
   return (
     <EuiAccordion
-      onToggle={setDefaultMapVisibility}
+      onToggle={setDefaultVisibility}
       id={`AccordionContentHider-${storageKey}`}
       arrowDisplay="right"
       arrowProps={{
         color: 'primary',
-        'data-test-subj': `${storageValue}-toggle-network-map`,
+        'data-test-subj': `${storageValue}-storage-toggle`,
       }}
       buttonContent={<strong>{'hiya content'}</strong>}
       paddingSize="none"
