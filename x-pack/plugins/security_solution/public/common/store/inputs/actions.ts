@@ -60,12 +60,6 @@ export const deleteOneQuery = actionCreator<{
   id: string;
 }>('DELETE_QUERY');
 
-export const setSkipQuery = actionCreator<{
-  inputId: InputsModelId;
-  id: string;
-  skip: boolean;
-}>('SET_SKIP_QUERY');
-
 export const setInspectionParameter = actionCreator<{
   id: string;
   inputId: InputsModelId;

@@ -316,62 +316,16 @@ export const StatItemsComponent = React.memo<StatItemsProps>(
         <InspectButtonContainer>
           <EuiPanel hasBorder>
             <StyledEuiAccordion
-              buttonContent={buttonContent}
-              id={`storageStatus-${id}`}
-              initialIsOpen={storageStatus}
               onToggle={setStorageStatus}
+              id={`storageStatus-${id}`}
+              arrowProps={{
+                'data-test-subj': `${id}-toggle-stat`,
+              }}
+              buttonContent={buttonContent}
               paddingSize="none"
+              initialIsOpen={storageStatus}
             >
-              <EuiFlexGroup>
-                {fields.map((field) => (
-                  <FlexItem key={`stat-items-field-${field.key}`}>
-                    <EuiFlexGroup alignItems="center" gutterSize="m" responsive={false}>
-                      {(isAreaChartDataAvailable || isBarChartDataAvailable) && field.icon && (
-                        <FlexItem grow={false}>
-                          <EuiIcon
-                            type={field.icon}
-                            color={field.color}
-                            size="l"
-                            data-test-subj="stat-icon"
-                          />
-                        </FlexItem>
-                      )}
-
-                      <FlexItem>
-                        <StatValue>
-                          <p data-test-subj="stat-title">
-                            {field.value != null
-                              ? field.value.toLocaleString()
-                              : getEmptyTagValue()}{' '}
-                            {field.description}
-                          </p>
-                        </StatValue>
-                      </FlexItem>
-                    </EuiFlexGroup>
-                  </FlexItem>
-                ))}
-              </EuiFlexGroup>
-
-              {(enableAreaChart || enableBarChart) && <EuiHorizontalRule />}
-              <EuiFlexGroup>
-                {enableBarChart && (
-                  <FlexItem>
-                    <BarChart barChart={barChart} configs={barchartConfigs()} />
-                  </FlexItem>
-                )}
-
-                {enableAreaChart && from != null && to != null && (
-                  <FlexItem>
-                    <AreaChart
-                      areaChart={areaChart}
-                      configs={areachartConfigs({
-                        xTickFormatter: histogramDateTimeFormatter([from, to]),
-                        onBrushEnd: narrowDateRange,
-                      })}
-                    />
-                  </FlexItem>
-                )}
-              </EuiFlexGroup>
+              {content}
             </StyledEuiAccordion>
           </EuiPanel>
         </InspectButtonContainer>
