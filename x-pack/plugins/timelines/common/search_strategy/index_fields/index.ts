@@ -54,9 +54,18 @@ export type IndexFieldsStrategyRequest<T extends 'indices' | 'dataView'> = T ext
   : IndexFieldsStrategyRequestByIndices;
 
 export interface IndexFieldsStrategyResponse extends IEsSearchResponse {
-  indexFields: IndexField[];
+  indexFields: FieldSpec[];
   indicesExist: string[];
   runtimeMappings: MappingRuntimeFields;
+}
+
+export interface FormatFieldsStrategyRequest extends IEsSearchRequest {
+  fields: FieldSpec[];
+  patternList: string[];
+}
+
+export interface FormatFieldsStrategyResponse extends IEsSearchResponse {
+  formatFields: IndexField[];
 }
 
 export interface BrowserField {

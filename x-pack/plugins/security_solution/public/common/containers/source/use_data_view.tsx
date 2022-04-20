@@ -146,7 +146,9 @@ export const useDataView = (): {
             )
             .subscribe({
               next: async (response) => {
+                console.log('da next');
                 if (isCompleteResponse(response)) {
+                  console.log('isCompleteResponse');
                   const patternString = response.indicesExist.sort().join();
                   if (needToBeInit && scopeId) {
                     dispatch(
@@ -175,6 +177,7 @@ export const useDataView = (): {
                     })
                   );
                 } else if (isErrorResponse(response)) {
+                  console.log('isErrorResponse');
                   setLoading({ id: dataViewId, loading: false });
                   addWarning(i18n.ERROR_BEAT_FIELDS);
                 }

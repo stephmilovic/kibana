@@ -54,6 +54,8 @@ export type {
   IndexField,
   IndexFieldsStrategyRequest,
   IndexFieldsStrategyResponse,
+  FormatFieldsStrategyRequest,
+  FormatFieldsStrategyResponse,
   LastTimeDetails,
   TimelineNonEcsData,
   Inspect,
