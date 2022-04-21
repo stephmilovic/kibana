@@ -12,6 +12,7 @@ import type {
   CreateFieldComponent,
   GetFieldTableColumns,
 } from '@kbn/timelines-plugin/common/types';
+import { useDescribeFields } from '../../../common/containers/source/use_describe_fields';
 import { TimelineId } from '../../../../common/types';
 import { useDataView } from '../../../common/containers/source/use_data_view';
 import { useDeepEqualSelector } from '../../../common/hooks/use_selector';
@@ -50,6 +51,7 @@ export const useFieldBrowserOptions: UseFieldBrowserOptions = ({
   const [dataView, setDataView] = useState<DataView | null>(null);
 
   const { indexFieldsSearch } = useDataView();
+  const { describeFieldsSearch } = useDescribeFields();
   const {
     dataViewFieldEditor,
     data: { dataViews },

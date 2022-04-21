@@ -12,13 +12,13 @@ import { from } from 'rxjs';
 import {
   BeatFields,
   IndexField,
-  FormatFieldsStrategyRequest,
-  FormatFieldsStrategyResponse,
+  DescribeFieldsStrategyRequest,
+  DescribeFieldsStrategyResponse,
 } from '../../../common';
 
-export const formatFieldsProvider = (): ISearchStrategy<
-  FormatFieldsStrategyRequest,
-  FormatFieldsStrategyResponse
+export const describeFieldsProvider = (): ISearchStrategy<
+  DescribeFieldsStrategyRequest,
+  DescribeFieldsStrategyResponse
 > => {
   // require the fields once we actually need them, rather than ahead of time, and pass
   // them to createFieldItem to reduce the amount of work done as much as possible
@@ -26,22 +26,22 @@ export const formatFieldsProvider = (): ISearchStrategy<
   const beatFields: BeatFields = require('../../utils/beat_schema/fields').fieldsBeat;
 
   return {
-    search: (request, options, deps) => from(requestFormatFieldSearch(request, deps, beatFields)),
+    search: (request, options, deps) => from(requestDescribeFieldSearch(request, deps, beatFields)),
   };
 };
-export const requestFormatFieldSearch = async (
-  request: FormatFieldsStrategyRequest,
+export const requestDescribeFieldSearch = async (
+  request: DescribeFieldsStrategyRequest,
   { savedObjectsClient, esClient, request: kRequest }: SearchStrategyDependencies,
   beatFields: BeatFields
-): Promise<FormatFieldsStrategyResponse> => {
-  const formatFields: IndexField[] = await formatIndexFields(
+): Promise<DescribeFieldsStrategyResponse> => {
+  const describeFields: IndexField[] = await formatIndexFields(
     beatFields,
     [request.fields],
     request.patternList
   );
 
   return {
-    formatFields,
+    describeFields,
     rawResponse: {
       timed_out: false,
       took: -1,
@@ -116,7 +116,7 @@ export const createFieldItem = (
   return {
     ...beatIndex,
     ...index,
-    // the format type on FieldSpec is SerializedFieldFormat
+    // the format type on FieldSpec is SerializedFieldDescribe
     // and is a string on beatIndex
     format: index.format?.id ?? beatIndex.format,
     indexes: [alias],
@@ -202,7 +202,7 @@ export const formatSecondFields = async (fields: IndexField[]): Promise<IndexFie
 };
 
 /**
- * Formats the index fields into a format the UI wants.
+ * Describes the index fields into a format the UI wants.
  *
  * NOTE: This will have array sizes up to 4.7 megs in size at a time when being called.
  * This function should be as optimized as possible and should avoid any and all creation

@@ -8,6 +8,7 @@
 import { PluginInitializerContext, CoreSetup, CoreStart, Plugin, Logger } from '@kbn/core/server';
 
 import { SecurityPluginSetup } from '@kbn/security-plugin/server';
+import { describeFieldsProvider } from './search_strategy/describe_fields';
 import { SetupPlugins, StartPlugins, TimelinesPluginUI, TimelinesPluginStart } from './types';
 import { defineRoutes } from './routes';
 import { timelineSearchStrategyProvider } from './search_strategy/timeline';
@@ -34,6 +35,7 @@ export class TimelinesPlugin
     defineRoutes(router);
 
     const IndexFields = indexFieldsProvider(core.getStartServices);
+    const DescribeFields = describeFieldsProvider();
     // Register search strategy
     core.getStartServices().then(([_, depsStart]) => {
       const TimelineSearchStrategy = timelineSearchStrategyProvider(
@@ -44,6 +46,7 @@ export class TimelinesPlugin
       const TimelineEqlSearchStrategy = timelineEqlSearchStrategyProvider(depsStart.data);
 
       plugins.data.search.registerSearchStrategy('indexFields', IndexFields);
+      plugins.data.search.registerSearchStrategy('describeFields', DescribeFields);
       plugins.data.search.registerSearchStrategy('timelineSearchStrategy', TimelineSearchStrategy);
       plugins.data.search.registerSearchStrategy(
         'timelineEqlSearchStrategy',

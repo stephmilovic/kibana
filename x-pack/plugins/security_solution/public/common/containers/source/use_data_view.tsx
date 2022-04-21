@@ -26,6 +26,10 @@ import * as i18n from './translations';
 import { SourcererScopeName } from '../../store/sourcerer/model';
 import { getSourcererDataView } from '../sourcerer/api';
 
+interface CategoryField extends FieldSpec {
+  category: string;
+}
+
 export type IndexFieldSearch = (param: {
   dataViewId: string;
   scopeId?: SourcererScopeName;
@@ -40,48 +44,64 @@ type DangerCastForBrowserFieldsMutation = Record<
 interface DataViewInfo {
   browserFields: DangerCastForBrowserFieldsMutation;
   docValueFields: DocValueFields[];
-  indexFields: FieldSpec[];
+  indexFields: CategoryField[] | IndexField[];
 }
 
 /**
  * HOT Code path where the fields can be 16087 in length or larger. This is
  * VERY mutatious on purpose to improve the performance of the transform.
  */
-const getDataViewStateFromIndexFields = memoizeOne(
-  (_title: string, fields: IndexField[]): DataViewInfo => {
+export const getDataViewStateFromIndexFields = memoizeOne(
+  async (_title: string, fields: FieldSpec[] | IndexField[]): Promise<DataViewInfo> => {
     // Adds two dangerous casts to allow for mutations within this function
     type DangerCastForMutation = Record<string, {}>;
 
-    return fields.reduce<DataViewInfo>(
-      (acc, field) => {
-        // mutate browserFields
-        if (acc.browserFields[field.category] == null) {
-          (acc.browserFields as DangerCastForMutation)[field.category] = {};
-        }
-        if (acc.browserFields[field.category].fields == null) {
-          acc.browserFields[field.category].fields = {};
-        }
-        acc.browserFields[field.category].fields[field.name] = field as unknown as BrowserField;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(
+          fields.reduce<DataViewInfo>(
+            (acc, fieldSpec, i) => {
+              // mutate browserFields
+              const field: CategoryField = {
+                ...fieldSpec,
+                category: fieldSpec.name.split('.')[0],
+              };
 
-        // mutate indexFields
-        acc.indexFields.push(
-          pick(['name', 'searchable', 'type', 'aggregatable', 'esTypes', 'subType'], field)
+              if (acc.browserFields[field.category] == null) {
+                (acc.browserFields as DangerCastForMutation)[field.category] = {};
+              }
+              if (acc.browserFields[field.category].fields == null) {
+                acc.browserFields[field.category].fields = {};
+              }
+              acc.browserFields[field.category].fields[field.name] =
+                field as unknown as BrowserField;
+
+              // mutate indexFields
+              acc.indexFields.push(
+                pick(
+                  ['category', 'name', 'searchable', 'type', 'aggregatable', 'esTypes', 'subType'],
+                  field
+                )
+              );
+
+              // mutate docValueFields
+              if (field.readFromDocValues && acc.docValueFields.length < 100) {
+                acc.docValueFields.push({
+                  field: field.name,
+                });
+              }
+
+              return acc;
+            },
+            {
+              browserFields: {},
+              docValueFields: [],
+              indexFields: [],
+            }
+          )
         );
-
-        // mutate docValueFields
-        if (field.readFromDocValues && acc.docValueFields.length < 100) {
-          acc.docValueFields.push({
-            field: field.name,
-          });
-        }
-        return acc;
-      },
-      {
-        browserFields: {},
-        docValueFields: [],
-        indexFields: [],
-      }
-    );
+      });
+    });
   },
   (newArgs, lastArgs) => newArgs[0] === lastArgs[0] && newArgs[1].length === lastArgs[1].length
 );
@@ -146,9 +166,7 @@ export const useDataView = (): {
             )
             .subscribe({
               next: async (response) => {
-                console.log('da next');
                 if (isCompleteResponse(response)) {
-                  console.log('isCompleteResponse');
                   const patternString = response.indicesExist.sort().join();
                   if (needToBeInit && scopeId) {
                     dispatch(
@@ -163,7 +181,7 @@ export const useDataView = (): {
                   if (cleanCache) {
                     getDataViewStateFromIndexFields.clear();
                   }
-                  const dataViewInfo = getDataViewStateFromIndexFields(
+                  const dataViewInfo = await getDataViewStateFromIndexFields(
                     patternString,
                     response.indexFields
                   );
@@ -177,7 +195,6 @@ export const useDataView = (): {
                     })
                   );
                 } else if (isErrorResponse(response)) {
-                  console.log('isErrorResponse');
                   setLoading({ id: dataViewId, loading: false });
                   addWarning(i18n.ERROR_BEAT_FIELDS);
                 }

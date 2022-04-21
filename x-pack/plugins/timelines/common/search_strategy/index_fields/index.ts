@@ -59,13 +59,13 @@ export interface IndexFieldsStrategyResponse extends IEsSearchResponse {
   runtimeMappings: MappingRuntimeFields;
 }
 
-export interface FormatFieldsStrategyRequest extends IEsSearchRequest {
+export interface DescribeFieldsStrategyRequest extends IEsSearchRequest {
   fields: FieldSpec[];
   patternList: string[];
 }
 
-export interface FormatFieldsStrategyResponse extends IEsSearchResponse {
-  formatFields: IndexField[];
+export interface DescribeFieldsStrategyResponse extends IEsSearchResponse {
+  describeFields: IndexField[];
 }
 
 export interface BrowserField {
