@@ -103,6 +103,24 @@ export const useRuleFromTimeline = (setRuleQuery: SetRuleQuery): RuleFromTimelin
   );
   // end browser field management
 
+  const onError = useCallback(
+    (error: Error, id: string) => {
+      setLoading(false);
+      addError(error, {
+        toastMessage: i18n.translate('xpack.securitySolution.ruleFromTimeline.error.toastMessage', {
+          defaultMessage: 'Failed to create rule from timeline with id: {id}',
+          values: {
+            id,
+          },
+        }),
+        title: i18n.translate('xpack.securitySolution.ruleFromTimeline.error.title', {
+          defaultMessage: 'Failed to import rule from timeline',
+        }),
+      });
+    },
+    [addError]
+  );
+
   // start set rule
   const handleSetRuleFromTimeline = useCallback(() => {
     if (selectedTimeline == null || selectedDataViewBrowserFields == null) return;
@@ -135,18 +153,7 @@ export const useRuleFromTimeline = (setRuleQuery: SetRuleQuery): RuleFromTimelin
         },
       });
     } catch (error) {
-      setLoading(false);
-      addError(error, {
-        toastMessage: i18n.translate('xpack.securitySolution.ruleFromTimeline.error.toastMessage', {
-          defaultMessage: 'Failed to create rule from timeline with id: {id}',
-          values: {
-            id: selectedTimeline.id,
-          },
-        }),
-        title: i18n.translate('xpack.securitySolution.ruleFromTimeline.error.title', {
-          defaultMessage: 'Failed to import rule from timeline',
-        }),
-      });
+      onError(error, selectedTimeline.id);
     }
 
     // reset timeline data view once complete
@@ -160,7 +167,7 @@ export const useRuleFromTimeline = (setRuleQuery: SetRuleQuery): RuleFromTimelin
       );
     }
   }, [
-    addError,
+    onError,
     dataViewId,
     dispatch,
     originalDataView.dataViewId,
@@ -190,6 +197,7 @@ export const useRuleFromTimeline = (setRuleQuery: SetRuleQuery): RuleFromTimelin
       if (selectedTimeline == null || timelineId !== selectedTimeline.id) {
         queryTimelineById({
           timelineId,
+          onError,
           onOpenTimeline,
           updateIsLoading: ({
             id: currentTimelineId,
@@ -202,7 +210,7 @@ export const useRuleFromTimeline = (setRuleQuery: SetRuleQuery): RuleFromTimelin
         });
       }
     },
-    [dispatch, onOpenTimeline, selectedTimeline]
+    [dispatch, onError, onOpenTimeline, selectedTimeline]
   );
 
   const [urlStateInitialized, setUrlStateInitialized] = useState(false);
