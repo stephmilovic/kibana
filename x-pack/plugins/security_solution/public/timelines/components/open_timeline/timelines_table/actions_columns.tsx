@@ -142,9 +142,7 @@ export const getActionsColumns = ({
         onCreateRule(selectedTimeline.savedObjectId);
     },
     enabled: (timeline: OpenTimelineResult) =>
-      onCreateRule != null &&
-      timeline.savedObjectId != null &&
-      timeline.status !== TimelineStatus.immutable,
+      onCreateRule != null && timeline.savedObjectId != null,
     description: i18n.CREATE_RULE_FROM_TIMELINE,
     'data-test-subj': 'create-rule-from-timeline',
     available: () => actionTimelineToShow.includes('createRule') && onCreateRule != null,
