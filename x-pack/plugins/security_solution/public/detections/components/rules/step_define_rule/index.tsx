@@ -180,10 +180,19 @@ const StepDefineRuleComponent: FC<StepDefineRuleProps> = ({
     },
   });
 
+  const [timelineRule, setTimelineRule] = useState<{
+    index: DefineStepRule['index'];
+    queryBar: DefineStepRule['queryBar'];
+    eqlQueryBar: DefineStepRule['queryBar'] | null;
+  } | null>(null);
+
   const handleSetRuleFromTimeline = useCallback(
-    ({ index: timelineIndex, queryBar: timelineQueryBar }) => {
-      setFieldValue('index', timelineIndex);
-      setFieldValue('queryBar', timelineQueryBar);
+    ({ index: timelineIndex, queryBar: timelineQueryBar, eqlQueryBar }) => {
+      setTimelineRule({
+        index: timelineIndex,
+        queryBar: timelineQueryBar,
+        eqlQueryBar,
+      });
     },
     [setFieldValue]
   );
@@ -249,6 +258,17 @@ const StepDefineRuleComponent: FC<StepDefineRuleProps> = ({
     ruleType,
     threatIndex,
   ]);
+
+  useEffect(() => {
+    if (timelineRule !== null) {
+      setFieldValue('index', timelineRule.index);
+      if (isEqlRule(ruleType) && timelineRule.eqlQueryBar !== null) {
+        setFieldValue('queryBar', timelineRule.eqlQueryBar);
+      } else {
+        setFieldValue('queryBar', timelineRule.queryBar);
+      }
+    }
+  }, [ruleType, setFieldValue, timelineRule]);
 
   // if 'index' is selected, use these browser fields
   // otherwise use the dataview browserfields

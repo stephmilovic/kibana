@@ -44,9 +44,11 @@ export const initialState = {
 type SetRuleQuery = ({
   index,
   queryBar,
+  eqlQueryBar,
 }: {
   index: string[];
   queryBar: FieldValueQueryBar;
+  eqlQueryBar: FieldValueQueryBar | null;
 }) => void;
 
 /**
@@ -140,7 +142,22 @@ export const useRuleFromTimeline = (setRuleQuery: SetRuleQuery): RuleFromTimelin
           : '';
 
       setLoading(false);
-
+      const eqlQueryBar =
+        selectedTimeline.eqlOptions != null &&
+        selectedTimeline.eqlOptions.query != null &&
+        selectedTimeline.eqlOptions.query.length > 0
+          ? {
+              filters:
+                dataProvidersDsl !== ''
+                  ? [...newFilters, getDataProviderFilter(dataProvidersDsl)]
+                  : newFilters,
+              query: {
+                language: 'eql',
+                query: selectedTimeline.eqlOptions.query,
+              },
+              saved_id: null,
+            }
+          : null;
       setRuleQuery({
         index: selectedPatterns,
         queryBar: {
@@ -151,6 +168,7 @@ export const useRuleFromTimeline = (setRuleQuery: SetRuleQuery): RuleFromTimelin
           query: newQuery,
           saved_id: null,
         },
+        eqlQueryBar,
       });
     } catch (error) {
       onError(error, selectedTimeline.id);
