@@ -283,13 +283,13 @@ secrets:
 [[preconfigured-gen-ai-configuration]]
 ==== OpenAI connectors
 
-The following example creates a <<gen-ai-action-type,OpenAI connector>>:
+The following example creates a <<openai-action-type,OpenAI connector>>:
 
 [source,text]
 --
 xpack.actions.preconfigured:
-  my-gen-ai:
-    name: preconfigured-gen-ai-connector-type
+  my-open-ai:
+    name: preconfigured-openai-connector-type
     actionTypeId: .gen-ai
     config:
       apiUrl: https://api.openai.com/v1/chat/completions <1>
