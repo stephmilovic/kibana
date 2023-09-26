@@ -37,7 +37,7 @@ import {
   sanitizeRequest,
 } from './lib/utils';
 
-export class GenAiConnector extends SubActionConnector<Config, Secrets> {
+export class OpenAIConnector extends SubActionConnector<Config, Secrets> {
   private url;
   private provider;
   private key;

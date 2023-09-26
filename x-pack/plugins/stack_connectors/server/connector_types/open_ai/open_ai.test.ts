@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { GenAiConnector } from './open_ai';
+import { OpenAIConnector } from './open_ai';
 import { actionsConfigMock } from '@kbn/actions-plugin/server/actions_config.mock';
 import {
   DEFAULT_OPENAI_MODEL,
@@ -18,7 +18,7 @@ import { RunActionResponseSchema, StreamingResponseSchema } from '../../../commo
 import { initDashboard } from './create_dashboard';
 jest.mock('./create_dashboard');
 
-describe('GenAiConnector', () => {
+describe('OpenAIConnector', () => {
   let mockRequest: jest.Mock;
   let mockError: jest.Mock;
   const mockResponseString = 'Hello! How can I assist you today?';
@@ -46,7 +46,7 @@ describe('GenAiConnector', () => {
   });
 
   describe('OpenAI', () => {
-    const connector = new GenAiConnector({
+    const connector = new OpenAIConnector({
       configurationUtilities: actionsConfigMock.create(),
       connector: { id: '1', type: OPEN_AI_CONNECTOR_ID },
       config: {
@@ -285,7 +285,7 @@ describe('GenAiConnector', () => {
   });
 
   describe('AzureAI', () => {
-    const connector = new GenAiConnector({
+    const connector = new OpenAIConnector({
       configurationUtilities: actionsConfigMock.create(),
       connector: { id: '1', type: OPEN_AI_CONNECTOR_ID },
       config: {
@@ -455,7 +455,7 @@ describe('GenAiConnector', () => {
   });
 
   describe('Token dashboard', () => {
-    const connector = new GenAiConnector({
+    const connector = new OpenAIConnector({
       configurationUtilities: actionsConfigMock.create(),
       connector: { id: '1', type: OPEN_AI_CONNECTOR_ID },
       config: { apiUrl: 'https://example.com/api', apiProvider: OpenAiProviderType.AzureAi },

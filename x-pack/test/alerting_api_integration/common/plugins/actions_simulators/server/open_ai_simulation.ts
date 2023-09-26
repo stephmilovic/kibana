@@ -9,7 +9,7 @@ import http from 'http';
 
 import { ProxyArgs, Simulator } from './simulator';
 
-export class GenAiSimulator extends Simulator {
+export class OpenAISimulator extends Simulator {
   private readonly returnError: boolean;
 
   constructor({ returnError = false, proxy }: { returnError?: boolean; proxy?: ProxyArgs }) {
@@ -24,10 +24,10 @@ export class GenAiSimulator extends Simulator {
     data: Record<string, unknown>
   ) {
     if (this.returnError) {
-      return GenAiSimulator.sendErrorResponse(response);
+      return OpenAISimulator.sendErrorResponse(response);
     }
 
-    return GenAiSimulator.sendResponse(response);
+    return OpenAISimulator.sendResponse(response);
   }
 
   private static sendResponse(response: http.ServerResponse) {

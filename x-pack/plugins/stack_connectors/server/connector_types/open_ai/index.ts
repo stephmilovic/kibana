@@ -21,13 +21,13 @@ import {
 } from '../../../common/open_ai/constants';
 import { ConfigSchema, SecretsSchema } from '../../../common/open_ai/schema';
 import { Config, Secrets } from '../../../common/open_ai/types';
-import { GenAiConnector } from './open_ai';
+import { OpenAIConnector } from './open_ai';
 import { renderParameterTemplates } from './render';
 
 export const getConnectorType = (): SubActionConnectorType<Config, Secrets> => ({
   id: OPEN_AI_CONNECTOR_ID,
   name: OPEN_AI_TITLE,
-  Service: GenAiConnector,
+  Service: OpenAIConnector,
   schema: {
     config: ConfigSchema,
     secrets: SecretsSchema,

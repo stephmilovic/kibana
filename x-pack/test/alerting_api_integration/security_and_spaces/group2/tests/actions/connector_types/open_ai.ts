@@ -8,9 +8,9 @@
 import expect from '@kbn/expect';
 
 import {
-  GenAiSimulator,
+  OpenAISimulator,
   genAiSuccessResponse,
-} from '@kbn/actions-simulators-plugin/server/gen_ai_simulation';
+} from '@kbn/actions-simulators-plugin/server/open_ai_simulation';
 import { FtrProviderContext } from '../../../../../common/ftr_provider_context';
 import { getUrlPrefix, ObjectRemover } from '../../../../../common/lib';
 
@@ -51,7 +51,7 @@ export default function genAiTest({ getService }: FtrProviderContext) {
       objectRemover.removeAll();
     });
     describe('action creation', () => {
-      const simulator = new GenAiSimulator({
+      const simulator = new OpenAISimulator({
         returnError: false,
         proxy: {
           config: configService.get('kbnTestServer.serverArgs'),
@@ -217,7 +217,7 @@ export default function genAiTest({ getService }: FtrProviderContext) {
 
     describe('executor', () => {
       describe('validation', () => {
-        const simulator = new GenAiSimulator({
+        const simulator = new OpenAISimulator({
           proxy: {
             config: configService.get('kbnTestServer.serverArgs'),
           },
@@ -272,7 +272,7 @@ export default function genAiTest({ getService }: FtrProviderContext) {
 
       describe('execution', () => {
         describe('successful response simulator', () => {
-          const simulator = new GenAiSimulator({
+          const simulator = new OpenAISimulator({
             proxy: {
               config: configService.get('kbnTestServer.serverArgs'),
             },
@@ -377,7 +377,7 @@ export default function genAiTest({ getService }: FtrProviderContext) {
           });
         });
         describe('non-default space simulator', () => {
-          const simulator = new GenAiSimulator({
+          const simulator = new OpenAISimulator({
             proxy: {
               config: configService.get('kbnTestServer.serverArgs'),
             },
@@ -428,7 +428,7 @@ export default function genAiTest({ getService }: FtrProviderContext) {
         });
 
         describe('error response simulator', () => {
-          const simulator = new GenAiSimulator({
+          const simulator = new OpenAISimulator({
             returnError: true,
             proxy: {
               config: configService.get('kbnTestServer.serverArgs'),
