@@ -69,7 +69,7 @@ export const INLINE_CONNECTOR_PLACEHOLDER = i18n.translate(
 export const ADD_CONNECTOR_TITLE = i18n.translate(
   'xpack.elasticAssistant.assistant.connectors.addConnectorButton.title',
   {
-    defaultMessage: 'Add OpenAI Connector',
+    defaultMessage: 'Add Generative AI Connector',
   }
 );
 
@@ -83,14 +83,14 @@ export const ADD_CONNECTOR_DESCRIPTION = i18n.translate(
 export const ADD_CONNECTOR_MISSING_PRIVILEGES_TITLE = i18n.translate(
   'xpack.elasticAssistant.assistant.connectors.addConnectorButton.missingPrivilegesTitle',
   {
-    defaultMessage: 'OpenAI Connector Required',
+    defaultMessage: 'Generative AI Connector Required',
   }
 );
 
 export const ADD_CONNECTOR_MISSING_PRIVILEGES_DESCRIPTION = i18n.translate(
   'xpack.elasticAssistant.assistant.connectors.addConnectorButton.missingPrivilegesDescription',
   {
-    defaultMessage: 'Please contact your administrator to enable an OpenAI Connector.',
+    defaultMessage: 'Please contact your administrator to enable a Generative AI Connector.',
   }
 );
 

@@ -1,6 +1,6 @@
 # @kbn/elastic-assistant
 
-The `Elastic Assistant` is a user interface for interacting with OpenAIs, like `ChatGPT`.
+The `Elastic Assistant` is a user interface for interacting with generative AIs, like `ChatGPT`.
 
 This package provides:
 
