@@ -281,9 +281,9 @@ secrets:
 
 [float]
 [[preconfigured-gen-ai-configuration]]
-==== Generative AI connectors
+==== OpenAI connectors
 
-The following example creates a <<gen-ai-action-type,generative AI connector>>:
+The following example creates a <<gen-ai-action-type,OpenAI connector>>:
 
 [source,text]
 --

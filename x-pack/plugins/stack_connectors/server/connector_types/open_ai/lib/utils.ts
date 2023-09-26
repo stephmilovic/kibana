@@ -7,7 +7,7 @@
 
 import { AxiosResponse, ResponseType } from 'axios';
 import { IncomingMessage } from 'http';
-import { OpenAiProviderType } from '../../../../common/gen_ai/constants';
+import { OpenAiProviderType } from '../../../../common/open_ai/constants';
 import {
   sanitizeRequest as openAiSanitizeRequest,
   getRequestWithStreamOption as openAiGetRequestWithStreamOption,

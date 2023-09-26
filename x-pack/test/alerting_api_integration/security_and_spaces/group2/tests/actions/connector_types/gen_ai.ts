@@ -189,7 +189,7 @@ export default function genAiTest({ getService }: FtrProviderContext) {
               statusCode: 400,
               error: 'Bad Request',
               message:
-                'error validating action type config: Error configuring Generative AI action: Error: error validating url: target url "http://genAi.mynonexistent.com" is not added to the Kibana config xpack.actions.allowedHosts',
+                'error validating action type config: Error configuring OpenAI action: Error: error validating url: target url "http://genAi.mynonexistent.com" is not added to the Kibana config xpack.actions.allowedHosts',
             });
           });
       });
@@ -313,7 +313,7 @@ export default function genAiTest({ getService }: FtrProviderContext) {
               data: genAiSuccessResponse,
             });
           });
-          describe('gen ai dashboard', () => {
+          describe('OpenAI dashboard', () => {
             const dashboardId = 'specific-dashboard-id-default';
 
             it('should not create a dashboard when user does not have kibana event log permissions', async () => {

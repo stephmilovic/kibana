@@ -7,7 +7,6 @@
 
 import { ServiceParams, SubActionConnector } from '@kbn/actions-plugin/server';
 import type { AxiosError } from 'axios';
-import { initDashboard } from './create_dashboard';
 import {
   RunActionParamsSchema,
   RunActionResponseSchema,
@@ -15,21 +14,22 @@ import {
   StreamActionParamsSchema,
   StreamingResponseSchema,
   InvokeAIActionParamsSchema,
-} from '../../../common/gen_ai/schema';
+} from '../../../common/open_ai/schema';
 import type {
   Config,
   Secrets,
   RunActionParams,
   RunActionResponse,
   StreamActionParams,
-} from '../../../common/gen_ai/types';
-import { SUB_ACTION } from '../../../common/gen_ai/constants';
+} from '../../../common/open_ai/types';
+import { SUB_ACTION } from '../../../common/open_ai/constants';
 import {
   DashboardActionParams,
   DashboardActionResponse,
   InvokeAIActionParams,
   InvokeAIActionResponse,
-} from '../../../common/gen_ai/types';
+} from '../../../common/open_ai/types';
+import { initDashboard } from './create_dashboard';
 import {
   getAxiosOptions,
   getRequestWithStreamOption,

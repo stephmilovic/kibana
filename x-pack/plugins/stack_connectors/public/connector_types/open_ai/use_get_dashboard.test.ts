@@ -123,7 +123,7 @@ describe('useGetDashboard_function', () => {
     await waitForNextUpdate();
     expect(result.current.isLoading).toBe(false);
     expect(mockToasts.addDanger).toHaveBeenCalledWith({
-      title: 'Error finding Generative AI Token Usage Dashboard.',
+      title: 'Error finding OpenAI Token Usage Dashboard.',
       text: 'Error fetching dashboard',
     });
   });

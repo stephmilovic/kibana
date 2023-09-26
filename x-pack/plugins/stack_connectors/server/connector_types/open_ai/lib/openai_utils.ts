@@ -5,7 +5,10 @@
  * 2.0.
  */
 
-import { OPENAI_CHAT_URL, OPENAI_LEGACY_COMPLETION_URL } from '../../../../common/gen_ai/constants';
+import {
+  OPENAI_CHAT_URL,
+  OPENAI_LEGACY_COMPLETION_URL,
+} from '../../../../common/open_ai/constants';
 
 const APIS_ALLOWING_STREAMING = new Set<string>([OPENAI_CHAT_URL, OPENAI_LEGACY_COMPLETION_URL]);
 

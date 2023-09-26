@@ -12,8 +12,8 @@ import {
   ActionConnectorMode,
   JsonEditorWithMessageVariables,
 } from '@kbn/triggers-actions-ui-plugin/public';
+import { OpenAiProviderType, SUB_ACTION } from '../../../common/open_ai/constants';
 import { DEFAULT_BODY, DEFAULT_BODY_AZURE } from './constants';
-import { OpenAiProviderType, SUB_ACTION } from '../../../common/gen_ai/constants';
 import { GenerativeAiActionConnector, GenerativeAiActionParams } from './types';
 
 const GenerativeAiParamsFields: React.FunctionComponent<

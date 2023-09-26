@@ -9,7 +9,7 @@ import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
 import GenerativeAiParamsFields from './params';
 import { MockCodeEditor } from '@kbn/triggers-actions-ui-plugin/public/application/code_editor.mock';
-import { OpenAiProviderType, SUB_ACTION } from '../../../common/gen_ai/constants';
+import { OpenAiProviderType, SUB_ACTION } from '../../../common/open_ai/constants';
 import { DEFAULT_BODY, DEFAULT_BODY_AZURE, DEFAULT_URL } from './constants';
 
 const kibanaReactPath = '../../../../../../src/plugins/kibana_react/public';
@@ -67,7 +67,7 @@ describe('Gen AI Params Fields renders', () => {
         isPreconfigured: false,
         isSystemAction: false as const,
         isDeprecated: false,
-        name: 'My GenAI Connector',
+        name: 'My OpenAI Connector',
         config: {
           apiProvider,
           apiUrl: DEFAULT_URL,

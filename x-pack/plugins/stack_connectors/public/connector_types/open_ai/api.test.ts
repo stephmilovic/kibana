@@ -7,7 +7,7 @@
 
 import { httpServiceMock } from '@kbn/core-http-browser-mocks';
 import { getDashboard } from './api';
-import { SUB_ACTION } from '../../../common/gen_ai/constants';
+import { SUB_ACTION } from '../../../common/open_ai/constants';
 const response = {
   available: true,
 };

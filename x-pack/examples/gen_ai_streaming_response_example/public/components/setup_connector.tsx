@@ -24,7 +24,7 @@ export const SetupConnector = ({ setIsConnectorModalVisible }: SetupConnectorPro
           title={i18n.translate(
             'genAiStreamingResponseExample.app.component.addConnectorCardTitle',
             {
-              defaultMessage: 'Add Generative AI Connector',
+              defaultMessage: 'Add OpenAI Connector',
             }
           )}
           description={i18n.translate(

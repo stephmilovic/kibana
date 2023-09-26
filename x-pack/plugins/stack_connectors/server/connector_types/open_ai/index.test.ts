@@ -9,9 +9,9 @@ import { actionsConfigMock } from '@kbn/actions-plugin/server/actions_config.moc
 import { ActionsConfigurationUtilities } from '@kbn/actions-plugin/server/actions_config';
 import axios from 'axios';
 import { configValidator, getConnectorType } from '.';
-import { Config, Secrets } from '../../../common/gen_ai/types';
+import { Config, Secrets } from '../../../common/open_ai/types';
 import { SubActionConnectorType } from '@kbn/actions-plugin/server/sub_action_framework/types';
-import { DEFAULT_OPENAI_MODEL, OpenAiProviderType } from '../../../common/gen_ai/constants';
+import { DEFAULT_OPENAI_MODEL, OpenAiProviderType } from '../../../common/open_ai/constants';
 
 jest.mock('axios');
 jest.mock('@kbn/actions-plugin/server/lib/axios_utils', () => {
@@ -30,12 +30,12 @@ axios.create = jest.fn(() => axios);
 let connectorType: SubActionConnectorType<Config, Secrets>;
 let configurationUtilities: jest.Mocked<ActionsConfigurationUtilities>;
 
-describe('Generative AI Connector', () => {
+describe('OpenAI Connector', () => {
   beforeEach(() => {
     configurationUtilities = actionsConfigMock.create();
     connectorType = getConnectorType();
   });
-  test('exposes the connector as `Generative AI` with id `.gen-ai`', () => {
+  test('exposes the connector as `OpenAI` with id `.gen-ai`', () => {
     expect(connectorType.id).toEqual('.gen-ai');
     expect(connectorType.name).toEqual('OpenAI');
   });
@@ -59,7 +59,7 @@ describe('Generative AI Connector', () => {
       expect(() => {
         configValidator(config, { configurationUtilities });
       }).toThrowErrorMatchingInlineSnapshot(
-        '"Error configuring Generative AI action: Error: URL Error: Invalid URL: example.com/do-something"'
+        '"Error configuring OpenAI action: Error: URL Error: Invalid URL: example.com/do-something"'
       );
     });
 
@@ -72,7 +72,7 @@ describe('Generative AI Connector', () => {
       expect(() => {
         configValidator(config, { configurationUtilities });
       }).toThrowErrorMatchingInlineSnapshot(
-        '"Error configuring Generative AI action: Error: API Provider is not supported"'
+        '"Error configuring OpenAI action: Error: API Provider is not supported"'
       );
     });
 
@@ -85,7 +85,7 @@ describe('Generative AI Connector', () => {
       expect(() => {
         configValidator(config, { configurationUtilities });
       }).toThrowErrorMatchingInlineSnapshot(
-        '"Error configuring Generative AI action: Error: API Provider is not supported: bad-one"'
+        '"Error configuring OpenAI action: Error: API Provider is not supported: bad-one"'
       );
     });
 
@@ -106,7 +106,7 @@ describe('Generative AI Connector', () => {
       expect(() => {
         configValidator(config, { configurationUtilities: configUtils });
       }).toThrowErrorMatchingInlineSnapshot(
-        `"Error configuring Generative AI action: Error: error validating url: target url is not present in allowedHosts"`
+        `"Error configuring OpenAI action: Error: error validating url: target url is not present in allowedHosts"`
       );
     });
   });

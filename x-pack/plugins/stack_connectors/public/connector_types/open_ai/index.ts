@@ -5,4 +5,4 @@
  * 2.0.
  */
 
-export { getConnectorType as getGenerativeAiConnectorType } from './gen_ai';
+export { getConnectorType as getGenerativeAiConnectorType } from './open_ai';

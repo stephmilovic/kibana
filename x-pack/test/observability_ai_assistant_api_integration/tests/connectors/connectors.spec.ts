@@ -29,7 +29,7 @@ export default function ApiTest({ getService }: FtrProviderContext) {
       expect(res.body.length).to.be(0);
     });
 
-    it("returns the gen ai connector if it's been created", async () => {
+    it("returns the OpenAI connector if it's been created", async () => {
       const connectorCreateResponse = await supertest
         .post('/api/actions/connector')
         .set('kbn-xsrf', 'foo')

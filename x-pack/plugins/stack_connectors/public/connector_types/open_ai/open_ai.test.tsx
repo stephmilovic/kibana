@@ -9,7 +9,7 @@ import { TypeRegistry } from '@kbn/triggers-actions-ui-plugin/public/application
 import { registerConnectorTypes } from '..';
 import type { ActionTypeModel } from '@kbn/triggers-actions-ui-plugin/public/types';
 import { registrationServicesMock } from '../../mocks';
-import { SUB_ACTION } from '../../../common/gen_ai/constants';
+import { SUB_ACTION } from '../../../common/open_ai/constants';
 
 const ACTION_TYPE_ID = '.gen-ai';
 let actionTypeModel: ActionTypeModel;
@@ -26,12 +26,12 @@ beforeAll(() => {
 describe('actionTypeRegistry.get() works', () => {
   test('connector type static data is as expected', () => {
     expect(actionTypeModel.id).toEqual(ACTION_TYPE_ID);
-    expect(actionTypeModel.selectMessage).toBe('Send a request to generative AI systems.');
+    expect(actionTypeModel.selectMessage).toBe('Send a request to OpenAI systems.');
     expect(actionTypeModel.actionTypeTitle).toBe('OpenAI');
   });
 });
 
-describe('gen ai action params validation', () => {
+describe('OpenAI action params validation', () => {
   test('action params validation succeeds when action params is valid', async () => {
     const actionParams = {
       subAction: SUB_ACTION.RUN,

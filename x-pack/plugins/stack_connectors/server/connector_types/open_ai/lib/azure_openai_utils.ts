@@ -9,7 +9,7 @@ import {
   AZURE_OPENAI_CHAT_URL,
   AZURE_OPENAI_COMPLETIONS_URL,
   AZURE_OPENAI_COMPLETIONS_EXTENSIONS_URL,
-} from '../../../../common/gen_ai/constants';
+} from '../../../../common/open_ai/constants';
 
 const APIS_ALLOWING_STREAMING = new Set<string>([
   AZURE_OPENAI_CHAT_URL,

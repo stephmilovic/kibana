@@ -9,7 +9,7 @@ import { DashboardAttributes } from '@kbn/dashboard-plugin/common';
 import { v4 as uuidv4 } from 'uuid';
 import { SavedObject } from '@kbn/core-saved-objects-common/src/server_types';
 
-export const dashboardTitle = `Generative AI Token Usage`;
+export const dashboardTitle = `OpenAI Token Usage`;
 
 export const getDashboard = (dashboardId: string): SavedObject<DashboardAttributes> => {
   const ids: Record<string, string> = {
@@ -125,7 +125,7 @@ export const getDashboard = (dashboardId: string): SavedObject<DashboardAttribut
                     yLeft: 0,
                     yRight: 0,
                   },
-                  yTitle: 'Sum of GenAi Completion + Prompt Tokens',
+                  yTitle: 'Sum of OpenAI Completion + Prompt Tokens',
                   axisTitlesVisibilitySettings: {
                     x: true,
                     yLeft: true,
@@ -143,7 +143,7 @@ export const getDashboard = (dashboardId: string): SavedObject<DashboardAttribut
                       '475e8ca0-e78e-454a-8597-a5492f70dce3': {
                         columns: {
                           '0f9814ec-0964-4efa-93a3-c7f173df2483': {
-                            label: 'GenAI Completion Tokens',
+                            label: 'OpenAI Completion Tokens',
                             dataType: 'number',
                             operationType: 'sum',
                             sourceField: 'kibana.action.execution.gen_ai.usage.completion_tokens',
@@ -177,7 +177,7 @@ export const getDashboard = (dashboardId: string): SavedObject<DashboardAttribut
                               includeIsRegex: false,
                               excludeIsRegex: false,
                               orderAgg: {
-                                label: 'Sum of kibana.action.execution.gen_ai.usage.total_tokens',
+                                label: 'Sum of kibana.action.execution.open_ai.usage.total_tokens',
                                 dataType: 'number',
                                 operationType: 'sum',
                                 sourceField: 'kibana.action.execution.gen_ai.usage.total_tokens',
@@ -192,7 +192,7 @@ export const getDashboard = (dashboardId: string): SavedObject<DashboardAttribut
                             customLabel: true,
                           },
                           'b0e390e4-d754-4eb4-9fcc-4347dadda394': {
-                            label: 'GenAi Prompt Tokens',
+                            label: 'OpenAI Prompt Tokens',
                             dataType: 'number',
                             operationType: 'sum',
                             sourceField: 'kibana.action.execution.gen_ai.usage.prompt_tokens',
@@ -334,7 +334,7 @@ export const getDashboard = (dashboardId: string): SavedObject<DashboardAttribut
                             customLabel: true,
                           },
                           'b0e390e4-d754-4eb4-9fcc-4347dadda394': {
-                            label: 'Sum of GenAI Total Tokens',
+                            label: 'Sum of OpenAI Total Tokens',
                             dataType: 'number',
                             operationType: 'sum',
                             sourceField: 'kibana.action.execution.gen_ai.usage.total_tokens',

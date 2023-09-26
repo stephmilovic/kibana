@@ -15,17 +15,17 @@ import { urlAllowListValidator } from '@kbn/actions-plugin/server';
 import { ValidatorServices } from '@kbn/actions-plugin/server/types';
 import { assertURL } from '@kbn/actions-plugin/server/sub_action_framework/helpers/validators';
 import {
-  GEN_AI_CONNECTOR_ID,
+  OPEN_AI_CONNECTOR_ID,
   OPEN_AI_TITLE,
   OpenAiProviderType,
-} from '../../../common/gen_ai/constants';
-import { ConfigSchema, SecretsSchema } from '../../../common/gen_ai/schema';
-import { Config, Secrets } from '../../../common/gen_ai/types';
-import { GenAiConnector } from './gen_ai';
+} from '../../../common/open_ai/constants';
+import { ConfigSchema, SecretsSchema } from '../../../common/open_ai/schema';
+import { Config, Secrets } from '../../../common/open_ai/types';
+import { GenAiConnector } from './open_ai';
 import { renderParameterTemplates } from './render';
 
 export const getConnectorType = (): SubActionConnectorType<Config, Secrets> => ({
-  id: GEN_AI_CONNECTOR_ID,
+  id: OPEN_AI_CONNECTOR_ID,
   name: OPEN_AI_TITLE,
   Service: GenAiConnector,
   schema: {
@@ -57,7 +57,7 @@ export const configValidator = (configObject: Config, validatorServices: Validat
   } catch (err) {
     throw new Error(
       i18n.translate('xpack.stackConnectors.genAi.configurationErrorApiProvider', {
-        defaultMessage: 'Error configuring Generative AI action: {err}',
+        defaultMessage: 'Error configuring OpenAI action: {err}',
         values: {
           err,
         },
