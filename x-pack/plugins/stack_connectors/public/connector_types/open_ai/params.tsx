@@ -14,11 +14,9 @@ import {
 } from '@kbn/triggers-actions-ui-plugin/public';
 import { OpenAiProviderType, SUB_ACTION } from '../../../common/open_ai/constants';
 import { DEFAULT_BODY, DEFAULT_BODY_AZURE } from './constants';
-import { GenerativeAiActionConnector, GenerativeAiActionParams } from './types';
+import { GenerativeAiActionConnector, ActionParams } from './types';
 
-const GenerativeAiParamsFields: React.FunctionComponent<
-  ActionParamsProps<GenerativeAiActionParams>
-> = ({
+const ParamsFields: React.FunctionComponent<ActionParamsProps<ActionParams>> = ({
   actionConnector,
   actionParams,
   editAction,
@@ -55,7 +53,7 @@ const GenerativeAiParamsFields: React.FunctionComponent<
   }, [typedActionConnector?.config?.apiProvider, editAction, index, subActionParams]);
 
   const editSubActionParams = useCallback(
-    (params: GenerativeAiActionParams['subActionParams']) => {
+    (params: ActionParams['subActionParams']) => {
       editAction('subActionParams', { ...subActionParams, ...params }, index);
     },
     [editAction, index, subActionParams]
@@ -87,4 +85,4 @@ const GenerativeAiParamsFields: React.FunctionComponent<
 };
 
 // eslint-disable-next-line import/no-default-export
-export { GenerativeAiParamsFields as default };
+export { ParamsFields as default };

@@ -31,10 +31,7 @@ import {
 } from './constants';
 const { emptyField } = fieldValidators;
 
-const GenerativeAiConnectorFields: React.FC<ActionConnectorFieldsProps> = ({
-  readOnly,
-  isEdit,
-}) => {
+const ConnectorFields: React.FC<ActionConnectorFieldsProps> = ({ readOnly, isEdit }) => {
   const { getFieldDefaultValue } = useFormContext();
   const [{ config, id, name }] = useFormData({
     watch: ['config.apiProvider'],
@@ -117,4 +114,4 @@ const GenerativeAiConnectorFields: React.FC<ActionConnectorFieldsProps> = ({
 };
 
 // eslint-disable-next-line import/no-default-export
-export { GenerativeAiConnectorFields as default };
+export { ConnectorFields as default };

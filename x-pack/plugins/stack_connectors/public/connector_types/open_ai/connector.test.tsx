@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import GenerativeAiConnectorFields from './connector';
+import ConnectorFields from './connector';
 import { ConnectorFormTestProvider } from '../lib/test_utils';
 import { act, fireEvent, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -46,7 +46,7 @@ const azureConnector = {
 
 const navigateToUrl = jest.fn();
 
-describe('GenerativeAiConnectorFields renders', () => {
+describe('ConnectorFields renders', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     useKibanaMock().services.application.navigateToUrl = navigateToUrl;
@@ -57,11 +57,7 @@ describe('GenerativeAiConnectorFields renders', () => {
   test('open ai connector fields are rendered', async () => {
     const { getAllByTestId } = render(
       <ConnectorFormTestProvider connector={openAiConnector}>
-        <GenerativeAiConnectorFields
-          readOnly={false}
-          isEdit={false}
-          registerPreSubmitValidator={() => {}}
-        />
+        <ConnectorFields readOnly={false} isEdit={false} registerPreSubmitValidator={() => {}} />
       </ConnectorFormTestProvider>
     );
     expect(getAllByTestId('config.apiUrl-input')[0]).toBeInTheDocument();
@@ -77,11 +73,7 @@ describe('GenerativeAiConnectorFields renders', () => {
   test('azure ai connector fields are rendered', async () => {
     const { getAllByTestId } = render(
       <ConnectorFormTestProvider connector={azureConnector}>
-        <GenerativeAiConnectorFields
-          readOnly={false}
-          isEdit={false}
-          registerPreSubmitValidator={() => {}}
-        />
+        <ConnectorFields readOnly={false} isEdit={false} registerPreSubmitValidator={() => {}} />
       </ConnectorFormTestProvider>
     );
     expect(getAllByTestId('config.apiUrl-input')[0]).toBeInTheDocument();
@@ -98,11 +90,7 @@ describe('GenerativeAiConnectorFields renders', () => {
     it('Does not render if isEdit is false and dashboardUrl is defined', async () => {
       const { queryByTestId } = render(
         <ConnectorFormTestProvider connector={openAiConnector}>
-          <GenerativeAiConnectorFields
-            readOnly={false}
-            isEdit={false}
-            registerPreSubmitValidator={() => {}}
-          />
+          <ConnectorFields readOnly={false} isEdit={false} registerPreSubmitValidator={() => {}} />
         </ConnectorFormTestProvider>
       );
       expect(queryByTestId('link-gen-ai-token-dashboard')).not.toBeInTheDocument();
@@ -113,11 +101,7 @@ describe('GenerativeAiConnectorFields renders', () => {
       }));
       const { queryByTestId } = render(
         <ConnectorFormTestProvider connector={openAiConnector}>
-          <GenerativeAiConnectorFields
-            readOnly={false}
-            isEdit={false}
-            registerPreSubmitValidator={() => {}}
-          />
+          <ConnectorFields readOnly={false} isEdit={false} registerPreSubmitValidator={() => {}} />
         </ConnectorFormTestProvider>
       );
       expect(queryByTestId('link-gen-ai-token-dashboard')).not.toBeInTheDocument();
@@ -125,11 +109,7 @@ describe('GenerativeAiConnectorFields renders', () => {
     it('Renders if isEdit is true and dashboardUrl is defined', async () => {
       const { getByTestId } = render(
         <ConnectorFormTestProvider connector={openAiConnector}>
-          <GenerativeAiConnectorFields
-            readOnly={false}
-            isEdit={true}
-            registerPreSubmitValidator={() => {}}
-          />
+          <ConnectorFields readOnly={false} isEdit={true} registerPreSubmitValidator={() => {}} />
         </ConnectorFormTestProvider>
       );
       expect(getByTestId('link-gen-ai-token-dashboard')).toBeInTheDocument();
@@ -137,11 +117,7 @@ describe('GenerativeAiConnectorFields renders', () => {
     it('On click triggers redirect with correct saved object id', async () => {
       const { getByTestId } = render(
         <ConnectorFormTestProvider connector={openAiConnector}>
-          <GenerativeAiConnectorFields
-            readOnly={false}
-            isEdit={true}
-            registerPreSubmitValidator={() => {}}
-          />
+          <ConnectorFields readOnly={false} isEdit={true} registerPreSubmitValidator={() => {}} />
         </ConnectorFormTestProvider>
       );
       fireEvent.click(getByTestId('link-gen-ai-token-dashboard'));
@@ -158,11 +134,7 @@ describe('GenerativeAiConnectorFields renders', () => {
     it('connector validation succeeds when connector config is valid', async () => {
       const { getByTestId } = render(
         <ConnectorFormTestProvider connector={openAiConnector} onSubmit={onSubmit}>
-          <GenerativeAiConnectorFields
-            readOnly={false}
-            isEdit={false}
-            registerPreSubmitValidator={() => {}}
-          />
+          <ConnectorFields readOnly={false} isEdit={false} registerPreSubmitValidator={() => {}} />
         </ConnectorFormTestProvider>
       );
 
@@ -191,11 +163,7 @@ describe('GenerativeAiConnectorFields renders', () => {
 
       const res = render(
         <ConnectorFormTestProvider connector={connector} onSubmit={onSubmit}>
-          <GenerativeAiConnectorFields
-            readOnly={false}
-            isEdit={false}
-            registerPreSubmitValidator={() => {}}
-          />
+          <ConnectorFields readOnly={false} isEdit={false} registerPreSubmitValidator={() => {}} />
         </ConnectorFormTestProvider>
       );
 
@@ -224,11 +192,7 @@ describe('GenerativeAiConnectorFields renders', () => {
 
       const res = render(
         <ConnectorFormTestProvider connector={connector} onSubmit={onSubmit}>
-          <GenerativeAiConnectorFields
-            readOnly={false}
-            isEdit={false}
-            registerPreSubmitValidator={() => {}}
-          />
+          <ConnectorFields readOnly={false} isEdit={false} registerPreSubmitValidator={() => {}} />
         </ConnectorFormTestProvider>
       );
 

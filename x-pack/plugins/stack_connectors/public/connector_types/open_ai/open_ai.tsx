@@ -10,13 +10,13 @@ import { i18n } from '@kbn/i18n';
 import type { GenericValidationResult } from '@kbn/triggers-actions-ui-plugin/public/types';
 import { SUB_ACTION } from '../../../common/open_ai/constants';
 import { OPEN_AI_CONNECTOR_ID, OPEN_AI_TITLE } from '../../../common/open_ai/constants';
-import { GenerativeAiActionParams, GenerativeAiConnector } from './types';
+import { ActionParams, OpenAIConnector } from './types';
 
 interface ValidationErrors {
   subAction: string[];
   body: string[];
 }
-export function getConnectorType(): GenerativeAiConnector {
+export function getConnectorType(): OpenAIConnector {
   return {
     id: OPEN_AI_CONNECTOR_ID,
     iconClass: lazy(() => import('./logo')),
@@ -25,7 +25,7 @@ export function getConnectorType(): GenerativeAiConnector {
     }),
     actionTypeTitle: OPEN_AI_TITLE,
     validateParams: async (
-      actionParams: GenerativeAiActionParams
+      actionParams: ActionParams
     ): Promise<GenericValidationResult<ValidationErrors>> => {
       const { subAction, subActionParams } = actionParams;
       const translations = await import('./translations');

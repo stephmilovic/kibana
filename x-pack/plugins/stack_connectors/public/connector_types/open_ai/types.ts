@@ -10,26 +10,19 @@ import { UserConfiguredActionConnector } from '@kbn/triggers-actions-ui-plugin/p
 import { OpenAiProviderType, SUB_ACTION } from '../../../common/open_ai/constants';
 import { RunActionParams } from '../../../common/open_ai/types';
 
-export interface GenerativeAiActionParams {
+export interface ActionParams {
   subAction: SUB_ACTION.RUN | SUB_ACTION.TEST;
   subActionParams: RunActionParams;
 }
 
-export interface GenerativeAiConfig {
+export interface Config {
   apiProvider: OpenAiProviderType;
   apiUrl: string;
 }
 
-export interface GenerativeAiSecrets {
+export interface Secrets {
   apiKey: string;
 }
 
-export type GenerativeAiConnector = ConnectorTypeModel<
-  GenerativeAiConfig,
-  GenerativeAiSecrets,
-  GenerativeAiActionParams
->;
-export type GenerativeAiActionConnector = UserConfiguredActionConnector<
-  GenerativeAiConfig,
-  GenerativeAiSecrets
->;
+export type OpenAIConnector = ConnectorTypeModel<Config, Secrets, ActionParams>;
+export type GenerativeAiActionConnector = UserConfiguredActionConnector<Config, Secrets>;

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
-import GenerativeAiParamsFields from './params';
+import ParamsFields from './params';
 import { MockCodeEditor } from '@kbn/triggers-actions-ui-plugin/public/application/code_editor.mock';
 import { OpenAiProviderType, SUB_ACTION } from '../../../common/open_ai/constants';
 import { DEFAULT_BODY, DEFAULT_BODY_AZURE, DEFAULT_URL } from './constants';
@@ -34,7 +34,7 @@ const messageVariables = [
 describe('Gen AI Params Fields renders', () => {
   test('all params fields are rendered', () => {
     const { getByTestId } = render(
-      <GenerativeAiParamsFields
+      <ParamsFields
         actionParams={{
           subAction: SUB_ACTION.RUN,
           subActionParams: { body: '{"message": "test"}' },
@@ -74,7 +74,7 @@ describe('Gen AI Params Fields renders', () => {
         },
       };
       render(
-        <GenerativeAiParamsFields
+        <ParamsFields
           actionParams={actionParams}
           actionConnector={actionConnector}
           editAction={editAction}
@@ -104,7 +104,7 @@ describe('Gen AI Params Fields renders', () => {
     const editAction = jest.fn();
     const errors = {};
     render(
-      <GenerativeAiParamsFields
+      <ParamsFields
         actionParams={actionParams}
         editAction={editAction}
         index={0}
@@ -120,7 +120,7 @@ describe('Gen AI Params Fields renders', () => {
     const editAction = jest.fn();
     const errors = {};
     const { getByTestId } = render(
-      <GenerativeAiParamsFields
+      <ParamsFields
         actionParams={{
           subAction: SUB_ACTION.RUN,
           subActionParams: {
