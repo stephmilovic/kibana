@@ -21,7 +21,7 @@ export function getConnectorType(): OpenAIConnector {
     id: OPEN_AI_CONNECTOR_ID,
     iconClass: lazy(() => import('./logo')),
     selectMessage: i18n.translate('xpack.stackConnectors.components.genAi.selectMessageText', {
-      defaultMessage: 'Send a request to OpenAI systems.',
+      defaultMessage: 'Send a request to an OpenAI or Azure OpenAI service.',
     }),
     actionTypeTitle: OPEN_AI_TITLE,
     validateParams: async (
