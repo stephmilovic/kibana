@@ -37,7 +37,7 @@ a| <<teams-action-type,Microsoft Teams>>
 
 a| <<openai-action-type,OpenAI>>
 
-| Send a request to OpenAI.
+| Send a request to an OpenAI or Azure OpenAI service.
 
 a| <<opsgenie-action-type,{opsgenie}>>
 
