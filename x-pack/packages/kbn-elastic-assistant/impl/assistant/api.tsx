@@ -56,8 +56,8 @@ export const fetchConnectorExecuteAction = async ({
 
   const requestBody = {
     params: {
-      subActionParams: body,
-      subAction: 'invokeAI',
+      subActionParams: { body: JSON.stringify(body), stream: true },
+      subAction: 'stream',
     },
   };
 
@@ -73,12 +73,13 @@ export const fetchConnectorExecuteAction = async ({
       service_message?: string;
     }>(path, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      // headers: {
+      //   'Content-Type': 'application/json',
+      // },
       body: JSON.stringify(requestBody),
       signal,
     });
+    console.log('response', response);
 
     if (response.status !== 'ok' || !response.data) {
       if (response.service_message) {
