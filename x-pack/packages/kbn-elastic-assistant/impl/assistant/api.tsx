@@ -11,14 +11,27 @@ import { HttpSetup, IHttpFetchError } from '@kbn/core-http-browser';
 import type { Conversation, Message } from '../assistant_context/types';
 import { API_ERROR } from './translations';
 import { MODEL_GPT_3_5_TURBO } from '../connectorland/models/model_selector/model_selector';
+import {
+  getFormattedMessageContent,
+  getOptionalRequestParams,
+  hasParsableResponse,
+} from './helpers';
 import { PerformEvaluationParams } from './settings/evaluation_settings/use_perform_evaluation';
 
 export interface FetchConnectorExecuteAction {
-  assistantLangChain: boolean;
+  isEnabledRAGAlerts: boolean;
+  alertsIndexPattern?: string;
+  allow?: string[];
+  allowReplacement?: string[];
+  isEnabledKnowledgeBase: boolean;
+  assistantStreamingEnabled: boolean;
   apiConfig: Conversation['apiConfig'];
   http: HttpSetup;
   messages: Message[];
+  onNewReplacements: (newReplacements: Record<string, string>) => void;
+  replacements?: Record<string, string>;
   signal?: AbortSignal | undefined;
+  size?: number;
 }
 
 export interface FetchConnectorExecuteResponse {
@@ -32,11 +45,19 @@ export interface FetchConnectorExecuteResponse {
 }
 
 export const fetchConnectorExecuteAction = async ({
-  assistantLangChain,
+  isEnabledRAGAlerts,
+  alertsIndexPattern,
+  allow,
+  allowReplacement,
+  isEnabledKnowledgeBase,
+  assistantStreamingEnabled,
   http,
   messages,
+  onNewReplacements,
+  replacements,
   apiConfig,
   signal,
+  size,
 }: FetchConnectorExecuteAction): Promise<FetchConnectorExecuteResponse> => {
   const outboundMessages = messages.map((msg) => ({
     role: msg.role,
@@ -57,13 +78,29 @@ export const fetchConnectorExecuteAction = async ({
           messages: outboundMessages,
         };
 
-  const requestBody = !assistantLangChain
+  // TODO: Remove in part 3 of streaming work for security solution
+  // tracked here: https://github.com/elastic/security-team/issues/7363
+  // In part 3 I will make enhancements to langchain to introduce streaming
+  // Once implemented, invokeAI can be removed
+  const isStream = assistantStreamingEnabled && !isEnabledKnowledgeBase && !isEnabledRAGAlerts;
+  const optionalRequestParams = getOptionalRequestParams({
+    isEnabledRAGAlerts,
+    alertsIndexPattern,
+    allow,
+    allowReplacement,
+    replacements,
+    size,
+  });
+
+  const requestBody = isStream
     ? {
         params: {
           subActionParams: body,
           subAction: 'invokeStream',
         },
-        assistantLangChain,
+        isEnabledKnowledgeBase,
+        isEnabledRAGAlerts,
+        ...optionalRequestParams,
       }
     : // langchain handles streaming by taking the full text from the LLM invokeAI response
       // and streaming it back to the client with their special chain of actions
@@ -72,7 +109,9 @@ export const fetchConnectorExecuteAction = async ({
           subActionParams: body,
           subAction: 'invokeAI',
         },
-        assistantLangChain,
+        isEnabledKnowledgeBase,
+        isEnabledRAGAlerts,
+        ...optionalRequestParams,
       };
 
   try {
@@ -91,23 +130,81 @@ export const fetchConnectorExecuteAction = async ({
 
     const reader = response?.response?.body?.getReader();
 
-    if (!reader) {
+      if (!reader) {
+        return {
+          response: `${API_ERROR}\n\nCould not get reader from response`,
+          isError: true,
+          isStream: false,
+        };
+      }
       return {
-        response: `${API_ERROR}\n\nCould not get reader from response`,
+        response: reader,
+        isStream: true,
+        isError: false,
+      };
+    }
+
+    // TODO: Remove in part 3 of streaming work for security solution
+    // tracked here: https://github.com/elastic/security-team/issues/7363
+    // This is a temporary code to support the non-streaming API
+    const response = await http.fetch<{
+      connector_id: string;
+      status: string;
+      data: string;
+      replacements?: Record<string, string>;
+      service_message?: string;
+      trace_data?: {
+        transaction_id: string;
+        trace_id: string;
+      };
+    }>(`/internal/elastic_assistant/actions/connector/${apiConfig?.connectorId}/_execute`, {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      headers: { 'Content-Type': 'application/json' },
+      signal,
+    });
+
+    if (response.status !== 'ok' || !response.data) {
+      if (response.service_message) {
+        return {
+          response: `${API_ERROR}\n\n${response.service_message}`,
+          isError: true,
+          isStream: false,
+        };
+      }
+      return {
+        response: API_ERROR,
         isError: true,
         isStream: false,
       };
     }
+
+    // Only add traceData if it exists in the response
+    const traceData =
+      response.trace_data?.trace_id != null && response.trace_data?.transaction_id != null
+        ? {
+            traceId: response.trace_data?.trace_id,
+            transactionId: response.trace_data?.transaction_id,
+          }
+        : undefined;
+
+    onNewReplacements(response.replacements ?? {});
+
     return {
-      response: reader,
-      isStream: true,
+      response: hasParsableResponse({
+        isEnabledRAGAlerts,
+        isEnabledKnowledgeBase,
+      })
+        ? getFormattedMessageContent(response.data)
+        : response.data,
       isError: false,
     };
     // // might need this still???
     //   response: assistantLangChain ? getFormattedMessageContent(response.data) : response.data,
   } catch (error) {
-    console.log('WE ARE HERE error 1', error);
-    const reader = error?.response?.body?.getReader();
+    const getReader = error?.response?.body?.getReader;
+    const reader =
+      isStream && typeof getReader === 'function' ? getReader.call(error.response.body) : null;
 
     if (!reader) {
       return {

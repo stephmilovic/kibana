@@ -8,12 +8,18 @@
 import { initializeAgentExecutorWithOptions } from 'langchain/agents';
 import { RetrievalQAChain } from 'langchain/chains';
 import { BufferMemory, ChatMessageHistory } from 'langchain/memory';
+import { Tool } from 'langchain/tools';
+
+import { ElasticsearchStore } from '../elasticsearch_store/elasticsearch_store';
 import { ChainTool, Tool } from 'langchain/tools';
 import { PassThrough, Readable } from 'stream';
 import { ActionsClientLlm } from '../llm/actions_client_llm';
 import { ElasticsearchStore } from '../elasticsearch_store/elasticsearch_store';
 import { KNOWLEDGE_BASE_INDEX_PATTERN } from '../../../routes/knowledge_base/constants';
 import type { AgentExecutorParams, AgentExecutorResponse } from '../executors/types';
+import { withAssistantSpan } from '../tracers/with_assistant_span';
+import { APMTracer } from '../tracers/apm_tracer';
+import { AssistantToolParams } from '../../../types';
 
 export const DEFAULT_AGENT_EXECUTOR_ID = 'Elastic AI Assistant Agent Executor';
 
@@ -24,14 +30,23 @@ export const DEFAULT_AGENT_EXECUTOR_ID = 'Elastic AI Assistant Agent Executor';
  */
 export const callAgentExecutor = async ({
   actions,
+  alertsIndexPattern,
+  allow,
+  allowReplacement,
+  isEnabledKnowledgeBase,
+  assistantTools = [],
   connectorId,
+  elserId,
   esClient,
+  kbResource,
   langChainMessages,
   llmType,
   logger,
+  onNewReplacements,
+  replacements,
   request,
-  elserId,
-  kbResource,
+  size,
+  telemetry,
   traceOptions,
 }: AgentExecutorParams): AgentExecutorResponse => {
   const llm = new ActionsClientLlm({
@@ -59,30 +74,33 @@ export const callAgentExecutor = async ({
     esClient,
     KNOWLEDGE_BASE_INDEX_PATTERN,
     logger,
+    telemetry,
     elserId,
     kbResource
   );
 
   const modelExists = await esStore.isModelInstalled();
-  if (!modelExists) {
-    throw new Error(
-      'Please ensure ELSER is configured to use the Knowledge Base, otherwise disable the Knowledge Base in Advanced Settings to continue.'
-    );
-  }
 
   // Create a chain that uses the ELSER backed ElasticsearchStore, override k=10 for esql query generation for now
   const chain = RetrievalQAChain.fromLLM(llm, esStore.asRetriever(10));
 
-  // TODO: Dependency inject these tools
-  const tools: Tool[] = [
-    new ChainTool({
-      name: 'ESQLKnowledgeBaseTool',
-      description:
-        'Call this for knowledge on how to build an ESQL query, or answer questions about the ES|QL query language.',
-      chain,
-      tags: ['esql', 'query-generation', 'knowledge-base'],
-    }),
-  ];
+  // Fetch any applicable tools that the source plugin may have registered
+  const assistantToolParams: AssistantToolParams = {
+    allow,
+    allowReplacement,
+    alertsIndexPattern,
+    isEnabledKnowledgeBase,
+    chain,
+    esClient,
+    modelExists,
+    onNewReplacements,
+    replacements,
+    request,
+    size,
+  };
+  const tools: Tool[] = assistantTools.flatMap((tool) => tool.getTool(assistantToolParams) ?? []);
+
+  logger.debug(`applicable tools: ${JSON.stringify(tools.map((t) => t.name).join(', '), null, 2)}`);
 
   // // Sets up tracer for tracing executions to APM. See x-pack/plugins/elastic_assistant/server/lib/langchain/tracers/README.mdx
   // // If LangSmith env vars are set, executions will be traced there as well. See https://docs.smith.langchain.com/tracing
@@ -129,6 +147,14 @@ export const callAgentExecutor = async ({
   }
 
   const readable = Readable.from(generate());
+  const reader= readable.pipe(new PassThrough());
 
-  return readable.pipe(new PassThrough());
+  return {
+    connector_id: connectorId,
+    data: llm.getActionResultData(), // the response from the actions framework
+    trace_data: traceData,
+    replacements,
+    status: 'ok',
+    reader
+  };
 };
