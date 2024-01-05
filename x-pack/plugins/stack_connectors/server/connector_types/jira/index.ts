@@ -7,18 +7,22 @@
 
 import { TypeOf } from '@kbn/config-schema';
 
-import type {
-  ActionType as ConnectorType,
+import {
   ActionTypeExecutorOptions as ConnectorTypeExecutorOptions,
   ActionTypeExecutorResult as ConnectorTypeExecutorResult,
 } from '@kbn/actions-plugin/server/types';
+import {
+  SubActionConnectorType,
+  ValidatorType,
+} from '@kbn/actions-plugin/server/sub_action_framework/types';
 import {
   AlertingConnectorFeatureId,
   CasesConnectorFeatureId,
   UptimeConnectorFeatureId,
   SecurityConnectorFeatureId,
 } from '@kbn/actions-plugin/common/types';
-import { validate } from './validators';
+import { JiraConnector } from './jira';
+import { configValidator } from './validators';
 import {
   ExternalIncidentServiceConfigurationSchema,
   ExternalIncidentServiceSecretConfigurationSchema,
@@ -54,36 +58,26 @@ const supportedSubActions: string[] = [
 
 export const ConnectorTypeId = '.jira';
 // connector type definition
-export function getConnectorType(): ConnectorType<
+export function getConnectorType(): SubActionConnectorType<
   JiraPublicConfigurationType,
-  JiraSecretConfigurationType,
-  ExecutorParams,
-  JiraExecutorResultData | {}
+  JiraSecretConfigurationType
 > {
   return {
     id: ConnectorTypeId,
     minimumLicenseRequired: 'gold',
     name: i18n.NAME,
+    getService: (params) => new JiraConnector(params),
     supportedFeatureIds: [
       AlertingConnectorFeatureId,
       CasesConnectorFeatureId,
       UptimeConnectorFeatureId,
       SecurityConnectorFeatureId,
     ],
-    validate: {
-      config: {
-        schema: ExternalIncidentServiceConfigurationSchema,
-        customValidator: validate.config,
-      },
-      secrets: {
-        schema: ExternalIncidentServiceSecretConfigurationSchema,
-        customValidator: validate.secrets,
-      },
-      params: {
-        schema: ExecutorParamsSchema,
-      },
+    schema: {
+      config: ExternalIncidentServiceConfigurationSchema,
+      secrets: ExternalIncidentServiceSecretConfigurationSchema,
     },
-    executor,
+    validators: [{ type: ValidatorType.CONFIG, validator: configValidator }],
   };
 }
 
@@ -122,10 +116,7 @@ async function executor(
 
   if (subAction === 'getIncident') {
     const getIncidentParams = subActionParams as ExecutorSubActionGetIncidentParams;
-    const res = await api.getIncident({
-      externalService,
-      params: getIncidentParams,
-    });
+    const res = await externalService.getIncident(getIncidentParams.externalId);
     if (res != null) {
       data = res;
     }

@@ -6,32 +6,24 @@
  */
 
 import { ValidatorServices } from '@kbn/actions-plugin/server/types';
+
 import {
-  JiraPublicConfigurationType,
-  JiraSecretConfigurationType,
-  ExternalServiceValidation,
-} from './types';
-
+  assertURL,
+  urlAllowListValidator,
+} from '@kbn/actions-plugin/server/sub_action_framework/helpers/validators';
 import * as i18n from './translations';
+import { JiraPublicConfigurationType } from './types';
 
-export const validateCommonConfig = (
+export const configValidator = (
   configObject: JiraPublicConfigurationType,
   validatorServices: ValidatorServices
 ) => {
-  const { configurationUtilities } = validatorServices;
   try {
-    configurationUtilities.ensureUriAllowed(configObject.apiUrl);
+    assertURL(configObject.apiUrl);
+    urlAllowListValidator('apiUrl')(configObject, validatorServices);
+
+    return configObject;
   } catch (allowedListError) {
     throw new Error(i18n.ALLOWED_HOSTS_ERROR(allowedListError.message));
   }
-};
-
-export const validateCommonSecrets = (
-  secrets: JiraSecretConfigurationType,
-  validatorServices: ValidatorServices
-) => {};
-
-export const validate: ExternalServiceValidation = {
-  config: validateCommonConfig,
-  secrets: validateCommonSecrets,
 };

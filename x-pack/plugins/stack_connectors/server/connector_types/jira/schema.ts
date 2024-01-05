@@ -57,6 +57,15 @@ export const ExecutorSubActionGetIncidentParamsSchema = schema.object({
   externalId: schema.string(),
 });
 
+export const JiraGetIncidentResponseSchema = schema.object({
+  id: schema.string(),
+  key: schema.string(),
+  summary: schema.string(),
+  description: schema.string(),
+  created: schema.string(),
+  updated: schema.string(),
+});
+
 // Reserved for future implementation
 export const ExecutorSubActionCommonFieldsParamsSchema = schema.object({});
 export const ExecutorSubActionHandshakeParamsSchema = schema.object({});

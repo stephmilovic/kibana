@@ -43,6 +43,22 @@ const VIEW_INCIDENT_URL = `browse`;
 
 const createMetaCapabilities = ['list-project-issuetypes', 'list-issuetype-fields'];
 
+export const getUrls = (url: string, projectKey: string) => {
+  const urlWithoutTrailingSlash = url.endsWith('/') ? url.slice(0, -1) : url;
+  const incidentUrl = `${urlWithoutTrailingSlash}/${BASE_URL}/issue`;
+  return {
+    incidentUrl,
+    capabilitiesUrl: `${urlWithoutTrailingSlash}/${CAPABILITIES_URL}`,
+    commentUrl: `${incidentUrl}/{issueId}/comment`,
+    getIssueTypesOldAPIURL: `${urlWithoutTrailingSlash}/${BASE_URL}/issue/createmeta?projectKeys=${projectKey}&expand=projects.issuetypes.fields`,
+    getIssueTypeFieldsOldAPIURL: `${urlWithoutTrailingSlash}/${BASE_URL}/issue/createmeta?projectKeys=${projectKey}&issuetypeIds={issueTypeId}&expand=projects.issuetypes.fields`,
+    getIssueTypesUrl: `${urlWithoutTrailingSlash}/${BASE_URL}/issue/createmeta/${projectKey}/issuetypes`,
+    getIssueTypeFieldsUrl: `${urlWithoutTrailingSlash}/${BASE_URL}/issue/createmeta/${projectKey}/issuetypes/{issueTypeId}`,
+    searchUrl: `${urlWithoutTrailingSlash}/${BASE_URL}/search`,
+    getIncidentViewUrl: (key: string) => `${urlWithoutTrailingSlash}/${VIEW_INCIDENT_URL}/${key}`,
+  };
+};
+
 export const createExternalService = (
   { config, secrets }: ExternalServiceCredentials,
   logger: Logger,
