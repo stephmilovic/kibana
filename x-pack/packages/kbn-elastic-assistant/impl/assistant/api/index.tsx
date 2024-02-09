@@ -8,7 +8,7 @@
 import { OpenAiProviderType } from '@kbn/stack-connectors-plugin/public/common';
 import { HttpSetup } from '@kbn/core/public';
 import { IHttpFetchError } from '@kbn/core-http-browser';
-import type { Conversation, RawMessage } from '../../assistant_context/types';
+import type { Conversation, Message } from '../../assistant_context/types';
 import { API_ERROR } from '../translations';
 import { MODEL_GPT_3_5_TURBO } from '../../connectorland/models/model_selector/model_selector';
 import {
@@ -17,8 +17,6 @@ import {
   hasParsableResponse,
   llmTypeDictionary,
 } from '../helpers';
-import { PerformEvaluationParams } from './evaluate/use_perform_evaluation';
-
 export * from './conversations';
 
 export interface FetchConnectorExecuteAction {
@@ -31,7 +29,8 @@ export interface FetchConnectorExecuteAction {
   assistantStreamingEnabled: boolean;
   apiConfig: Conversation['apiConfig'];
   http: HttpSetup;
-  messages: RawMessage[];
+  messages: Message[];
+  replacements?: Record<string, string>;
   signal?: AbortSignal | undefined;
   size?: number;
 }
@@ -56,26 +55,28 @@ export const fetchConnectorExecuteAction = async ({
   assistantStreamingEnabled,
   http,
   messages,
+  replacements,
   apiConfig,
   signal,
   size,
 }: FetchConnectorExecuteAction): Promise<FetchConnectorExecuteResponse> => {
-  const messagesT = messages.map((m) => ({
-    rawData: {},
-    ...m,
+  const outboundMessages = messages.map((msg) => ({
+    role: msg.role,
+    content: msg.content,
   }));
+
   const body =
     apiConfig?.provider === OpenAiProviderType.OpenAi
       ? {
           model: apiConfig.model ?? MODEL_GPT_3_5_TURBO,
-          messages: messagesT,
+          messages: outboundMessages,
           n: 1,
           stop: null,
           temperature: 0.2,
         }
       : {
           // Azure OpenAI and Bedrock invokeAI both expect this body format
-          messages: messagesT,
+          messages: outboundMessages,
         };
 
   const llmType = llmTypeDictionary[apiConfig.connectorTypeTitle ?? 'OpenAI'];
@@ -99,6 +100,7 @@ export const fetchConnectorExecuteAction = async ({
     isEnabledKnowledgeBase,
     isEnabledRAGAlerts,
     llmType,
+    replacements,
   };
 
   const requestBody = isStream
@@ -338,65 +340,6 @@ export const deleteKnowledgeBase = async ({
     });
 
     return response as DeleteKnowledgeBaseResponse;
-  } catch (error) {
-    return error as IHttpFetchError;
-  }
-};
-
-export interface PostEvaluationParams {
-  http: HttpSetup;
-  evalParams?: PerformEvaluationParams;
-  signal?: AbortSignal | undefined;
-}
-
-export interface PostEvaluationResponse {
-  evaluationId: string;
-  success: boolean;
-}
-
-/**
- * API call for evaluating models.
- *
- * @param {Object} options - The options object.
- * @param {HttpSetup} options.http - HttpSetup
- * @param {string} [options.evalParams] - Params necessary for evaluation
- * @param {AbortSignal} [options.signal] - AbortSignal
- *
- * @returns {Promise<PostEvaluationResponse | IHttpFetchError>}
- */
-export const postEvaluation = async ({
-  http,
-  evalParams,
-  signal,
-}: PostEvaluationParams): Promise<PostEvaluationResponse | IHttpFetchError> => {
-  try {
-    const path = `/internal/elastic_assistant/evaluate`;
-    const query = {
-      agents: evalParams?.agents.sort()?.join(','),
-      datasetName: evalParams?.datasetName,
-      evaluationType: evalParams?.evaluationType.sort()?.join(','),
-      evalModel: evalParams?.evalModel.sort()?.join(','),
-      outputIndex: evalParams?.outputIndex,
-      models: evalParams?.models.sort()?.join(','),
-      projectName: evalParams?.projectName,
-      runName: evalParams?.runName,
-    };
-
-    const response = await http.fetch(path, {
-      method: 'POST',
-      body: JSON.stringify({
-        dataset: JSON.parse(evalParams?.dataset ?? '[]'),
-        evalPrompt: evalParams?.evalPrompt ?? '',
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      query,
-      signal,
-      version: '1',
-    });
-
-    return response as PostEvaluationResponse;
   } catch (error) {
     return error as IHttpFetchError;
   }
