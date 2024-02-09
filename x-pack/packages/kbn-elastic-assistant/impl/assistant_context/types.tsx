@@ -13,6 +13,15 @@ export interface MessagePresentation {
   delay?: number;
   stream?: boolean;
 }
+
+export interface RawMessage {
+  role: ConversationRole;
+  content: string;
+  allow?: string[];
+  allowReplacement?: string[];
+  rawData?: string | Record<string, string[]>;
+  promptText?: string;
+}
 export interface Message {
   role: ConversationRole;
   reader?: ReadableStreamDefaultReader<Uint8Array>;
@@ -50,6 +59,7 @@ export interface ConversationTheme {
  *
  */
 export interface Conversation {
+  '@timestamp'?: string;
   apiConfig: {
     connectorId?: string;
     connectorTypeTitle?: string;
@@ -57,10 +67,16 @@ export interface Conversation {
     provider?: OpenAiProviderType;
     model?: string;
   };
+  user?: {
+    id?: string;
+    name?: string;
+  };
   id: string;
+  title: string;
   messages: Message[];
+  updatedAt?: Date;
+  createdAt?: Date;
   replacements?: Record<string, string>;
-  theme?: ConversationTheme;
   isDefault?: boolean;
   excludeFromLastConversationStorage?: boolean;
 }

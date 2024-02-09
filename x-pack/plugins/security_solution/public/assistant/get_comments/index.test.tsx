@@ -12,6 +12,7 @@ const user: ConversationRole = 'user';
 const currentConversation = {
   apiConfig: {},
   id: '1',
+  title: '1',
   messages: [
     {
       role: user,
@@ -42,6 +43,7 @@ describe('getComments', () => {
       currentConversation: {
         apiConfig: {},
         id: '1',
+        title: '1',
         messages: [
           {
             role: user,

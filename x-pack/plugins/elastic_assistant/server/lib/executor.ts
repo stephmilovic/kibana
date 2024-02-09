@@ -6,16 +6,21 @@
  */
 
 import { get } from 'lodash/fp';
-import { PluginStartContract as ActionsPluginStart } from '@kbn/actions-plugin/server';
 import { KibanaRequest } from '@kbn/core-http-server';
+import { PluginStartContract as ActionsPluginStart } from '@kbn/actions-plugin/server';
 import { PassThrough, Readable } from 'stream';
-import { RequestBody } from './langchain/types';
+import {
+  ConnectorExecutionParams,
+  ExecuteConnectorRequestBody,
+} from '@kbn/elastic-assistant-common';
 
 export interface Props {
   abortSignal?: AbortSignal;
   actions: ActionsPluginStart;
   connectorId: string;
-  request: KibanaRequest<unknown, unknown, RequestBody>;
+  onMessageSent: (content: string) => void;
+  params: ConnectorExecutionParams;
+  request: KibanaRequest<unknown, unknown, ExecuteConnectorRequestBody>;
 }
 interface StaticResponse {
   connector_id: string;
@@ -24,18 +29,20 @@ interface StaticResponse {
 }
 
 export const executeAction = async ({
-  actions,
-  request,
-  connectorId,
   abortSignal,
+  actions,
+  connectorId,
+  onMessageSent,
+  params,
+  request,
 }: Props): Promise<StaticResponse | Readable> => {
   const actionsClient = await actions.getActionsClientWithRequest(request);
   const actionResult = await actionsClient.execute({
     actionId: connectorId,
     params: {
-      ...request.body.params,
+      ...params,
       subActionParams: {
-        ...request.body.params.subActionParams,
+        ...params.subActionParams,
         signal: abortSignal,
       },
     },
@@ -48,6 +55,7 @@ export const executeAction = async ({
   }
   const content = get('data.message', actionResult);
   if (typeof content === 'string') {
+    onMessageSent(content);
     return {
       connector_id: connectorId,
       data: content, // the response from the actions framework
@@ -55,6 +63,13 @@ export const executeAction = async ({
     };
   }
   const readable = get('data', actionResult) as Readable;
+
+  // TODO @steph make sure aborted
+  readable.read().then(({ done, value }) => {
+    if (done) {
+      onMessageSent(value);
+    }
+  });
 
   if (typeof readable?.read !== 'function') {
     throw new Error('Action result status is error: result is not streamable');

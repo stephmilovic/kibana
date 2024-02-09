@@ -16,7 +16,7 @@ import { MessageText } from './message_text';
 
 interface Props {
   abortStream: () => void;
-  amendMessage: (message: string) => void;
+  amendMessage: (message: string) => Promise<void>;
   content?: string;
   isEnabledLangChain: boolean;
   isError?: boolean;

@@ -31,14 +31,16 @@ interface OwnProps {
   docLinks: Omit<DocLinksStart, 'links'>;
   isDisabled: boolean;
   isSettingsModalVisible: boolean;
-  onConversationSelected: (cId: string) => void;
+  onConversationSelected: ({ cId, cTitle }: { cId: string; cTitle: string }) => void;
+  onConversationDeleted: (conversationId: string) => void;
   onToggleShowAnonymizedValues: (e: EuiSwitchEvent) => void;
-  selectedConversationId: string;
   setIsSettingsModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  setSelectedConversationId: React.Dispatch<React.SetStateAction<string>>;
+  setCurrentConversation: React.Dispatch<React.SetStateAction<Conversation>>;
   shouldDisableKeyboardShortcut?: () => boolean;
   showAnonymizedValues: boolean;
   title: string | JSX.Element;
+  conversations: Record<string, Conversation>;
+  refetchConversationsState: () => Promise<void>;
 }
 
 type Props = OwnProps;
@@ -55,13 +57,15 @@ export const AssistantHeader: React.FC<Props> = ({
   isDisabled,
   isSettingsModalVisible,
   onConversationSelected,
+  onConversationDeleted,
   onToggleShowAnonymizedValues,
-  selectedConversationId,
   setIsSettingsModalVisible,
-  setSelectedConversationId,
   shouldDisableKeyboardShortcut,
   showAnonymizedValues,
   title,
+  setCurrentConversation,
+  conversations,
+  refetchConversationsState,
 }) => {
   const showAnonymizedValuesChecked = useMemo(
     () =>
@@ -84,6 +88,13 @@ export const AssistantHeader: React.FC<Props> = ({
             isDisabled={isDisabled}
             docLinks={docLinks}
             selectedConversation={currentConversation}
+            onChange={(updatedConversation) => {
+              setCurrentConversation(updatedConversation);
+              onConversationSelected({
+                cId: updatedConversation.id,
+                cTitle: updatedConversation.title,
+              });
+            }}
             title={title}
           />
         </EuiFlexItem>
@@ -97,10 +108,12 @@ export const AssistantHeader: React.FC<Props> = ({
           <ConversationSelector
             defaultConnectorId={defaultConnectorId}
             defaultProvider={defaultProvider}
-            selectedConversationId={selectedConversationId}
+            selectedConversationTitle={currentConversation.title}
             onConversationSelected={onConversationSelected}
             shouldDisableKeyboardShortcut={shouldDisableKeyboardShortcut}
             isDisabled={isDisabled}
+            conversations={conversations}
+            onConversationDeleted={onConversationDeleted}
           />
 
           <>
@@ -131,7 +144,9 @@ export const AssistantHeader: React.FC<Props> = ({
                   isSettingsModalVisible={isSettingsModalVisible}
                   selectedConversation={currentConversation}
                   setIsSettingsModalVisible={setIsSettingsModalVisible}
-                  setSelectedConversationId={setSelectedConversationId}
+                  onConversationSelected={onConversationSelected}
+                  conversations={conversations}
+                  refetchConversationsState={refetchConversationsState}
                 />
               </EuiFlexItem>
             </EuiFlexGroup>

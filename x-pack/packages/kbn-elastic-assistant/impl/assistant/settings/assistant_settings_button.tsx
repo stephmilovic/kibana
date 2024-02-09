@@ -20,8 +20,10 @@ interface Props {
   isSettingsModalVisible: boolean;
   selectedConversation: Conversation;
   setIsSettingsModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  setSelectedConversationId: React.Dispatch<React.SetStateAction<string>>;
+  onConversationSelected: ({ cId, cTitle }: { cId: string; cTitle: string }) => void;
   isDisabled?: boolean;
+  conversations: Record<string, Conversation>;
+  refetchConversationsState: () => Promise<void>;
 }
 
 /**
@@ -35,7 +37,9 @@ export const AssistantSettingsButton: React.FC<Props> = React.memo(
     isSettingsModalVisible,
     setIsSettingsModalVisible,
     selectedConversation,
-    setSelectedConversationId,
+    onConversationSelected,
+    conversations,
+    refetchConversationsState,
   }) => {
     const { toasts, setSelectedSettingsTab } = useAssistantContext();
 
@@ -48,13 +52,19 @@ export const AssistantSettingsButton: React.FC<Props> = React.memo(
       cleanupAndCloseModal();
     }, [cleanupAndCloseModal]);
 
-    const handleSave = useCallback(() => {
-      cleanupAndCloseModal();
-      toasts?.addSuccess({
-        iconType: 'check',
-        title: i18n.SETTINGS_UPDATED_TOAST_TITLE,
-      });
-    }, [cleanupAndCloseModal, toasts]);
+    const handleSave = useCallback(
+      async (success: boolean) => {
+        cleanupAndCloseModal();
+        await refetchConversationsState();
+        if (success) {
+          toasts?.addSuccess({
+            iconType: 'check',
+            title: i18n.SETTINGS_UPDATED_TOAST_TITLE,
+          });
+        }
+      },
+      [cleanupAndCloseModal, refetchConversationsState, toasts]
+    );
 
     const handleShowConversationSettings = useCallback(() => {
       setSelectedSettingsTab(CONVERSATIONS_TAB);
@@ -79,9 +89,10 @@ export const AssistantSettingsButton: React.FC<Props> = React.memo(
             defaultConnectorId={defaultConnectorId}
             defaultProvider={defaultProvider}
             selectedConversation={selectedConversation}
-            setSelectedConversationId={setSelectedConversationId}
+            onConversationSelected={onConversationSelected}
             onClose={handleCloseModal}
             onSave={handleSave}
+            conversations={conversations}
           />
         )}
       </>

@@ -34,11 +34,11 @@ const transformMessageWithReplacements = ({
     ...message,
     content:
       showAnonymizedValues || !replacements
-        ? content
-        : getMessageContentWithReplacements({
+        ? getMessageContentWithReplacements({
             messageContent: content,
             replacements,
-          }),
+          })
+        : content,
   };
 };
 
@@ -52,15 +52,21 @@ export const getComments = ({
   showAnonymizedValues,
 }: {
   abortStream: () => void;
-  amendMessage: ({ conversationId, content }: { conversationId: string; content: string }) => void;
+  amendMessage: ({
+    conversationId,
+    content,
+  }: {
+    conversationId: string;
+    content: string;
+  }) => Promise<void>;
   currentConversation: Conversation;
   isEnabledLangChain: boolean;
   isFetchingResponse: boolean;
   regenerateMessage: (conversationId: string) => void;
   showAnonymizedValues: boolean;
 }): EuiCommentProps[] => {
-  const amendMessageOfConversation = (content: string) => {
-    amendMessage({
+  const amendMessageOfConversation = async (content: string) => {
+    await amendMessage({
       conversationId: currentConversation.id,
       content,
     });

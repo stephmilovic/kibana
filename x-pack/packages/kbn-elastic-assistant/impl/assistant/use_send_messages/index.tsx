@@ -9,7 +9,7 @@ import { HttpSetup } from '@kbn/core-http-browser';
 import { useCallback, useRef, useState } from 'react';
 
 import { useAssistantContext } from '../../assistant_context';
-import { Conversation, Message } from '../../assistant_context/types';
+import { Conversation, RawMessage } from '../../assistant_context/types';
 import { fetchConnectorExecuteAction, FetchConnectorExecuteResponse } from '../api';
 
 interface SendMessagesProps {
@@ -17,8 +17,8 @@ interface SendMessagesProps {
   allowReplacement?: string[];
   apiConfig: Conversation['apiConfig'];
   http: HttpSetup;
-  messages: Message[];
-  onNewReplacements: (newReplacements: Record<string, string>) => void;
+  messages: RawMessage[];
+  conversationId: string;
   replacements?: Record<string, string>;
 }
 
@@ -43,11 +43,12 @@ export const useSendMessages = (): UseSendMessages => {
   const [isLoading, setIsLoading] = useState(false);
   const abortController = useRef(new AbortController());
   const sendMessages = useCallback(
-    async ({ apiConfig, http, messages, onNewReplacements, replacements }: SendMessagesProps) => {
+    async ({ apiConfig, http, messages, conversationId, replacements }: SendMessagesProps) => {
       setIsLoading(true);
 
       try {
         return await fetchConnectorExecuteAction({
+          conversationId,
           isEnabledRAGAlerts: knowledgeBase.isEnabledRAGAlerts, // settings toggle
           alertsIndexPattern,
           allow: defaultAllow,
@@ -56,11 +57,9 @@ export const useSendMessages = (): UseSendMessages => {
           isEnabledKnowledgeBase: knowledgeBase.isEnabledKnowledgeBase,
           assistantStreamingEnabled,
           http,
-          replacements,
           messages,
           signal: abortController.current.signal,
           size: knowledgeBase.latestAlerts,
-          onNewReplacements,
         });
       } finally {
         setIsLoading(false);

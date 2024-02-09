@@ -10,7 +10,7 @@ import { HttpSetup } from '@kbn/core-http-browser';
 import { SelectedPromptContext } from '../prompt_context/types';
 import { useSendMessages } from '../use_send_messages';
 import { useConversation } from '../use_conversation';
-import { getCombinedMessage } from '../prompt/helpers';
+import { getCombinedRawMessages } from '../prompt/helpers';
 import { Conversation, Message, Prompt } from '../../..';
 import { getMessageFromRawResponse } from '../helpers';
 import { getDefaultSystemPrompt } from '../use_conversation/helpers';
@@ -27,6 +27,8 @@ export interface UseChatSendProps {
     React.SetStateAction<Record<string, SelectedPromptContext>>
   >;
   setUserPrompt: React.Dispatch<React.SetStateAction<string | null>>;
+  refresh: () => Promise<Conversation | undefined>;
+  setCurrentConversation: React.Dispatch<React.SetStateAction<Conversation>>;
 }
 
 export interface UseChatSend {
@@ -54,10 +56,11 @@ export const useChatSend = ({
   setPromptTextPreview,
   setSelectedPromptContexts,
   setUserPrompt,
+  refresh,
+  setCurrentConversation,
 }: UseChatSendProps): UseChatSend => {
   const { isLoading, sendMessages, abortStream } = useSendMessages();
-  const { appendMessage, appendReplacements, clearConversation, removeLastMessage } =
-    useConversation();
+  const { clearConversation, removeLastMessage } = useConversation();
 
   const handlePromptChange = (prompt: string) => {
     setPromptTextPreview(prompt);
@@ -67,28 +70,31 @@ export const useChatSend = ({
   // Handles sending latest user prompt to API
   const handleSendMessage = useCallback(
     async (promptText: string) => {
-      const onNewReplacements = (newReplacements: Record<string, string>) =>
-        appendReplacements({
-          conversationId: currentConversation.id,
-          replacements: newReplacements,
-        });
-
       const systemPrompt = allSystemPrompts.find((prompt) => prompt.id === editingSystemPromptId);
 
-      const message = await getCombinedMessage({
+      const messagesWithRawData = getCombinedRawMessages({
         isNewChat: currentConversation.messages.length === 0,
-        currentReplacements: currentConversation.replacements,
-        onNewReplacements,
         promptText,
         selectedPromptContexts,
         selectedSystemPrompt: systemPrompt,
       });
 
-      const updatedMessages = appendMessage({
-        conversationId: currentConversation.id,
-        message,
-      });
+      const updatedMessages = [
+        ...currentConversation.messages,
+        ...messagesWithRawData.map((m) => ({
+          content: `${
+            currentConversation.messages.length === 0 ? `${systemPrompt?.content ?? ''}\n\n` : ''
+          }
+          ${m.promptText}`,
+          timestamp: new Date().toLocaleString(),
+          role: m.role,
+        })),
+      ];
 
+      setCurrentConversation({
+        ...currentConversation,
+        messages: updatedMessages,
+      });
       // Reset prompt context selection and preview before sending:
       setSelectedPromptContexts({});
       setPromptTextPreview('');
@@ -96,59 +102,45 @@ export const useChatSend = ({
       const rawResponse = await sendMessages({
         apiConfig: currentConversation.apiConfig,
         http,
-        messages: updatedMessages,
-        onNewReplacements,
-        replacements: currentConversation.replacements ?? {},
+        messages: messagesWithRawData,
+        conversationId: currentConversation.id,
       });
 
       const responseMessage: Message = getMessageFromRawResponse(rawResponse);
-      appendMessage({ conversationId: currentConversation.id, message: responseMessage });
+
+      setCurrentConversation({
+        ...currentConversation,
+        messages: [...updatedMessages, responseMessage],
+      });
     },
     [
       allSystemPrompts,
-      appendMessage,
-      appendReplacements,
-      currentConversation.apiConfig,
-      currentConversation.id,
-      currentConversation.messages.length,
-      currentConversation.replacements,
+      currentConversation,
       editingSystemPromptId,
       http,
       selectedPromptContexts,
       sendMessages,
+      setCurrentConversation,
       setPromptTextPreview,
       setSelectedPromptContexts,
     ]
   );
 
   const handleRegenerateResponse = useCallback(async () => {
-    const onNewReplacements = (newReplacements: Record<string, string>) =>
-      appendReplacements({
-        conversationId: currentConversation.id,
-        replacements: newReplacements,
-      });
-
-    const updatedMessages = removeLastMessage(currentConversation.id);
+    await removeLastMessage(currentConversation.id);
 
     const rawResponse = await sendMessages({
       apiConfig: currentConversation.apiConfig,
       http,
-      messages: updatedMessages,
-      onNewReplacements,
-      replacements: currentConversation.replacements ?? {},
+      messages: [],
+      conversationId: currentConversation.id,
     });
     const responseMessage: Message = getMessageFromRawResponse(rawResponse);
-    appendMessage({ conversationId: currentConversation.id, message: responseMessage });
-  }, [
-    appendMessage,
-    appendReplacements,
-    currentConversation.apiConfig,
-    currentConversation.id,
-    currentConversation.replacements,
-    http,
-    removeLastMessage,
-    sendMessages,
-  ]);
+    setCurrentConversation({
+      ...currentConversation,
+      messages: [...currentConversation.messages, responseMessage],
+    });
+  }, [currentConversation, http, removeLastMessage, sendMessages, setCurrentConversation]);
 
   const handleButtonSendMessage = useCallback(
     (message: string) => {
@@ -158,7 +150,7 @@ export const useChatSend = ({
     [handleSendMessage, setUserPrompt]
   );
 
-  const handleOnChatCleared = useCallback(() => {
+  const handleOnChatCleared = useCallback(async () => {
     const defaultSystemPromptId = getDefaultSystemPrompt({
       allSystemPrompts,
       conversation: currentConversation,
@@ -167,12 +159,14 @@ export const useChatSend = ({
     setPromptTextPreview('');
     setUserPrompt('');
     setSelectedPromptContexts({});
-    clearConversation(currentConversation.id);
     setEditingSystemPromptId(defaultSystemPromptId);
+    await clearConversation(currentConversation.id);
+    await refresh();
   }, [
     allSystemPrompts,
     clearConversation,
     currentConversation,
+    refresh,
     setEditingSystemPromptId,
     setPromptTextPreview,
     setSelectedPromptContexts,

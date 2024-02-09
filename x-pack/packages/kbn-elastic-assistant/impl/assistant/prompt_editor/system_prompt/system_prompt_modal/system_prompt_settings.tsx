@@ -24,20 +24,22 @@ import { keyBy } from 'lodash/fp';
 import { css } from '@emotion/react';
 import { Conversation, Prompt } from '../../../../..';
 import * as i18n from './translations';
-import { UseAssistantContext } from '../../../../assistant_context';
 import { ConversationMultiSelector } from './conversation_multi_selector/conversation_multi_selector';
 import { SystemPromptSelector } from './system_prompt_selector/system_prompt_selector';
 import { TEST_IDS } from '../../../constants';
+import { ConversationUpdateParams, ConversationsBulkActions } from '../../../api';
 
 interface Props {
-  conversationSettings: UseAssistantContext['conversations'];
+  conversationSettings: Record<string, Conversation>;
+  conversationsSettingsBulkActions: ConversationsBulkActions;
   onSelectedSystemPromptChange: (systemPrompt?: Prompt) => void;
   selectedSystemPrompt: Prompt | undefined;
   setUpdatedSystemPromptSettings: React.Dispatch<React.SetStateAction<Prompt[]>>;
-  setUpdatedConversationSettings: React.Dispatch<
-    React.SetStateAction<UseAssistantContext['conversations']>
-  >;
+  setConversationSettings: React.Dispatch<React.SetStateAction<Record<string, Conversation>>>;
   systemPromptSettings: Prompt[];
+  setConversationsSettingsBulkActions: React.Dispatch<
+    React.SetStateAction<ConversationsBulkActions>
+  >;
 }
 
 /**
@@ -49,8 +51,10 @@ export const SystemPromptSettings: React.FC<Props> = React.memo(
     onSelectedSystemPromptChange,
     selectedSystemPrompt,
     setUpdatedSystemPromptSettings,
-    setUpdatedConversationSettings,
+    setConversationSettings,
     systemPromptSettings,
+    conversationsSettingsBulkActions,
+    setConversationsSettingsBulkActions,
   }) => {
     // Prompt
     const promptContent = useMemo(
@@ -100,11 +104,21 @@ export const SystemPromptSettings: React.FC<Props> = React.memo(
     const handleConversationSelectionChange = useCallback(
       (currentPromptConversations: Conversation[]) => {
         const currentPromptConversationIds = currentPromptConversations.map((convo) => convo.id);
+        const getDefaultSystemPromptId = (convo: Conversation) =>
+          currentPromptConversationIds.includes(convo.id)
+            ? selectedSystemPrompt?.id
+            : convo.apiConfig.defaultSystemPromptId === selectedSystemPrompt?.id
+            ? // remove the default System Prompt if it is assigned to a conversation
+              // but that conversation is not in the currentPromptConversationList
+              // This means conversation was removed in the current transaction
+              undefined
+            : //  leave it as it is .. if that conversation was neither added nor removed.
+              convo.apiConfig.defaultSystemPromptId;
 
         if (selectedSystemPrompt != null) {
-          setUpdatedConversationSettings((prev) =>
+          setConversationSettings((prev) =>
             keyBy(
-              'id',
+              'title',
               /*
                * updatedConversationWithPrompts calculates the present of prompt for
                * each conversation. Based on the values of selected conversation, it goes
@@ -115,22 +129,67 @@ export const SystemPromptSettings: React.FC<Props> = React.memo(
                 ...convo,
                 apiConfig: {
                   ...convo.apiConfig,
-                  defaultSystemPromptId: currentPromptConversationIds.includes(convo.id)
-                    ? selectedSystemPrompt?.id
-                    : convo.apiConfig.defaultSystemPromptId === selectedSystemPrompt?.id
-                    ? // remove the default System Prompt if it is assigned to a conversation
-                      // but that conversation is not in the currentPromptConversationList
-                      // This means conversation was removed in the current transaction
-                      undefined
-                    : //  leave it as it is .. if that conversation was neither added nor removed.
-                      convo.apiConfig.defaultSystemPromptId,
+                  defaultSystemPromptId: getDefaultSystemPromptId(convo),
                 },
               }))
             )
           );
+
+          let updatedConversationsSettingsBulkActions = { ...conversationsSettingsBulkActions };
+          Object.values(conversationSettings).forEach((convo) => {
+            const getApiConfig = (
+              operation: Record<string, ConversationUpdateParams> | undefined
+            ) => ({
+              ...((operation ? operation[convo.id] ?? {} : {}).apiConfig ?? {}),
+              defaultSystemPromptId: getDefaultSystemPromptId(convo),
+            });
+            const createOperation =
+              convo.id === convo.title
+                ? {
+                    create: {
+                      ...(updatedConversationsSettingsBulkActions.create ?? {}),
+                      [convo.id]: {
+                        ...convo,
+                        apiConfig: {
+                          ...convo.apiConfig,
+                          defaultSystemPromptId: getDefaultSystemPromptId(convo),
+                        },
+                      },
+                    },
+                  }
+                : {};
+
+            const updateOperation =
+              convo.id !== convo.title
+                ? {
+                    update: {
+                      ...(updatedConversationsSettingsBulkActions.update ?? {}),
+                      [convo.id]: {
+                        ...(updatedConversationsSettingsBulkActions.update
+                          ? updatedConversationsSettingsBulkActions.update[convo.id] ?? {}
+                          : {}),
+                        apiConfig: getApiConfig(updatedConversationsSettingsBulkActions.update),
+                      },
+                    },
+                  }
+                : {};
+
+            updatedConversationsSettingsBulkActions = {
+              ...updatedConversationsSettingsBulkActions,
+              ...createOperation,
+              ...updateOperation,
+            };
+          });
+          setConversationsSettingsBulkActions(updatedConversationsSettingsBulkActions);
         }
       },
-      [selectedSystemPrompt, setUpdatedConversationSettings]
+      [
+        conversationSettings,
+        conversationsSettingsBulkActions,
+        selectedSystemPrompt,
+        setConversationSettings,
+        setConversationsSettingsBulkActions,
+      ]
     );
 
     // Whether this system prompt should be the default for new conversations

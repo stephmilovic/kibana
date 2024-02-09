@@ -14,13 +14,13 @@
 import { executeAction, Props } from './executor';
 import { PassThrough } from 'stream';
 import { KibanaRequest } from '@kbn/core-http-server';
-import { RequestBody } from './langchain/types';
 import { PluginStartContract as ActionsPluginStart } from '@kbn/actions-plugin/server';
+import { ExecuteConnectorRequestBody } from '@kbn/elastic-assistant-common';
 const request = {
   body: {
     params: {},
   },
-} as KibanaRequest<unknown, unknown, RequestBody>;
+} as KibanaRequest<unknown, unknown, ExecuteConnectorRequestBody>;
 
 describe('executeAction', () => {
   beforeEach(() => {
