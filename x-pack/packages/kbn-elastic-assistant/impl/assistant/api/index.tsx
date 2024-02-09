@@ -60,18 +60,22 @@ export const fetchConnectorExecuteAction = async ({
   signal,
   size,
 }: FetchConnectorExecuteAction): Promise<FetchConnectorExecuteResponse> => {
+  const messagesT = messages.map((m) => ({
+    rawData: {},
+    ...m,
+  }));
   const body =
     apiConfig?.provider === OpenAiProviderType.OpenAi
       ? {
           model: apiConfig.model ?? MODEL_GPT_3_5_TURBO,
-          messages,
+          messages: messagesT,
           n: 1,
           stop: null,
           temperature: 0.2,
         }
       : {
           // Azure OpenAI and Bedrock invokeAI both expect this body format
-          messages,
+          messages: messagesT,
         };
 
   const llmType = llmTypeDictionary[apiConfig.connectorTypeTitle ?? 'OpenAI'];

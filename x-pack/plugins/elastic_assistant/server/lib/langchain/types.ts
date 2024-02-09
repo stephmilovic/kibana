@@ -9,9 +9,6 @@ import {
   ChatCompletionContentPart,
   ChatCompletionCreateParamsNonStreaming,
 } from 'openai/resources/chat/completions';
-import { PostActionsConnectorExecuteBodyInputs } from '../../schemas/post_actions_connector_execute';
-
-export type RequestBody = PostActionsConnectorExecuteBodyInputs;
 
 export interface ResponseBody {
   data: string;

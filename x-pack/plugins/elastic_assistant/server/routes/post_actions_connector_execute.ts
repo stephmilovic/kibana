@@ -18,6 +18,7 @@ import {
 } from '@kbn/elastic-assistant-common';
 import { getRequestAbortedSignal } from '@kbn/data-plugin/server';
 import { StreamFactoryReturnType } from '@kbn/ml-response-stream/server';
+import { ResponseBody } from '../lib/langchain/types';
 import { StaticReturnType } from '../lib/langchain/executors/types';
 import {
   INVOKE_ASSISTANT_ERROR_EVENT,
@@ -188,6 +189,7 @@ export const postActionsConnectorExecuteRoute = (
               actions,
               request,
               connectorId,
+              logger,
               params: {
                 subAction: request.body.params.subAction,
                 subActionParams: {
@@ -266,8 +268,8 @@ export const postActionsConnectorExecuteRoute = (
             kbResource: ESQL_RESOURCE,
             langChainMessages,
             isStream:
-            // TODO implement llmClass for bedrock streaming
-            // tracked here: https://github.com/elastic/security-team/issues/7363
+              // TODO implement llmClass for bedrock streaming
+              // tracked here: https://github.com/elastic/security-team/issues/7363
               request.body.params.subAction !== 'invokeAI' && request.body.llmType === 'openai',
             llmType: request.body.llmType,
             logger,
@@ -282,25 +284,27 @@ export const postActionsConnectorExecuteRoute = (
             isEnabledKnowledgeBase: request.body.isEnabledKnowledgeBase,
             isEnabledRAGAlerts: request.body.isEnabledRAGAlerts,
           });
-
-          dataClient?.appendConversationMessages({
-            existingConversation: conversation,
-            messages: [
-              getMessageFromRawResponse({
-                rawContent: langChainResponse.body.data,
-                traceData: langChainResponse.body.trace_data
-                  ? {
-                      traceId: langChainResponse.body.trace_data.trace_id,
-                      transactionId: langChainResponse.body.trace_data.transaction_id,
-                    }
-                  : {},
-              }),
-            ],
-          });
-
           let result: StreamFactoryReturnType['responseWithHeaders'] | StaticReturnType =
             langChainResponse;
           if (Object.hasOwn(langChainResponse.body, 'data')) {
+            // casting as the check above proves this is a static response
+            const responseBody: ResponseBody = langChainResponse.body as unknown as ResponseBody;
+
+            dataClient?.appendConversationMessages({
+              existingConversation: conversation,
+              messages: [
+                getMessageFromRawResponse({
+                  rawContent: responseBody.data,
+                  traceData: responseBody.trace_data
+                    ? {
+                        traceId: responseBody.trace_data.trace_id,
+                        transactionId: responseBody.trace_data.transaction_id,
+                      }
+                    : {},
+                }),
+              ],
+            });
+
             // update replacements on static response
             const staticResponse = langChainResponse as StaticReturnType;
             result = {
@@ -315,7 +319,6 @@ export const postActionsConnectorExecuteRoute = (
           return response.ok<
             StreamFactoryReturnType['responseWithHeaders']['body'] | StaticReturnType['body']
           >(result);
-
         } catch (err) {
           logger.error(err);
           const error = transformError(err);
