@@ -21,7 +21,6 @@ import {
 } from '../lib/telemetry/event_based_telemetry';
 import { getConversationResponseMock } from '../conversations_data_client/update_conversation.test';
 
-
 jest.mock('../lib/build_response', () => ({
   buildResponse: jest.fn().mockImplementation((x) => x),
 }));
@@ -140,6 +139,11 @@ const mockRequest = {
     },
     isEnabledKnowledgeBase: true,
     isEnabledRAGAlerts: false,
+  },
+  events: {
+    aborted$: {
+      subscribe: jest.fn(),
+    },
   },
 };
 
@@ -515,34 +519,40 @@ describe('postActionsConnectorExecuteRoute', () => {
 
   it('returns the expected response when subAction=invokeStream and llmType=openai', async () => {
     const mockRouter = {
-      post: jest.fn().mockImplementation(async (_, handler) => {
-        const result = await handler(
-          mockContext,
-          {
-            ...mockRequest,
-            body: {
-              ...mockRequest.body,
-              params: {
-                ...mockRequest.body.params,
-                subAction: 'invokeStream',
-              },
-              llmType: 'openai',
-            },
-          },
-          mockResponse
-        );
+      versioned: {
+        post: jest.fn().mockImplementation(() => {
+          return {
+            addVersion: jest.fn().mockImplementation(async (_, handler) => {
+              const result = await handler(
+                mockContext,
+                {
+                  ...mockRequest,
+                  body: {
+                    ...mockRequest.body,
+                    params: {
+                      ...mockRequest.body.params,
+                      subAction: 'invokeStream',
+                    },
+                    llmType: 'openai',
+                  },
+                },
+                mockResponse
+              );
 
-        expect(result).toEqual({
-          body: mockStream,
-          headers: {
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-            'Transfer-Encoding': 'chunked',
-            'X-Accel-Buffering': 'no',
-            'X-Content-Type-Options': 'nosniff',
-          },
-        });
-      }),
+              expect(result).toEqual({
+                body: mockStream,
+                headers: {
+                  'Cache-Control': 'no-cache',
+                  Connection: 'keep-alive',
+                  'Transfer-Encoding': 'chunked',
+                  'X-Accel-Buffering': 'no',
+                  'X-Content-Type-Options': 'nosniff',
+                },
+              });
+            }),
+          };
+        }),
+      },
     };
 
     await postActionsConnectorExecuteRoute(
@@ -553,35 +563,41 @@ describe('postActionsConnectorExecuteRoute', () => {
 
   it('returns the expected response when subAction=invokeStream and llmType=bedrock', async () => {
     const mockRouter = {
-      post: jest.fn().mockImplementation(async (_, handler) => {
-        const result = await handler(
-          mockContext,
-          {
-            ...mockRequest,
-            body: {
-              ...mockRequest.body,
-              params: {
-                ...mockRequest.body.params,
-                subAction: 'invokeStream',
-              },
-              llmType: 'bedrock',
-            },
-          },
-          mockResponse
-        );
+      versioned: {
+        post: jest.fn().mockImplementation(() => {
+          return {
+            addVersion: jest.fn().mockImplementation(async (_, handler) => {
+              const result = await handler(
+                mockContext,
+                {
+                  ...mockRequest,
+                  body: {
+                    ...mockRequest.body,
+                    params: {
+                      ...mockRequest.body.params,
+                      subAction: 'invokeStream',
+                    },
+                    llmType: 'bedrock',
+                  },
+                },
+                mockResponse
+              );
 
-        expect(result).toEqual({
-          body: {
-            connector_id: 'mock-connector-id',
-            data: mockActionResponse,
-            replacements: {},
-            status: 'ok',
-          },
-          headers: {
-            'content-type': 'application/json',
-          },
-        });
-      }),
+              expect(result).toEqual({
+                body: {
+                  connector_id: 'mock-connector-id',
+                  data: mockActionResponse,
+                  replacements: {},
+                  status: 'ok',
+                },
+                headers: {
+                  'content-type': 'application/json',
+                },
+              });
+            }),
+          };
+        }),
+      },
     };
 
     await postActionsConnectorExecuteRoute(

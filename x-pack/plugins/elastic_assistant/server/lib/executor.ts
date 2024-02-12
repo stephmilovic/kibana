@@ -68,7 +68,7 @@ export const executeAction = async ({
 
   const readable = get('data', actionResult) as Readable;
   if (typeof readable?.read !== 'function') {
-    throw new Error(`Action result status is error: result is not streamable}`);
+    throw new Error(`Action result status is error: result is not streamable`);
   }
 
   // do not await, blocks stream for UI
