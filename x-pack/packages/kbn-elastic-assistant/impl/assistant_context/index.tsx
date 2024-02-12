@@ -69,10 +69,10 @@ export interface AssistantProviderProps {
   children: React.ReactNode;
   getComments: (commentArgs: {
     abortStream: () => void;
-    amendMessage: (args: { conversationId: string; content: string }) => Promise<void>;
     currentConversation: Conversation;
     isEnabledLangChain: boolean;
     isFetchingResponse: boolean;
+    refetchCurrentConversation: () => void;
     regenerateMessage: (conversationId: string) => void;
     showAnonymizedValues: boolean;
   }) => EuiCommentProps[];
@@ -109,7 +109,7 @@ export interface UseAssistantContext {
     currentConversation: Conversation;
     isEnabledLangChain: boolean;
     isFetchingResponse: boolean;
-    amendMessage: (args: { conversationId: string; content: string }) => Promise<void>;
+    refetchCurrentConversation: () => void;
     regenerateMessage: () => void;
     showAnonymizedValues: boolean;
   }) => EuiCommentProps[];

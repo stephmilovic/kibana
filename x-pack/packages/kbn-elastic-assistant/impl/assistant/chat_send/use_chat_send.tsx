@@ -78,11 +78,12 @@ export const useChatSend = ({
           ...currentConversation,
           replacements,
         });
+        return replacements;
       };
 
       const systemPrompt = allSystemPrompts.find((prompt) => prompt.id === editingSystemPromptId);
 
-      const userMessages = getCombinedMessage({
+      const userMessage = getCombinedMessage({
         isNewChat: currentConversation.messages.length === 0,
         currentReplacements: currentConversation.replacements,
         promptText,
@@ -91,16 +92,16 @@ export const useChatSend = ({
         onNewReplacements,
       });
 
-      const updatedMessages = [...currentConversation.messages, ...userMessages];
+      const updatedMessages = [...currentConversation.messages, userMessage].map((m) => ({
+        ...m,
+        content: getMessageContentWithoutReplacements({
+          messageContent: m.content ?? '',
+          replacements,
+        }),
+      }));
       setCurrentConversation({
         ...currentConversation,
-        messages: updatedMessages.map((m) => ({
-          ...m,
-          content: getMessageContentWithoutReplacements({
-            messageContent: m.content ?? '',
-            replacements,
-          }),
-        })),
+        messages: updatedMessages,
       });
 
       // Reset prompt context selection and preview before sending:
@@ -110,7 +111,7 @@ export const useChatSend = ({
       const rawResponse = await sendMessages({
         apiConfig: currentConversation.apiConfig,
         http,
-        messages: userMessages,
+        messages: [userMessage],
         conversationId: currentConversation.id,
         replacements,
       });
@@ -136,18 +137,26 @@ export const useChatSend = ({
   );
 
   const handleRegenerateResponse = useCallback(async () => {
-    await removeLastMessage(currentConversation.id);
+    // remove last message from the local state immediately
+    setCurrentConversation({
+      ...currentConversation,
+      messages: currentConversation.messages.slice(0, -1),
+    });
+
+    const updatedMessages = (await removeLastMessage(currentConversation.id)) ?? [];
 
     const rawResponse = await sendMessages({
       apiConfig: currentConversation.apiConfig,
       http,
+      // do not send any new messages, the previous conversation is already stored
       messages: [],
       conversationId: currentConversation.id,
     });
+
     const responseMessage: Message = getMessageFromRawResponse(rawResponse);
     setCurrentConversation({
       ...currentConversation,
-      messages: [...currentConversation.messages, responseMessage],
+      messages: [...updatedMessages, responseMessage],
     });
   }, [currentConversation, http, removeLastMessage, sendMessages, setCurrentConversation]);
 

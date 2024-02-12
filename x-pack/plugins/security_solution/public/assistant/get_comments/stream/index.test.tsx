@@ -17,11 +17,11 @@ const content = 'Test Content';
 const mockAbortStream = jest.fn();
 const testProps = {
   abortStream: mockAbortStream,
-  amendMessage: jest.fn(),
+  refetchCurrentConversation: jest.fn(),
   content,
   index: 1,
+  isControlsEnabled: true,
   isEnabledLangChain: true,
-  isLastComment: true,
   connectorTypeTitle: 'OpenAI',
   regenerateMessage: jest.fn(),
   transformMessage: jest.fn(),

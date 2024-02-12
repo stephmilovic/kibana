@@ -8,7 +8,7 @@
 import { ElasticsearchClient, IRouter, KibanaRequest, Logger } from '@kbn/core/server';
 import type { PluginStartContract as ActionsPluginStart } from '@kbn/actions-plugin/server';
 import { BaseMessage } from '@langchain/core/messages';
-
+import { PassThrough } from 'stream';
 import { mockActionResponse } from '../__mocks__/action_result_data';
 import { postActionsConnectorExecuteRoute } from './post_actions_connector_execute';
 import { ElasticAssistantRequestHandlerContext } from '../types';
@@ -19,7 +19,8 @@ import {
   INVOKE_ASSISTANT_ERROR_EVENT,
   INVOKE_ASSISTANT_SUCCESS_EVENT,
 } from '../lib/telemetry/event_based_telemetry';
-import { PassThrough } from 'stream';
+import { getConversationResponseMock } from '../conversations_data_client/update_conversation.test';
+
 
 jest.mock('../lib/build_response', () => ({
   buildResponse: jest.fn().mockImplementation((x) => x),
@@ -79,7 +80,7 @@ jest.mock('../lib/langchain/execute_custom_llm_chain', () => ({
     }
   ),
 }));
-
+const existingConversation = getConversationResponseMock();
 const reportEvent = jest.fn();
 const mockContext = {
   elasticAssistant: {
@@ -87,6 +88,24 @@ const mockContext = {
     getRegisteredTools: jest.fn(() => []),
     logger: loggingSystemMock.createLogger(),
     telemetry: { ...coreMock.createSetup().analytics, reportEvent },
+    getCurrentUser: () => ({
+      username: 'user',
+      email: 'email',
+      fullName: 'full name',
+      roles: ['user-role'],
+      enabled: true,
+      authentication_realm: { name: 'native1', type: 'native' },
+      lookup_realm: { name: 'native1', type: 'native' },
+      authentication_provider: { type: 'basic', name: 'basic1' },
+      authentication_type: 'realm',
+      elastic_cloud_user: false,
+      metadata: { _reserved: false },
+    }),
+    getAIAssistantConversationsDataClient: jest.fn().mockResolvedValue({
+      getConversation: jest.fn().mockResolvedValue(existingConversation),
+      updateConversation: jest.fn().mockResolvedValue(existingConversation),
+      appendConversationMessages: jest.fn().mockResolvedValue(existingConversation),
+    }),
   },
   core: {
     elasticsearch: {

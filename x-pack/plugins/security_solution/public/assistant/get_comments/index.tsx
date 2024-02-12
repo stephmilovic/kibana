@@ -44,34 +44,21 @@ const transformMessageWithReplacements = ({
 
 export const getComments = ({
   abortStream,
-  amendMessage,
   currentConversation,
   isEnabledLangChain,
   isFetchingResponse,
+  refetchCurrentConversation,
   regenerateMessage,
   showAnonymizedValues,
 }: {
   abortStream: () => void;
-  amendMessage: ({
-    conversationId,
-    content,
-  }: {
-    conversationId: string;
-    content: string;
-  }) => Promise<void>;
   currentConversation: Conversation;
   isEnabledLangChain: boolean;
   isFetchingResponse: boolean;
+  refetchCurrentConversation: () => void;
   regenerateMessage: (conversationId: string) => void;
   showAnonymizedValues: boolean;
 }): EuiCommentProps[] => {
-  const amendMessageOfConversation = async (content: string) => {
-    await amendMessage({
-      conversationId: currentConversation.id,
-      content,
-    });
-  };
-
   const regenerateMessageOfConversation = () => {
     regenerateMessage(currentConversation.id);
   };
@@ -87,12 +74,11 @@ export const getComments = ({
           children: (
             <StreamComment
               abortStream={abortStream}
-              amendMessage={amendMessageOfConversation}
               connectorTypeTitle={connectorTypeTitle}
               content=""
+              refetchCurrentConversation={refetchCurrentConversation}
               regenerateMessage={regenerateMessageOfConversation}
               isEnabledLangChain={isEnabledLangChain}
-              isLastComment
               transformMessage={() => ({ content: '' } as unknown as ContentMessage)}
               isFetching
               // we never need to append to a code block in the loading comment, which is what this index is used for
@@ -122,6 +108,8 @@ export const getComments = ({
         eventColor: message.isError ? 'danger' : undefined,
       };
 
+      const isControlsEnabled = isLastComment && !isUser;
+
       const transformMessage = (content: string) =>
         transformMessageWithReplacements({
           message,
@@ -137,13 +125,13 @@ export const getComments = ({
           children: (
             <StreamComment
               abortStream={abortStream}
-              amendMessage={amendMessageOfConversation}
               connectorTypeTitle={connectorTypeTitle}
               index={index}
+              isControlsEnabled={isControlsEnabled}
               isEnabledLangChain={isEnabledLangChain}
-              isLastComment={isLastComment}
               isError={message.isError}
               reader={message.reader}
+              refetchCurrentConversation={refetchCurrentConversation}
               regenerateMessage={regenerateMessageOfConversation}
               transformMessage={transformMessage}
             />
@@ -160,15 +148,14 @@ export const getComments = ({
         children: (
           <StreamComment
             abortStream={abortStream}
-            amendMessage={amendMessageOfConversation}
             connectorTypeTitle={connectorTypeTitle}
             content={transformedMessage.content}
             index={index}
+            isControlsEnabled={isControlsEnabled}
             isEnabledLangChain={isEnabledLangChain}
-            isLastComment={isLastComment}
-            // reader is used to determine if streaming controls are shown
             reader={transformedMessage.reader}
             regenerateMessage={regenerateMessageOfConversation}
+            refetchCurrentConversation={refetchCurrentConversation}
             transformMessage={transformMessage}
           />
         ),

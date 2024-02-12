@@ -103,23 +103,18 @@ export const fetchConnectorExecuteAction = async ({
     replacements,
   };
 
-  const requestBody = isStream
-    ? {
-        params: {
-          subActionParams: body,
-          subAction: 'invokeStream',
-        },
-        ...requiredRequestParams,
-        ...optionalRequestParams,
-      }
-    : {
-        params: {
-          subActionParams: body,
-          subAction: 'invokeAI',
-        },
-        ...requiredRequestParams,
-        ...optionalRequestParams,
-      };
+  const requestBody = {
+    params: {
+      subActionParams: body,
+      subAction: isStream ? 'invokeStream' : 'invokeAI',
+    },
+    conversationId,
+    replacements,
+    isEnabledKnowledgeBase,
+    isEnabledRAGAlerts,
+    llmType,
+    ...optionalRequestParams,
+  };
 
   try {
     if (isStream) {
