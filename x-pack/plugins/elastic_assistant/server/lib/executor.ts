@@ -19,7 +19,6 @@ export interface Props {
   abortSignal?: AbortSignal;
   actions: ActionsPluginStart;
   connectorId: string;
-  logger: Logger;
   onMessageSent: (content: string) => void;
   params: ConnectorExecutionParams;
   request: KibanaRequest<unknown, unknown, ExecuteConnectorRequestBody>;
@@ -34,7 +33,6 @@ export const executeAction = async ({
   abortSignal,
   actions,
   connectorId,
-  logger,
   onMessageSent,
   params,
   request,

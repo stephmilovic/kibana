@@ -168,7 +168,6 @@ export const postActionsConnectorExecuteRoute = (
               actions,
               request,
               connectorId,
-              logger,
               params: {
                 subAction: request.body.params.subAction,
                 subActionParams: {
