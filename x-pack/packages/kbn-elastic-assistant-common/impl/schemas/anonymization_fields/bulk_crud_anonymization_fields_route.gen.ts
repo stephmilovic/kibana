@@ -16,6 +16,8 @@ import { z } from 'zod';
  *   version: 2023-10-31
  */
 
+import { UUID, NonEmptyString, User } from '../conversations/common_attributes.gen';
+
 export type BulkActionSkipReason = z.infer<typeof BulkActionSkipReason>;
 export const BulkActionSkipReason = z.literal('ANONYMIZATION_FIELD_NOT_MODIFIED');
 
@@ -42,14 +44,20 @@ export const NormalizedAnonymizationFieldError = z.object({
 
 export type AnonymizationFieldResponse = z.infer<typeof AnonymizationFieldResponse>;
 export const AnonymizationFieldResponse = z.object({
-  id: z.string(),
-  fieldId: z.string(),
+  id: UUID,
+  timestamp: NonEmptyString.optional(),
+  field: z.string(),
   defaultAllow: z.boolean().optional(),
   defaultAllowReplacement: z.boolean().optional(),
   updatedAt: z.string().optional(),
   updatedBy: z.string().optional(),
   createdAt: z.string().optional(),
   createdBy: z.string().optional(),
+  users: z.array(User).optional(),
+  /**
+   * Kibana space
+   */
+  namespace: z.string().optional(),
 });
 
 export type BulkCrudActionResults = z.infer<typeof BulkCrudActionResults>;
@@ -95,7 +103,7 @@ export const BulkActionBase = z.object({
 
 export type AnonymizationFieldCreateProps = z.infer<typeof AnonymizationFieldCreateProps>;
 export const AnonymizationFieldCreateProps = z.object({
-  fieldId: z.string(),
+  field: z.string(),
   defaultAllow: z.boolean().optional(),
   defaultAllowReplacement: z.boolean().optional(),
 });

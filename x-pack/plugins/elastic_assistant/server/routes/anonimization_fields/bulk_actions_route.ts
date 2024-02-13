@@ -14,9 +14,9 @@ import {
   ELASTIC_AI_ASSISTANT_API_CURRENT_VERSION,
 } from '@kbn/elastic-assistant-common';
 
-import { SavedObjectError } from '@kbn/core/types';
 import {
   AnonymizationFieldResponse,
+  AnonymizationFieldUpdateProps,
   BulkActionSkipResult,
   BulkCrudActionResponse,
   BulkCrudActionResults,
@@ -28,13 +28,13 @@ import { ANONYMIZATION_FIELDS_TABLE_MAX_PAGE_SIZE } from '../../../common/consta
 import { ElasticAssistantPluginRouter } from '../../types';
 import { buildRouteValidationWithZod } from '../route_validation';
 import { buildResponse } from '../utils';
+import { getUpdateScript } from '../../anonymization_fields_data_client/helpers';
 
 export interface BulkOperationError {
   message: string;
   status?: number;
-  anonymizationField: {
+  document: {
     id: string;
-    name: string;
   };
 }
 
@@ -49,7 +49,7 @@ const buildBulkResponse = (
     deleted = [],
     skipped = [],
   }: {
-    errors?: SavedObjectError[];
+    errors?: BulkOperationError[];
     updated?: AnonymizationFieldResponse[];
     created?: AnonymizationFieldResponse[];
     deleted?: string[];
@@ -141,43 +141,71 @@ export const bulkActionAnonymizationFieldsRoute = (
         request.events.completed$.subscribe(() => abortController.abort());
         try {
           const ctx = await context.resolve(['core', 'elasticAssistant']);
-          const dataClient = await ctx.elasticAssistant.getAIAssistantAnonymizationFieldsSOClient();
 
-          const docsCreated =
-            body.create && body.create.length > 0
-              ? await dataClient.createAnonymizationFields(body.create)
-              : [];
-          const docsUpdated =
-            body.update && body.update.length > 0
-              ? await dataClient.updateAnonymizationFields(body.update)
-              : [];
-          const docsDeleted = await dataClient.deleteAnonymizationFieldsByIds(
-            body.delete?.ids ?? []
-          );
+          const authenticatedUser = ctx.elasticAssistant.getCurrentUser();
+          if (authenticatedUser == null) {
+            return assistantResponse.error({
+              body: `Authenticated user not found`,
+              statusCode: 401,
+            });
+          }
+          const dataClient =
+            await ctx.elasticAssistant.getAIAssistantAnonymizationFieldsDataClient();
+
+          if (body.create && body.create.length > 0) {
+            const result = await dataClient?.findAnonymizationFields({
+              perPage: 100,
+              page: 1,
+              filter: `user.id:${authenticatedUser?.profile_uid} AND (${body.create
+                .map((c) => `field:${c.field}`)
+                .join(' OR ')})`,
+              fields: ['field'],
+            });
+            if (result?.data != null && result.data.length > 0) {
+              return assistantResponse.error({
+                statusCode: 409,
+                body: `anonymization for field: "${result.data
+                  .map((c) => c.field)
+                  .join(',')}" already exists`,
+              });
+            }
+          }
+
+          const writer = await dataClient?.getWriter();
+
+          const {
+            errors,
+            docs_created: docsCreated,
+            docs_updated: docsUpdated,
+            docs_deleted: docsDeleted,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          } = await writer!.bulk({
+            documentsToCreate: body.create,
+            documentsToDelete: body.delete?.ids,
+            documentsToUpdate: body.update,
+            getUpdateScript: (document: AnonymizationFieldUpdateProps, updatedAt: string) =>
+              getUpdateScript({ anonymizationField: document, updatedAt, isPatch: false }),
+            authenticatedUser,
+          });
 
           const created = await dataClient?.findAnonymizationFields({
             page: 1,
             perPage: 1000,
-            filter: docsCreated.map((updatedId) => `id:${updatedId}`).join(' OR '),
+            filter: docsCreated.map((c) => `id:${c}`).join(' OR '),
             fields: ['id'],
           });
           const updated = await dataClient?.findAnonymizationFields({
             page: 1,
             perPage: 1000,
-            filter: docsUpdated.map((updatedId) => `id:${updatedId}`).join(' OR '),
+            filter: docsUpdated.map((c) => `id:${c}`).join(' OR '),
             fields: ['id'],
           });
 
           return buildBulkResponse(response, {
             updated: updated?.data,
             created: created?.data,
-            deleted: docsDeleted.map((d) => d.id) ?? [],
-            errors: docsDeleted.reduce((res, d) => {
-              if (d.error !== undefined) {
-                res.push(d.error);
-              }
-              return res;
-            }, [] as SavedObjectError[]),
+            deleted: docsDeleted ?? [],
+            errors,
           });
         } catch (err) {
           const error = transformError(err);

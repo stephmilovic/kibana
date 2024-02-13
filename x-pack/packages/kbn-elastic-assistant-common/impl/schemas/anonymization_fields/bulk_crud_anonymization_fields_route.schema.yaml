@@ -100,11 +100,13 @@ components:
       type: object
       required:
         - id
-        - fieldId
+        - field
       properties:
         id:
-          type: string
-        fieldId:
+          $ref: '../conversations/common_attributes.schema.yaml#/components/schemas/UUID'
+        'timestamp':
+          $ref: '../conversations/common_attributes.schema.yaml#/components/schemas/NonEmptyString'
+        field:
           type: string
         defaultAllow:
           type: boolean
@@ -118,6 +120,13 @@ components:
           type: string
         createdBy:
           type: string
+        users:
+          type: array
+          items:
+            $ref: '../conversations/common_attributes.schema.yaml#/components/schemas/User'
+        namespace:
+          type: string
+          description: Kibana space
 
     BulkCrudActionResults:
       type: object
@@ -207,9 +216,9 @@ components:
     AnonymizationFieldCreateProps:
       type: object
       required:
-        - fieldId
+        - field
       properties:
-        fieldId:
+        field:
           type: string
         defaultAllow:
           type: boolean
