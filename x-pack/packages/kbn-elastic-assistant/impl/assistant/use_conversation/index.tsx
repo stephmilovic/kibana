@@ -12,7 +12,6 @@ import { Conversation, Message } from '../../assistant_context/types';
 import * as i18n from './translations';
 import { getDefaultSystemPrompt } from './helpers';
 import {
-  appendConversationMessages,
   createConversation as createConversationApi,
   deleteConversation as deleteConversationApi,
   getConversationById,
@@ -24,19 +23,9 @@ export const DEFAULT_CONVERSATION_STATE: Conversation = {
   id: i18n.DEFAULT_CONVERSATION_TITLE,
   messages: [],
   apiConfig: {},
+  category: 'assistant',
   title: i18n.DEFAULT_CONVERSATION_TITLE,
 };
-
-interface AppendMessageProps {
-  id: string;
-  title: string;
-  message: Message;
-}
-
-interface AppendReplacementsProps {
-  conversationId: string;
-  replacements: Record<string, string>;
-}
 
 interface CreateConversationProps {
   conversationId: string;
@@ -49,11 +38,6 @@ interface SetApiConfigProps {
 }
 
 interface UseConversation {
-  appendMessage: ({ id, title, message }: AppendMessageProps) => Promise<Message[] | undefined>;
-  appendReplacements: ({
-    conversationId,
-    replacements,
-  }: AppendReplacementsProps) => Promise<Record<string, string> | undefined>;
   clearConversation: (conversationId: string) => Promise<void>;
   getDefaultConversation: ({ conversationId, messages }: CreateConversationProps) => Conversation;
   deleteConversation: (conversationId: string) => void;
@@ -67,18 +51,13 @@ interface UseConversation {
 }
 
 export const useConversation = (): UseConversation => {
-  const {
-    allSystemPrompts,
-    assistantTelemetry,
-    knowledgeBase: { isEnabledKnowledgeBase, isEnabledRAGAlerts },
-    http,
-  } = useAssistantContext();
+  const { allSystemPrompts, http, toasts } = useAssistantContext();
 
   const getConversation = useCallback(
     async (conversationId: string) => {
-      return getConversationById({ http, id: conversationId });
+      return getConversationById({ http, id: conversationId, toasts });
     },
-    [http]
+    [http, toasts]
   );
 
   /**
@@ -87,70 +66,24 @@ export const useConversation = (): UseConversation => {
   const removeLastMessage = useCallback(
     async (conversationId: string) => {
       let messages: Message[] = [];
-      const prevConversation = await getConversationById({ http, id: conversationId });
+      const prevConversation = await getConversationById({ http, id: conversationId, toasts });
       if (prevConversation != null) {
         messages = prevConversation.messages.slice(0, prevConversation.messages.length - 1);
         await updateConversation({
           http,
           conversationId,
           messages,
+          toasts,
         });
       }
       return messages;
     },
-    [http]
-  );
-
-  /**
-   * Append a message to the conversation[] for a given conversationId
-   */
-  const appendMessage = useCallback(
-    async ({ id, message, title }: AppendMessageProps): Promise<Message[] | undefined> => {
-      assistantTelemetry?.reportAssistantMessageSent({
-        conversationId: title,
-        role: message.role,
-        isEnabledKnowledgeBase,
-        isEnabledRAGAlerts,
-      });
-
-      const res = await appendConversationMessages({
-        http,
-        conversationId: id,
-        messages: [message],
-      });
-      return res?.messages;
-    },
-    [assistantTelemetry, isEnabledKnowledgeBase, isEnabledRAGAlerts, http]
-  );
-
-  const appendReplacements = useCallback(
-    async ({
-      conversationId,
-      replacements,
-    }: AppendReplacementsProps): Promise<Record<string, string> | undefined> => {
-      let allReplacements = replacements;
-      const prevConversation = await getConversationById({ http, id: conversationId });
-      if (prevConversation != null) {
-        allReplacements = {
-          ...prevConversation.replacements,
-          ...replacements,
-        };
-
-        await updateConversation({
-          http,
-          conversationId,
-          replacements: allReplacements,
-        });
-      }
-
-      return allReplacements;
-    },
-    [http]
+    [http, toasts]
   );
 
   const clearConversation = useCallback(
     async (conversationId: string) => {
-      const prevConversation = await getConversationById({ http, id: conversationId });
+      const prevConversation = await getConversationById({ http, id: conversationId, toasts });
       if (prevConversation) {
         const defaultSystemPromptId = getDefaultSystemPrompt({
           allSystemPrompts,
@@ -159,6 +92,7 @@ export const useConversation = (): UseConversation => {
 
         await updateConversation({
           http,
+          toasts,
           conversationId,
           apiConfig: {
             defaultSystemPromptId,
@@ -168,7 +102,7 @@ export const useConversation = (): UseConversation => {
         });
       }
     },
-    [allSystemPrompts, http]
+    [allSystemPrompts, http, toasts]
   );
 
   /**
@@ -204,9 +138,9 @@ export const useConversation = (): UseConversation => {
    */
   const createConversation = useCallback(
     async (conversation: Conversation): Promise<Conversation | undefined> => {
-      return createConversationApi({ http, conversation });
+      return createConversationApi({ http, conversation, toasts });
     },
-    [http]
+    [http, toasts]
   );
 
   /**
@@ -214,9 +148,9 @@ export const useConversation = (): UseConversation => {
    */
   const deleteConversation = useCallback(
     async (conversationId: string): Promise<void> => {
-      await deleteConversationApi({ http, id: conversationId });
+      await deleteConversationApi({ http, id: conversationId, toasts });
     },
-    [http]
+    [http, toasts]
   );
 
   /**
@@ -229,6 +163,7 @@ export const useConversation = (): UseConversation => {
           http,
           conversation: {
             apiConfig,
+            category: 'assistant',
             title: conversation.title,
             replacements: conversation.replacements,
             excludeFromLastConversationStorage: conversation.excludeFromLastConversationStorage,
@@ -236,21 +171,21 @@ export const useConversation = (): UseConversation => {
             id: '',
             messages: conversation.messages ?? [],
           },
+          toasts,
         });
       } else {
         return updateConversation({
           http,
           conversationId: conversation.id,
           apiConfig,
+          toasts,
         });
       }
     },
-    [http]
+    [http, toasts]
   );
 
   return {
-    appendMessage,
-    appendReplacements,
     clearConversation,
     getDefaultConversation,
     deleteConversation,

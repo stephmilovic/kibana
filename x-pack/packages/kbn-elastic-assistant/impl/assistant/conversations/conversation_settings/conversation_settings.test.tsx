@@ -151,6 +151,7 @@ describe('ConversationSettings', () => {
         defaultSystemPromptId: 'default-system-prompt',
         provider: 'OpenAI',
       },
+      category: 'assistant',
       id: 'Cool new conversation',
       title: 'Cool new conversation',
       messages: [],
@@ -184,6 +185,9 @@ describe('ConversationSettings', () => {
         ...welcomeConvo,
         apiConfig: {
           connectorId: mockConnector.id,
+          connectorTypeTitle: 'OpenAI',
+          model: undefined,
+          provider: undefined,
         },
       },
     });
