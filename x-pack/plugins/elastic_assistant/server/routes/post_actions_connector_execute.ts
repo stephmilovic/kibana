@@ -271,23 +271,28 @@ export const postActionsConnectorExecuteRoute = (
             // casting as the check above proves this is a static response
             const responseBody: ResponseBody = langChainResponse.body as unknown as ResponseBody;
 
-            if (conversation != null) {
-              dataClient?.appendConversationMessages({
-                existingConversation: conversation,
-                messages: [
-                  getMessageFromRawResponse({
-                    rawContent: responseBody.data,
-                    traceData: responseBody.trace_data
-                      ? {
-                          traceId: responseBody.trace_data.trace_id,
-                          transactionId: responseBody.trace_data.transaction_id,
-                        }
-                      : {},
-                  }),
-                ],
-              });
-            }
-
+          if (conversation != null) {
+            dataClient?.appendConversationMessages({
+              existingConversation: conversation,
+              messages: [
+                getMessageFromRawResponse({
+                  rawContent: responseBody.data,
+                  traceData: responseBody.trace_data
+                    ? {
+                        traceId: responseBody.trace_data.trace_id,
+                        transactionId: responseBody.trace_data.transaction_id,
+                      }
+                    : {},
+                }),
+              ],
+            });
+            await dataClient?.updateConversation({
+              existingConversation: conversation,
+              conversationUpdateProps: {
+                id: conversation.id,
+                replacements: latestReplacements,
+              },
+            });
             // update replacements on static response
             const staticResponse = langChainResponse as StaticReturnType;
             result = {
@@ -297,6 +302,7 @@ export const postActionsConnectorExecuteRoute = (
                 replacements: latestReplacements,
               },
             };
+          }
           }
 
           return response.ok<

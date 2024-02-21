@@ -22,13 +22,19 @@ import {
   BulkCrudActionSummary,
   PerformBulkActionRequestBody,
   PerformBulkActionResponse,
-  PromptUpdateProps,
 } from '@kbn/elastic-assistant-common/impl/schemas/prompts/bulk_crud_prompts_route.gen';
+import { estypes } from '@elastic/elasticsearch';
 import { ANONYMIZATION_FIELDS_TABLE_MAX_PAGE_SIZE } from '../../../common/constants';
 import { ElasticAssistantPluginRouter } from '../../types';
 import { buildRouteValidationWithZod } from '../route_validation';
 import { buildResponse } from '../utils';
-import { getUpdateScript } from '../../promts_data_client/helpers';
+import {
+  getUpdateScript,
+  transformToCreateScheme,
+  transformToUpdateScheme,
+  transformESToPrompts,
+} from '../../promts_data_client/helpers';
+import { SearchEsPromptsSchema, UpdatePromptSchema } from '../../promts_data_client/types';
 
 export interface BulkOperationError {
   message: string;
@@ -149,26 +155,26 @@ export const bulkPromptsRoute = (router: ElasticAssistantPluginRouter, logger: L
           const dataClient = await ctx.elasticAssistant.getAIAssistantPromptsDataClient();
 
           if (body.create && body.create.length > 0) {
-            const result = await dataClient?.findPrompts({
+            const result = await dataClient?.findDocuments<SearchEsPromptsSchema>({
               perPage: 100,
               page: 1,
-              filter: `user.id:${authenticatedUser?.profile_uid} AND (${body.create
+              filter: `users:{ id: "${authenticatedUser?.profile_uid}" } AND (${body.create
                 .map((c) => `name:${c.name}`)
                 .join(' OR ')})`,
               fields: ['name'],
             });
-            if (result?.data != null && result.data.length > 0) {
+            if (result?.data != null && result.total > 0) {
               return assistantResponse.error({
                 statusCode: 409,
-                body: `prompt with name: "${result.data
-                  .map((c) => c.name)
+                body: `prompt with id: "${result.data.hits.hits
+                  .map((c) => c._id)
                   .join(',')}" already exists`,
               });
             }
           }
 
           const writer = await dataClient?.getWriter();
-
+          const changedAt = new Date().toISOString();
           const {
             errors,
             docs_created: docsCreated,
@@ -176,30 +182,48 @@ export const bulkPromptsRoute = (router: ElasticAssistantPluginRouter, logger: L
             docs_deleted: docsDeleted,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           } = await writer!.bulk({
-            documentsToCreate: body.create,
+            documentsToCreate: body.create?.map((f) =>
+              transformToCreateScheme(authenticatedUser, changedAt, f)
+            ),
             documentsToDelete: body.delete?.ids,
-            documentsToUpdate: body.update,
-            getUpdateScript: (document: PromptUpdateProps, updatedAt: string) =>
-              getUpdateScript({ prompt: document, updatedAt, isPatch: false }),
+            documentsToUpdate: body.update?.map((f) =>
+              transformToUpdateScheme(authenticatedUser, changedAt, f)
+            ),
+            getUpdateScript: (document: UpdatePromptSchema) =>
+              getUpdateScript({ prompt: document, isPatch: true }),
             authenticatedUser,
           });
 
-          const created = await dataClient?.findPrompts({
-            page: 1,
-            perPage: 1000,
-            filter: docsCreated.map((c) => `id:${c}`).join(' OR '),
-            fields: ['id'],
-          });
-          const updated = await dataClient?.findPrompts({
-            page: 1,
-            perPage: 1000,
-            filter: docsUpdated.map((c) => `id:${c}`).join(' OR '),
-            fields: ['id'],
-          });
+          const created =
+            docsCreated.length > 0
+              ? (
+                  await dataClient?.findDocuments<SearchEsPromptsSchema>({
+                    page: 1,
+                    perPage: 1000,
+                    filter: docsCreated.map((c) => `id:${c}`).join(' OR '),
+                    fields: ['id'],
+                  })
+                )?.data
+              : [];
+          const updated =
+            docsUpdated.length > 0
+              ? (
+                  await dataClient?.findDocuments<SearchEsPromptsSchema>({
+                    page: 1,
+                    perPage: 1000,
+                    filter: docsUpdated.map((c) => `id:${c}`).join(' OR '),
+                    fields: ['id'],
+                  })
+                )?.data
+              : [];
 
           return buildBulkResponse(response, {
-            updated: updated?.data,
-            created: created?.data,
+            updated: updated
+              ? transformESToPrompts(updated as estypes.SearchResponse<SearchEsPromptsSchema>)
+              : [],
+            created: created
+              ? transformESToPrompts(created as estypes.SearchResponse<SearchEsPromptsSchema>)
+              : [],
             deleted: docsDeleted ?? [],
             errors,
           });

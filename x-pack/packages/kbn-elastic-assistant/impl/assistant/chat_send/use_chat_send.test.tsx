@@ -14,9 +14,11 @@ import { useChatSend, UseChatSendProps } from './use_chat_send';
 import { renderHook } from '@testing-library/react-hooks';
 import { waitFor } from '@testing-library/react';
 import { TestProviders } from '../../mock/test_providers/test_providers';
+import { useAssistantContext } from '../../..';
 
 jest.mock('../use_send_messages');
 jest.mock('../use_conversation');
+jest.mock('../../..');
 
 const setEditingSystemPromptId = jest.fn();
 const setPromptTextPreview = jest.fn();
@@ -31,7 +33,7 @@ const setCurrentConversation = jest.fn();
 export const testProps: UseChatSendProps = {
   selectedPromptContexts: {},
   allSystemPrompts: [defaultSystemPrompt, mockSystemPrompt],
-  currentConversation: emptyWelcomeConvo,
+  currentConversation: { ...emptyWelcomeConvo, id: 'an-id' },
   http: {
     basePath: {
       basePath: '/mfg',
@@ -49,6 +51,7 @@ export const testProps: UseChatSendProps = {
   setCurrentConversation,
 };
 const robotMessage = { response: 'Response message from the robot', isError: false };
+const reportAssistantMessageSent = jest.fn();
 describe('use chat send', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -59,6 +62,12 @@ describe('use chat send', () => {
     (useConversation as jest.Mock).mockReturnValue({
       removeLastMessage,
       clearConversation,
+    });
+    (useAssistantContext as jest.Mock).mockReturnValue({
+      assistantTelemetry: {
+        reportAssistantMessageSent,
+      },
+      knowledgeBase: { isEnabledKnowledgeBase: false, isEnabledRAGAlerts: false },
     });
   });
   it('handleOnChatCleared clears the conversation', async () => {
@@ -104,7 +113,8 @@ describe('use chat send', () => {
   it('handleButtonSendMessage sends message with only provided prompt text and context already exists in convo history', async () => {
     const promptText = 'prompt text';
     const { result } = renderHook(
-      () => useChatSend({ ...testProps, currentConversation: welcomeConvo }),
+      () =>
+        useChatSend({ ...testProps, currentConversation: { ...welcomeConvo, id: 'welcome-id' } }),
       {
         wrapper: TestProviders,
       }
@@ -121,19 +131,43 @@ describe('use chat send', () => {
   });
   it('handleRegenerateResponse removes the last message of the conversation, resends the convo to GenAI, and appends the message received', async () => {
     const { result } = renderHook(
-      () => useChatSend({ ...testProps, currentConversation: welcomeConvo }),
+      () =>
+        useChatSend({ ...testProps, currentConversation: { ...welcomeConvo, id: 'welcome-id' } }),
       {
         wrapper: TestProviders,
       }
     );
 
     result.current.handleRegenerateResponse();
-    expect(removeLastMessage).toHaveBeenCalledWith('Welcome');
+    expect(removeLastMessage).toHaveBeenCalledWith('welcome-id');
 
     await waitFor(() => {
       expect(sendMessages).toHaveBeenCalled();
       const messages = setCurrentConversation.mock.calls[1][0].messages;
       expect(messages[messages.length - 1].content).toEqual(robotMessage.response);
+    });
+  });
+  it('sends telemetry events for both user and assistant', async () => {
+    const promptText = 'prompt text';
+    const { result } = renderHook(() => useChatSend(testProps), {
+      wrapper: TestProviders,
+    });
+    result.current.handleButtonSendMessage(promptText);
+    expect(setUserPrompt).toHaveBeenCalledWith('');
+
+    await waitFor(() => {
+      expect(reportAssistantMessageSent).toHaveBeenNthCalledWith(1, {
+        conversationId: testProps.currentConversation.title,
+        role: 'user',
+        isEnabledKnowledgeBase: false,
+        isEnabledRAGAlerts: false,
+      });
+      expect(reportAssistantMessageSent).toHaveBeenNthCalledWith(2, {
+        conversationId: testProps.currentConversation.title,
+        role: 'assistant',
+        isEnabledKnowledgeBase: false,
+        isEnabledRAGAlerts: false,
+      });
     });
   });
 });

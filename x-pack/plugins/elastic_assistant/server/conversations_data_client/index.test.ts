@@ -189,6 +189,7 @@ describe('AIAssistantConversationsDataClient', () => {
         },
         assignEmpty: false,
         exclude_from_last_conversation_storage: false,
+        id: '12345',
         messages: [
           {
             '@timestamp': '2019-12-13T16:40:33.400Z',
