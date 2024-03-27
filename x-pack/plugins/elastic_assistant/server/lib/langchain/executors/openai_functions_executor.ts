@@ -120,7 +120,7 @@ export const callOpenAIFunctionsExecutor: AgentExecutor<false> = async ({
   return {
     body: {
       connector_id: connectorId,
-      data: llm.getActionResultData(), // the response from the actions framework
+      data: langChainResponse.output, // the response from the actions framework
       trace_data: traceData,
       status: 'ok',
     },

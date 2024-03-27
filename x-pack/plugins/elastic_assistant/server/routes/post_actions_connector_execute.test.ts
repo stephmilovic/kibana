@@ -19,8 +19,10 @@ import {
   INVOKE_ASSISTANT_ERROR_EVENT,
   INVOKE_ASSISTANT_SUCCESS_EVENT,
 } from '../lib/telemetry/event_based_telemetry';
-import { getConversationResponseMock } from '../conversations_data_client/update_conversation.test';
+import { getConversationResponseMock } from '../ai_assistant_data_clients/conversations/update_conversation.test';
+import { actionsClientMock } from '@kbn/actions-plugin/server/actions_client/actions_client.mock';
 
+const actionsClient = actionsClientMock.create();
 jest.mock('../lib/build_response', () => ({
   buildResponse: jest.fn().mockImplementation((x) => x),
 }));
@@ -83,7 +85,9 @@ const existingConversation = getConversationResponseMock();
 const reportEvent = jest.fn();
 const mockContext = {
   elasticAssistant: {
-    actions: jest.fn(),
+    actions: {
+      getActionsClientWithRequest: jest.fn().mockResolvedValue(actionsClient),
+    },
     getRegisteredTools: jest.fn(() => []),
     logger: loggingSystemMock.createLogger(),
     telemetry: { ...coreMock.createSetup().analytics, reportEvent },
@@ -157,6 +161,22 @@ describe('postActionsConnectorExecuteRoute', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    actionsClient.getBulk.mockResolvedValue([
+      {
+        id: '1',
+        isPreconfigured: false,
+        isSystemAction: false,
+        isDeprecated: false,
+        name: 'my name',
+        actionTypeId: '.gen-ai',
+        isMissingSecrets: false,
+        config: {
+          a: true,
+          b: true,
+          c: true,
+        },
+      },
+    ]);
   });
 
   it('returns the expected response when isEnabledKnowledgeBase=false', async () => {
@@ -208,7 +228,6 @@ describe('postActionsConnectorExecuteRoute', () => {
                 body: {
                   connector_id: 'mock-connector-id',
                   data: mockActionResponse,
-                  replacements: {},
                   status: 'ok',
                 },
                 headers: { 'content-type': 'application/json' },
@@ -285,7 +304,7 @@ describe('postActionsConnectorExecuteRoute', () => {
         ...mockRequest.body,
         allow: ['@timestamp'],
         allowReplacement: ['host.name'],
-        replacements: {},
+        replacements: [],
         isEnabledRAGAlerts: true,
       },
     };
@@ -321,7 +340,7 @@ describe('postActionsConnectorExecuteRoute', () => {
         isEnabledKnowledgeBase: false,
         allow: ['@timestamp'],
         allowReplacement: ['host.name'],
-        replacements: {},
+        replacements: [],
         isEnabledRAGAlerts: true,
       },
     };
@@ -454,7 +473,7 @@ describe('postActionsConnectorExecuteRoute', () => {
         isEnabledKnowledgeBase: false,
         allow: ['@timestamp'],
         allowReplacement: ['host.name'],
-        replacements: {},
+        replacements: [],
         isEnabledRAGAlerts: true,
       },
     };

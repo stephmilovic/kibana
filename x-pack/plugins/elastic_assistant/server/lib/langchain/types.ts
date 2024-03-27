@@ -5,6 +5,7 @@
  * 2.0.
  */
 
+import { Replacement } from '@kbn/elastic-assistant-common';
 import {
   ChatCompletionContentPart,
   ChatCompletionCreateParamsNonStreaming,
@@ -13,7 +14,7 @@ import {
 export interface ResponseBody {
   data: string;
   connector_id: string;
-  replacements?: Record<string, string>;
+  replacements?: Replacement[];
   status: string;
   trace_data?: {
     transaction_id: string;

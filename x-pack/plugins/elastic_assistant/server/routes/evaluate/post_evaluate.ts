@@ -148,20 +148,12 @@ export const postEvaluateRoute = (
               alertsIndexPattern: '',
               allow: [],
               allowReplacement: [],
-              params: {
-                subAction: 'invokeAI',
-                subActionParams: {
-                  messages: [],
-                },
-              },
-              // does not matter in conjunction with invokeAI
-              llmType: 'openai',
-              replacements: {},
+              subAction: 'invokeAI',
+              replacements: [],
               size: DEFAULT_SIZE,
               isEnabledKnowledgeBase: true,
               isEnabledRAGAlerts: true,
               conversationId: '',
-              llmType: 'openai',
             },
           };
 
@@ -204,6 +196,7 @@ export const postEvaluateRoute = (
                       ],
                       tracers: getLangSmithTracer(detailedRunName, exampleId, logger),
                     },
+                    replacements: [],
                   });
                   return evalResult.body;
                 },

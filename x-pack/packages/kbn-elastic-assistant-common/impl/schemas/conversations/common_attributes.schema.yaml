@@ -41,7 +41,16 @@ components:
 
     Replacement:
       type: object
-      additionalProperties: true
+      required:
+        - 'value'
+        - 'uuid'
+      description: Replacements object used to anonymize/deanomymize messsages
+      properties:
+        value:
+          type: string
+          description: Actual value was anonymized.
+        uuid:
+          $ref: '#/components/schemas/UUID'
 
     Reader:
       type: object
@@ -58,7 +67,7 @@ components:
       type: string
       description: Message role.
       enum:
-        - system 
+        - system
         - user
         - assistant
 
@@ -96,7 +105,7 @@ components:
           description: Message role.
         timestamp:
           $ref: '#/components/schemas/NonEmptyString'
-          description: The timestamp message was sent or received.         
+          description: The timestamp message was sent or received.
         isError:
           type: boolean
           description: Is error message.
@@ -106,13 +115,12 @@ components:
 
     ApiConfig:
       type: object
+      required:
+        - connectorId
       properties:
         connectorId:
           type: string
           description: connector Id
-        connectorTypeTitle:
-          type: string
-          description: connector Type Title
         defaultSystemPromptId:
           type: string
           description: defaultSystemPromptId
@@ -122,7 +130,7 @@ components:
         model:
           type: string
           description: model
-    
+
     ConversationSummary:
       type: object
       properties:
@@ -167,7 +175,6 @@ components:
         - createdAt
         - users
         - namespace
-        - apiConfig
         - category
       properties:
         id:
@@ -191,7 +198,9 @@ components:
           description: The last time conversation was updated.
           type: string
         replacements:
-          $ref: '#/components/schemas/Replacement'
+          type: array
+          items:
+            $ref: '#/components/schemas/Replacement'
         users:
           type: array
           items:
@@ -243,7 +252,9 @@ components:
           description: excludeFromLastConversationStorage.
           type: boolean
         replacements:
-          $ref: '#/components/schemas/Replacement'
+          type: array
+          items:
+            $ref: '#/components/schemas/Replacement'
 
     ConversationCreateProps:
       type: object
@@ -254,7 +265,7 @@ components:
           type: string
           description: The conversation title.
         category:
-          $ref: '#/components/schemas/ConversationCategory'         
+          $ref: '#/components/schemas/ConversationCategory'
           description: The conversation category.
         messages:
           type: array
@@ -271,8 +282,10 @@ components:
           description: excludeFromLastConversationStorage.
           type: boolean
         replacements:
-          $ref: '#/components/schemas/Replacement'
-    
+          type: array
+          items:
+            $ref: '#/components/schemas/Replacement'
+
     ConversationMessageCreateProps:
       type: object
       required:

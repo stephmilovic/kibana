@@ -30,7 +30,6 @@ export class ActionsClientLlm extends LLM {
   #connectorId: string;
   #logger: Logger;
   #request: KibanaRequest<unknown, unknown, ExecuteConnectorRequestBody>;
-  #actionResultData: string;
   #traceId: string;
 
   // Local `llmType` as it can change and needs to be accessed by abstract `_llmType()` method
@@ -53,11 +52,6 @@ export class ActionsClientLlm extends LLM {
     this.llmType = llmType ?? LLM_TYPE;
     this.#logger = logger;
     this.#request = request;
-    this.#actionResultData = '';
-  }
-
-  getActionResultData(): string {
-    return this.#actionResultData;
   }
 
   _llmType() {
@@ -83,12 +77,12 @@ export class ActionsClientLlm extends LLM {
     const requestBody = {
       actionId: this.#connectorId,
       params: {
-        ...this.#request.body.params, // the original request body params
         // hard code to non-streaming subaction as this class only supports non-streaming
         subAction: 'invokeAI',
         subActionParams: {
-          ...this.#request.body.params.subActionParams, // the original request body params.subActionParams
+          model: this.#request.body.model,
           messages: [assistantMessage], // the assistant message
+          ...(this.llmType === '.gen-ai' ? { n: 1, stop: null, temperature: 0.2 } : {}),
         },
       },
     };
@@ -111,7 +105,6 @@ export class ActionsClientLlm extends LLM {
         `${LLM_TYPE}: content should be a string, but it had an unexpected type: ${typeof content}`
       );
     }
-    this.#actionResultData = content; // save the raw response from the connector, because that's what the assistant expects
 
     return content; // per the contact of _call, return a string
   }

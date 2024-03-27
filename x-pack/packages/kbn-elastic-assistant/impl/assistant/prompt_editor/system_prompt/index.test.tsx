@@ -22,6 +22,7 @@ import { WELCOME_CONVERSATION } from '../../use_conversation/sample_conversation
 const BASE_CONVERSATION: Conversation = {
   ...WELCOME_CONVERSATION,
   apiConfig: {
+    connectorId: '123',
     defaultSystemPromptId: mockSystemPrompt.id,
   },
 };
@@ -374,10 +375,12 @@ describe('SystemPrompt', () => {
         id: 'second',
         category: 'assistant',
         apiConfig: {
+          connectorId: '123',
           defaultSystemPromptId: undefined,
         },
         title: 'second',
         messages: [],
+        replacements: [],
       };
       const localMockConversations: Record<string, Conversation> = {
         [DEFAULT_CONVERSATION_TITLE]: BASE_CONVERSATION,
@@ -456,6 +459,7 @@ describe('SystemPrompt', () => {
         [secondMockConversation.title]: {
           ...secondMockConversation,
           apiConfig: {
+            connectorId: '123',
             defaultSystemPromptId: mockSystemPrompt.id,
           },
         },

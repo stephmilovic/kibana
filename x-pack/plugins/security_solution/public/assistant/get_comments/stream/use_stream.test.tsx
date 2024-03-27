@@ -41,7 +41,7 @@ const defaultProps = {
   reader: readerComplete,
   isEnabledLangChain: false,
   isError: false,
-  connectorTypeTitle: 'OpenAI',
+  llmType: '.gen-ai',
 };
 describe('useStream', () => {
   beforeEach(() => {

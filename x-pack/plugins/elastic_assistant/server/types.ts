@@ -23,13 +23,17 @@ import { type MlPluginSetup } from '@kbn/ml-plugin/server';
 import { SpacesPluginSetup, SpacesPluginStart } from '@kbn/spaces-plugin/server';
 import { TaskManagerSetupContract } from '@kbn/task-manager-plugin/server';
 import { AuthenticatedUser, SecurityPluginStart } from '@kbn/security-plugin/server';
-import { Tool } from '@langchain/core/tools';
+import { Tool } from 'langchain/dist/tools/base';
 import { RetrievalQAChain } from 'langchain/chains';
 import { ElasticsearchClient } from '@kbn/core/server';
-import { AssistantFeatures, ExecuteConnectorRequestBody } from '@kbn/elastic-assistant-common';
-import { AIAssistantConversationsDataClient } from './conversations_data_client';
+import {
+  AssistantFeatures,
+  ExecuteConnectorRequestBody,
+  Replacement,
+} from '@kbn/elastic-assistant-common';
+import { AIAssistantConversationsDataClient } from './ai_assistant_data_clients/conversations';
 import type { GetRegisteredFeatures, GetRegisteredTools } from './services/app_context';
-import { AIAssistantDataClient } from './ai_assistant_data_client.ts';
+import { AIAssistantDataClient } from './ai_assistant_data_clients';
 
 export const PLUGIN_ID = 'elasticAssistant' as const;
 
@@ -200,8 +204,8 @@ export interface AssistantToolParams {
   chain: RetrievalQAChain;
   esClient: ElasticsearchClient;
   modelExists: boolean;
-  onNewReplacements?: (newReplacements: Record<string, string>) => void;
-  replacements?: Record<string, string>;
+  onNewReplacements?: (newReplacements: Replacement[]) => void;
+  replacements?: Replacement[];
   request: KibanaRequest<unknown, unknown, ExecuteConnectorRequestBody>;
   size?: number;
 }

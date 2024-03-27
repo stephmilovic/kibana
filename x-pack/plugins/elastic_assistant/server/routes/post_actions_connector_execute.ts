@@ -10,12 +10,13 @@ import { transformError } from '@kbn/securitysolution-es-utils';
 
 import { schema } from '@kbn/config-schema';
 import {
-  ConversationResponse,
   ELASTIC_AI_ASSISTANT_INTERNAL_API_VERSION,
   ExecuteConnectorRequestBody,
   Message,
-  getMessageContentWithoutReplacements,
+  Replacement,
+  replaceAnonymizedValuesWithOriginalValues,
 } from '@kbn/elastic-assistant-common';
+import { buildRouteValidationWithZod } from '@kbn/elastic-assistant-common/impl/schemas/common';
 import { getRequestAbortedSignal } from '@kbn/data-plugin/server';
 import { StreamFactoryReturnType } from '@kbn/ml-response-stream/server';
 import { ResponseBody } from '../lib/langchain/types';
@@ -26,10 +27,7 @@ import {
 } from '../lib/telemetry/event_based_telemetry';
 import { executeAction } from '../lib/executor';
 import { POST_ACTIONS_CONNECTOR_EXECUTE } from '../../common/constants';
-import {
-  getLangChainMessages,
-  requestHasRequiredAnonymizationParams,
-} from '../lib/langchain/helpers';
+import { getLangChainMessages } from '../lib/langchain/helpers';
 import { buildResponse } from '../lib/build_response';
 import { ElasticAssistantRequestHandlerContext, GetElser } from '../types';
 import { ESQL_RESOURCE } from './knowledge_base/constants';
@@ -39,7 +37,6 @@ import {
   getMessageFromRawResponse,
   getPluginNameFromRequest,
 } from './helpers';
-import { buildRouteValidationWithZod } from './route_validation';
 
 export const postActionsConnectorExecuteRoute = (
   router: IRouter<ElasticAssistantRequestHandlerContext>,
@@ -73,6 +70,9 @@ export const postActionsConnectorExecuteRoute = (
         const telemetry = assistantContext.telemetry;
 
         try {
+          // Get the actions plugin start contract from the request context for the agents
+          const actionsClient = await assistantContext.actions.getActionsClientWithRequest(request);
+
           const authenticatedUser = assistantContext.getCurrentUser();
           if (authenticatedUser == null) {
             return response.unauthorized({
@@ -81,122 +81,152 @@ export const postActionsConnectorExecuteRoute = (
           }
           const dataClient = await assistantContext.getAIAssistantConversationsDataClient();
 
-          let onMessageSent;
-          let conversation: ConversationResponse | undefined | null;
+          let latestReplacements: Replacement[] = request.body.replacements;
+          const onNewReplacements = (newReplacements: Replacement[]) => {
+            const latestReplacementsDict = latestReplacements.reduce(
+              (acc: Record<string, string>, r) => {
+                acc[r.value] = r.uuid;
+                return acc;
+              },
+              {}
+            );
+            const newReplacementsDict = newReplacements.reduce((acc: Record<string, string>, r) => {
+              acc[r.value] = r.uuid;
+              return acc;
+            }, {});
+
+            const updatedReplacements = { ...latestReplacementsDict, ...newReplacementsDict };
+            latestReplacements = Object.keys(updatedReplacements).map((key) => ({
+              value: key,
+              uuid: updatedReplacements[key],
+            }));
+          };
+
+          let onLlmResponse;
           let prevMessages;
-          if (request.body.conversationId) {
-            conversation = await dataClient?.getConversation({
-              id: request.body.conversationId,
+          let newMessage: Pick<Message, 'content' | 'role'> | undefined;
+          const conversationId = request.body.conversationId;
+
+          // if message is undefined, it means the user is regenerating a message from the stored conversation
+          if (request.body.message) {
+            newMessage = {
+              content: request.body.message,
+              role: 'user',
+            };
+          }
+
+          if (conversationId) {
+            const conversation = await dataClient?.getConversation({
+              id: conversationId,
               authenticatedUser,
             });
+            if (conversation == null) {
+              return response.notFound({
+                body: `conversation id: "${conversationId}" not found`,
+              });
+            }
+
+            // messages are anonymized by dataClient
             prevMessages = conversation?.messages?.map((c) => ({
               role: c.role,
               content: c.content,
             }));
 
-            if (conversation == null) {
-              return response.notFound({
-                body: `conversation id: "${request.body.conversationId}" not found`,
-              });
-            }
-
-            if (request.body.replacements) {
-              await dataClient?.updateConversation({
+            if (request.body.message) {
+              const res = await dataClient?.appendConversationMessages({
                 existingConversation: conversation,
-                conversationUpdateProps: {
-                  id: request.body.conversationId,
-                  replacements: request.body.replacements,
-                },
-              });
-            }
-
-            const dateTimeString = new Date().toLocaleString();
-
-            const appendMessageFuncs = request.body.params.subActionParams.messages.map(
-              (userMessage) => async () => {
-                if (conversation != null) {
-                  const res = await dataClient?.appendConversationMessages({
-                    existingConversation: conversation,
-                    messages: request.body.params.subActionParams.messages.map((m) => ({
-                      content: getMessageContentWithoutReplacements({
-                        messageContent: userMessage.content,
-                        replacements: request.body.replacements as
-                          | Record<string, string>
-                          | undefined,
+                messages: [
+                  {
+                    ...{
+                      content: replaceAnonymizedValuesWithOriginalValues({
+                        messageContent: request.body.message,
+                        replacements: request.body.replacements,
                       }),
-                      role: m.role,
-                      timestamp: dateTimeString,
-                    })),
-                  });
-                  if (res == null) {
-                    return response.badRequest({
-                      body: `conversation id: "${request.body.conversationId}" not updated`,
-                    });
-                  }
-                }
+                      role: 'user',
+                    },
+                    timestamp: new Date().toISOString(),
+                  },
+                ],
+              });
+
+              if (res == null) {
+                return response.badRequest({
+                  body: `conversation id: "${conversationId}" not updated`,
+                });
               }
-            );
-
-            await Promise.all(appendMessageFuncs.map((appendMessageFunc) => appendMessageFunc()));
-
+            }
             const updatedConversation = await dataClient?.getConversation({
-              id: request.body.conversationId,
+              id: conversationId,
               authenticatedUser,
             });
 
             if (updatedConversation == null) {
               return response.notFound({
-                body: `conversation id: "${request.body.conversationId}" not found`,
+                body: `conversation id: "${conversationId}" not found`,
               });
             }
 
-            onMessageSent = (content: string) => {
+            onLlmResponse = async (
+              content: string,
+              traceData: Message['traceData'] = {}
+            ): Promise<void> => {
               if (updatedConversation) {
-                dataClient?.appendConversationMessages({
+                await dataClient?.appendConversationMessages({
                   existingConversation: updatedConversation,
                   messages: [
                     getMessageFromRawResponse({
-                      rawContent: getMessageContentWithoutReplacements({
+                      rawContent: replaceAnonymizedValuesWithOriginalValues({
                         messageContent: content,
-                        replacements: request.body.replacements as
-                          | Record<string, string>
-                          | undefined,
+                        replacements: latestReplacements,
                       }),
+                      traceData,
                     }),
                   ],
+                });
+              }
+              if (latestReplacements.length > 0) {
+                await dataClient?.updateConversation({
+                  conversationUpdateProps: {
+                    id: conversationId,
+                    replacements: latestReplacements,
+                  },
                 });
               }
             };
           }
 
           const connectorId = decodeURIComponent(request.params.connectorId);
+          const connectors = await actionsClient.getBulk({
+            ids: [connectorId],
+            throwIfSystemAction: false,
+          });
 
           // get the actions plugin start contract from the request context:
           const actions = (await context.elasticAssistant).actions;
 
           // if not langchain, call execute action directly and return the response:
-          if (
-            !request.body.isEnabledKnowledgeBase &&
-            !requestHasRequiredAnonymizationParams(request)
-          ) {
+          if (!request.body.isEnabledKnowledgeBase && !request.body.isEnabledRAGAlerts) {
             logger.debug('Executing via actions framework directly');
+
             const result = await executeAction({
               abortSignal,
-              onMessageSent,
+              onLlmResponse,
               actions,
               request,
               connectorId,
+              llmType: connectors[0]?.actionTypeId,
               params: {
-                subAction: request.body.params.subAction,
+                subAction: request.body.subAction,
                 subActionParams: {
-                  ...request.body.params.subActionParams,
-                  messages: [
-                    ...(prevMessages ?? []),
-                    ...request.body.params.subActionParams.messages,
-                  ],
+                  model: request.body.model,
+                  messages: [...(prevMessages ?? []), ...(newMessage ? [newMessage] : [])],
+                  ...(connectors[0]?.actionTypeId === '.gen-ai'
+                    ? { n: 1, stop: null, temperature: 0.2 }
+                    : {}),
                 },
               },
             });
+
             telemetry.reportEvent(INVOKE_ASSISTANT_SUCCESS_EVENT.eventType, {
               isEnabledKnowledgeBase: request.body.isEnabledKnowledgeBase,
               isEnabledRAGAlerts: request.body.isEnabledRAGAlerts,
@@ -224,16 +254,11 @@ export const postActionsConnectorExecuteRoute = (
 
           // convert the assistant messages to LangChain messages:
           const langChainMessages = getLangChainMessages(
-            ([...(prevMessages ?? []), request.body.params.subActionParams.messages] ??
+            ([...(prevMessages ?? []), ...(newMessage ? [newMessage] : [])] ??
               []) as unknown as Array<Pick<Message, 'content' | 'role'>>
           );
 
           const elserId = await getElser(request, (await context.core).savedObjects.getClient());
-
-          let latestReplacements = { ...request.body.replacements };
-          const onNewReplacements = (newReplacements: Record<string, string>) => {
-            latestReplacements = { ...latestReplacements, ...newReplacements };
-          };
 
           const langChainResponse = await callAgentExecutor({
             abortSignal,
@@ -249,14 +274,14 @@ export const postActionsConnectorExecuteRoute = (
             kbResource: ESQL_RESOURCE,
             langChainMessages,
             isStream:
-              // TODO implement llmClass for bedrock streaming
-              // tracked here: https://github.com/elastic/security-team/issues/7363
-              request.body.params.subAction !== 'invokeAI' && request.body.llmType === 'openai',
-            llmType: request.body.llmType,
+            // TODO implement llmClass for bedrock streaming
+            // tracked here: https://github.com/elastic/security-team/issues/7363
+              request.body.subAction !== 'invokeAI' && connectors[0]?.actionTypeId === '.gen-ai',
+            llmType: connectors[0]?.actionTypeId,
             logger,
             onNewReplacements,
             request,
-            replacements: request.body.replacements as Record<string, string>,
+            replacements: request.body.replacements,
             size: request.body.size,
             telemetry,
           });
@@ -270,30 +295,17 @@ export const postActionsConnectorExecuteRoute = (
           if (Object.hasOwn(langChainResponse.body, 'data')) {
             // casting as the check above proves this is a static response
             const responseBody: ResponseBody = langChainResponse.body as unknown as ResponseBody;
-
-            if (conversation != null) {
-              dataClient?.appendConversationMessages({
-                existingConversation: conversation,
-                messages: [
-                  getMessageFromRawResponse({
-                    rawContent: responseBody.data,
-                    traceData: responseBody.trace_data
-                      ? {
-                          traceId: responseBody.trace_data.trace_id,
-                          transactionId: responseBody.trace_data.transaction_id,
-                        }
-                      : {},
-                  }),
-                ],
-              });
-              await dataClient?.updateConversation({
-                existingConversation: conversation,
-                conversationUpdateProps: {
-                  id: conversation.id,
-                  replacements: latestReplacements,
-                },
-              });
-              // update replacements on static response
+            if (conversationId) {
+              // if conversationId is defined, onLlmResponse will be too. the ? is to satisfy TS
+              await onLlmResponse?.(
+                responseBody.data,
+                responseBody.trace_data
+                  ? {
+                    traceId: responseBody.trace_data.trace_id,
+                    transactionId: responseBody.trace_data.transaction_id,
+                  }
+                  : {}
+              );
               const staticResponse = langChainResponse as StaticReturnType;
               result = {
                 ...staticResponse,

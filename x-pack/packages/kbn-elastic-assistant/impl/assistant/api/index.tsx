@@ -5,18 +5,11 @@
  * 2.0.
  */
 
-import { OpenAiProviderType } from '@kbn/stack-connectors-plugin/public/common';
 import { HttpSetup } from '@kbn/core/public';
 import { IHttpFetchError } from '@kbn/core-http-browser';
-import type { Conversation, Message } from '../../assistant_context/types';
+import { ApiConfig, Replacement } from '@kbn/elastic-assistant-common';
 import { API_ERROR } from '../translations';
-import { MODEL_GPT_3_5_TURBO } from '../../connectorland/models/model_selector/model_selector';
-import {
-  getFormattedMessageContent,
-  getOptionalRequestParams,
-  hasParsableResponse,
-  llmTypeDictionary,
-} from '../helpers';
+import { getOptionalRequestParams } from '../helpers';
 export * from './conversations';
 
 export interface FetchConnectorExecuteAction {
@@ -27,10 +20,10 @@ export interface FetchConnectorExecuteAction {
   allowReplacement?: string[];
   isEnabledKnowledgeBase: boolean;
   assistantStreamingEnabled: boolean;
-  apiConfig: Conversation['apiConfig'];
+  apiConfig: ApiConfig;
   http: HttpSetup;
-  messages: Message[];
-  replacements?: Record<string, string>;
+  message?: string;
+  replacements: Replacement[];
   signal?: AbortSignal | undefined;
   size?: number;
 }
@@ -54,33 +47,14 @@ export const fetchConnectorExecuteAction = async ({
   isEnabledKnowledgeBase,
   assistantStreamingEnabled,
   http,
-  messages,
+  message,
   replacements,
   apiConfig,
   signal,
   size,
 }: FetchConnectorExecuteAction): Promise<FetchConnectorExecuteResponse> => {
-  const outboundMessages = messages.map((msg) => ({
-    role: msg.role,
-    content: msg.content,
-  }));
 
-  const body =
-    apiConfig?.provider === OpenAiProviderType.OpenAi
-      ? {
-          model: apiConfig.model ?? MODEL_GPT_3_5_TURBO,
-          messages: outboundMessages,
-          n: 1,
-          stop: null,
-          temperature: 0.2,
-        }
-      : {
-          // Azure OpenAI and Bedrock invokeAI both expect this body format
-          messages: outboundMessages,
-        };
-
-  const llmType = llmTypeDictionary[apiConfig.connectorTypeTitle ?? 'OpenAI'];
-
+  // TODO define llmType?!?!
   const isStream =
     assistantStreamingEnabled &&
     (llmType === 'openai' ||
@@ -95,24 +69,16 @@ export const fetchConnectorExecuteAction = async ({
     allowReplacement,
     size,
   });
-  const requiredRequestParams = {
-    conversationId,
-    isEnabledKnowledgeBase,
-    isEnabledRAGAlerts,
-    llmType,
-    replacements,
-  };
 
   const requestBody = {
-    params: {
-      subActionParams: body,
-      subAction: isStream ? 'invokeStream' : 'invokeAI',
-    },
+    // only used for openai, azure and bedrock ignore field
+    model: apiConfig?.model,
+    message,
+    subAction: isStream ? 'invokeStream' : 'invokeAI',
     conversationId,
     replacements,
     isEnabledKnowledgeBase,
     isEnabledRAGAlerts,
-    llmType,
     ...optionalRequestParams,
   };
 
@@ -150,7 +116,7 @@ export const fetchConnectorExecuteAction = async ({
       connector_id: string;
       status: string;
       data: string;
-      replacements?: Record<string, string>;
+      replacements?: Replacement[];
       service_message?: string;
       trace_data?: {
         transaction_id: string;
@@ -189,12 +155,7 @@ export const fetchConnectorExecuteAction = async ({
         : undefined;
 
     return {
-      response: hasParsableResponse({
-        isEnabledRAGAlerts,
-        isEnabledKnowledgeBase,
-      })
-        ? getFormattedMessageContent(response.data)
-        : response.data,
+      response: response.data,
       isError: false,
       isStream: false,
       traceData,

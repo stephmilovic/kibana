@@ -6,7 +6,7 @@
  */
 
 import { EuiButtonEmpty, EuiFlexGroup, EuiFlexItem, EuiText } from '@elastic/eui';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { css } from '@emotion/css';
 import { AIConnector, ConnectorSelector } from '../connector_selector';
@@ -15,7 +15,7 @@ import { useLoadConnectors } from '../use_load_connectors';
 import * as i18n from '../translations';
 import { useAssistantContext } from '../../assistant_context';
 import { useConversation } from '../../assistant/use_conversation';
-import { getActionTypeTitle, getGenAiConfig } from '../helpers';
+import { getGenAiConfig } from '../helpers';
 
 export const ADD_NEW_CONNECTOR = 'ADD_NEW_CONNECTOR';
 
@@ -68,24 +68,15 @@ const placeholderButtonClassName = css`
 export const ConnectorSelectorInline: React.FC<Props> = React.memo(
   ({ isDisabled = false, selectedConnectorId, selectedConversation, onConnectorSelected }) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
-    const { actionTypeRegistry, assistantAvailability, http } = useAssistantContext();
+    const { assistantAvailability, http } = useAssistantContext();
     const { setApiConfig } = useConversation();
 
-    const { data: connectorsWithoutActionContext } = useLoadConnectors({ http });
-
-    const aiConnectors: AIConnector[] = useMemo(
-      () =>
-        connectorsWithoutActionContext
-          ? connectorsWithoutActionContext.map((c) => ({
-              ...c,
-              connectorTypeTitle: getActionTypeTitle(actionTypeRegistry.get(c.actionTypeId)),
-            }))
-          : [],
-      [actionTypeRegistry, connectorsWithoutActionContext]
-    );
+    const { data: aiConnectors } = useLoadConnectors({
+      http,
+    });
 
     const selectedConnectorName =
-      aiConnectors.find((c) => c.id === selectedConnectorId)?.name ??
+      (aiConnectors ?? []).find((c) => c.id === selectedConnectorId)?.name ??
       i18n.INLINE_CONNECTOR_PLACEHOLDER;
     const localIsDisabled = isDisabled || !assistantAvailability.hasConnectorsReadPrivilege;
 
@@ -111,7 +102,6 @@ export const ConnectorSelectorInline: React.FC<Props> = React.memo(
             apiConfig: {
               ...selectedConversation.apiConfig,
               connectorId,
-              connectorTypeTitle: connector.connectorTypeTitle,
               // With the inline component, prefer config args to handle 'new connector' case
               provider: apiProvider ?? config?.apiProvider,
               model: model ?? config?.defaultModel,

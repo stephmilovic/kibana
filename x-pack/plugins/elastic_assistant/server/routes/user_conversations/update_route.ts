@@ -16,8 +16,8 @@ import {
   ConversationUpdateProps,
 } from '@kbn/elastic-assistant-common/impl/schemas/conversations/common_attributes.gen';
 import { UpdateConversationRequestParams } from '@kbn/elastic-assistant-common/impl/schemas/conversations/crud_conversation_route.gen';
+import { buildRouteValidationWithZod } from '@kbn/elastic-assistant-common/impl/schemas/common';
 import { ElasticAssistantPluginRouter } from '../../types';
-import { buildRouteValidationWithZod } from '../route_validation';
 import { buildResponse } from '../utils';
 
 export const updateConversationRoute = (router: ElasticAssistantPluginRouter) => {
@@ -62,7 +62,6 @@ export const updateConversationRoute = (router: ElasticAssistantPluginRouter) =>
             });
           }
           const conversation = await dataClient?.updateConversation({
-            existingConversation,
             conversationUpdateProps: request.body,
             authenticatedUser,
           });

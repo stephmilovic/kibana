@@ -15,7 +15,7 @@ import {
   getKnowledgeBaseStatus,
   postKnowledgeBase,
 } from '.';
-import type { Conversation, Message } from '../../assistant_context/types';
+import type { Conversation } from '../../assistant_context/types';
 import { API_ERROR } from '../translations';
 
 jest.mock('@kbn/core-http-browser');
@@ -30,17 +30,15 @@ const apiConfig: Conversation['apiConfig'] = {
   provider: OpenAiProviderType.OpenAi,
 };
 
-const messages: Message[] = [
-  { content: 'This is a test', role: 'user', timestamp: new Date().toLocaleString() },
-];
 const fetchConnectorArgs: FetchConnectorExecuteAction = {
   isEnabledRAGAlerts: false,
   apiConfig,
   isEnabledKnowledgeBase: true,
   assistantStreamingEnabled: true,
   http: mockHttp,
-  messages,
+  message: 'This is a test',
   conversationId: 'test',
+  replacements: [],
 };
 describe('API tests', () => {
   beforeEach(() => {
@@ -57,7 +55,7 @@ describe('API tests', () => {
       expect(mockHttp.fetch).toHaveBeenCalledWith(
         '/internal/elastic_assistant/actions/connector/foo/_execute',
         {
-          body: '{"params":{"subActionParams":{"model":"gpt-4","messages":[{"role":"user","content":"This is a test"}],"n":1,"stop":null,"temperature":0.2},"subAction":"invokeAI"},"conversationId":"test","isEnabledKnowledgeBase":true,"isEnabledRAGAlerts":false,"llmType":"openai"}',
+          body: '{"model":"gpt-4","message":"This is a test","subAction":"invokeAI","conversationId":"test","replacements":[],"isEnabledKnowledgeBase":true,"isEnabledRAGAlerts":false}',
           headers: { 'Content-Type': 'application/json' },
           method: 'POST',
           signal: undefined,
@@ -72,7 +70,7 @@ describe('API tests', () => {
       expect(mockHttp.fetch).toHaveBeenCalledWith(
         '/internal/elastic_assistant/actions/connector/foo/_execute',
         {
-          body: '{"params":{"subActionParams":{"model":"gpt-4","messages":[{"role":"user","content":"This is a test"}],"n":1,"stop":null,"temperature":0.2},"subAction":"invokeStream"},"conversationId":"test","isEnabledKnowledgeBase":true,"isEnabledRAGAlerts":false,"llmType":"openai"}',
+          body: '{"model":"gpt-4","message":"This is a test","subAction":"invokeStream","conversationId":"test","replacements":[],"isEnabledKnowledgeBase":false,"isEnabledRAGAlerts":false}',
           method: 'POST',
           asResponse: true,
           rawResponse: true,
@@ -85,10 +83,12 @@ describe('API tests', () => {
     it('calls the non-stream API when assistantStreamingEnabled is true and llmType is bedrock and isEnabledKnowledgeBase is true', async () => {
       const testProps: FetchConnectorExecuteAction = {
         ...fetchConnectorArgs,
-        apiConfig: {
-          ...apiConfig,
-          connectorTypeTitle: 'Amazon Bedrock',
-        },
+        isEnabledRAGAlerts: true,
+        alertsIndexPattern: '.alerts-security.alerts-default',
+        allow: ['a', 'b', 'c'],
+        allowReplacement: ['b', 'c'],
+        replacements: [{ uuid: 'auuid', value: 'real.hostname' }],
+        size: 30,
       };
 
       await fetchConnectorExecuteAction(testProps);
@@ -96,7 +96,7 @@ describe('API tests', () => {
       expect(mockHttp.fetch).toHaveBeenCalledWith(
         '/internal/elastic_assistant/actions/connector/foo/_execute',
         {
-          body: '{"params":{"subActionParams":{"model":"gpt-4","messages":[{"role":"user","content":"This is a test"}],"n":1,"stop":null,"temperature":0.2},"subAction":"invokeAI"},"conversationId":"test","isEnabledKnowledgeBase":true,"isEnabledRAGAlerts":false,"llmType":"bedrock"}',
+          body: '{"model":"gpt-4","message":"This is a test","subAction":"invokeAI","conversationId":"test","replacements":[{"uuid":"auuid","value":"real.hostname"}],"isEnabledKnowledgeBase":true,"isEnabledRAGAlerts":true,"alertsIndexPattern":".alerts-security.alerts-default","allow":["a","b","c"],"allowReplacement":["b","c"],"size":30}',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -123,7 +123,7 @@ describe('API tests', () => {
       expect(mockHttp.fetch).toHaveBeenCalledWith(
         '/internal/elastic_assistant/actions/connector/foo/_execute',
         {
-          body: '{"params":{"subActionParams":{"model":"gpt-4","messages":[{"role":"user","content":"This is a test"}],"n":1,"stop":null,"temperature":0.2},"subAction":"invokeAI"},"conversationId":"test","isEnabledKnowledgeBase":false,"isEnabledRAGAlerts":true,"llmType":"bedrock"}',
+          body: '{"params":{"subActionParams":{"model":"gpt-4","message":"This is a test","n":1,"stop":null,"temperature":0.2},"subAction":"invokeAI"},"conversationId":"test","replacements":[],"isEnabledKnowledgeBase":false,"isEnabledRAGAlerts":true,"llmType":"bedrock"}',
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -176,7 +176,7 @@ describe('API tests', () => {
       expect(mockHttp.fetch).toHaveBeenCalledWith(
         '/internal/elastic_assistant/actions/connector/foo/_execute',
         {
-          body: '{"params":{"subActionParams":{"model":"gpt-4","messages":[{"role":"user","content":"This is a test"}],"n":1,"stop":null,"temperature":0.2},"subAction":"invokeAI"},"conversationId":"test","replacements":{"auuid":"real.hostname"},"isEnabledKnowledgeBase":true,"isEnabledRAGAlerts":true,"llmType":"openai","alertsIndexPattern":".alerts-security.alerts-default","allow":["a","b","c"],"allowReplacement":["b","c"],"size":30}',
+          body: '{"model":"gpt-4","message":"This is a test","subAction":"invokeAI","conversationId":"test","replacements":[],"isEnabledKnowledgeBase":false,"isEnabledRAGAlerts":true}',
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -263,26 +263,6 @@ describe('API tests', () => {
       });
 
       expect(result).toEqual({ response: API_ERROR, isStream: false, isError: true });
-    });
-
-    it('returns the value of the action_input property when isEnabledKnowledgeBase is true, and `content` has properly prefixed and suffixed JSON with the action_input property', async () => {
-      const response = '```json\n{"action_input": "value from action_input"}\n```';
-
-      (mockHttp.fetch as jest.Mock).mockResolvedValue({
-        status: 'ok',
-        data: response,
-      });
-
-      const result = await fetchConnectorExecuteAction({
-        ...fetchConnectorArgs,
-        assistantStreamingEnabled: false,
-      });
-
-      expect(result).toEqual({
-        response: 'value from action_input',
-        isStream: false,
-        isError: false,
-      });
     });
 
     it('returns the original content when isEnabledKnowledgeBase is true, and `content` has properly formatted JSON WITHOUT the action_input property', async () => {

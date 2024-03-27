@@ -10,7 +10,7 @@ import * as i18n from '../../content/prompts/welcome/translations';
 import { WELCOME_CONVERSATION_TITLE } from './translations';
 
 export const WELCOME_CONVERSATION: Conversation = {
-  id: WELCOME_CONVERSATION_TITLE,
+  id: '',
   title: WELCOME_CONVERSATION_TITLE,
   category: 'assistant',
   messages: [
@@ -42,7 +42,7 @@ export const WELCOME_CONVERSATION: Conversation = {
       },
     },
   ],
-  apiConfig: {},
+  replacements: [],
 };
 
 export const enterpriseMessaging: Message[] = [

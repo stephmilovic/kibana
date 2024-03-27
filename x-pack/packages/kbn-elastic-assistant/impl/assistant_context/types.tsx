@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { OpenAiProviderType } from '@kbn/stack-connectors-plugin/common/openai/constants';
+import { ApiConfig, Replacement } from '@kbn/elastic-assistant-common';
 
 export type ConversationRole = 'system' | 'user' | 'assistant';
 
@@ -17,7 +17,7 @@ export interface MessagePresentation {
 export interface Message {
   role: ConversationRole;
   reader?: ReadableStreamDefaultReader<Uint8Array>;
-  replacements?: Record<string, string>;
+  replacements?: Replacement[];
   content?: string;
   timestamp: string;
   isError?: boolean;
@@ -44,7 +44,6 @@ export interface ConversationTheme {
     icon?: string;
   };
 }
-
 /**
  * Complete state to reconstruct a conversation instance.
  * Includes all messages, connector configured, and relevant UI state.
@@ -52,13 +51,7 @@ export interface ConversationTheme {
  */
 export interface Conversation {
   '@timestamp'?: string;
-  apiConfig: {
-    connectorId?: string;
-    connectorTypeTitle?: string;
-    defaultSystemPromptId?: string;
-    provider?: OpenAiProviderType;
-    model?: string;
-  };
+  apiConfig?: ApiConfig;
   user?: {
     id?: string;
     name?: string;
@@ -69,7 +62,7 @@ export interface Conversation {
   messages: Message[];
   updatedAt?: Date;
   createdAt?: Date;
-  replacements?: Record<string, string>;
+  replacements: Replacement[];
   isDefault?: boolean;
   excludeFromLastConversationStorage?: boolean;
 }

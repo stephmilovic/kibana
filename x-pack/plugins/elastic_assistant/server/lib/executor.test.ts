@@ -18,19 +18,21 @@ import { PluginStartContract as ActionsPluginStart } from '@kbn/actions-plugin/s
 import { ExecuteConnectorRequestBody } from '@kbn/elastic-assistant-common';
 const request = {
   body: {
-    params: {},
+    subAction: 'invokeAI',
+    message: 'hello',
   },
 } as KibanaRequest<unknown, unknown, ExecuteConnectorRequestBody>;
-const onMessageSent = jest.fn();
+const onLlmResponse = jest.fn();
 const connectorId = 'testConnectorId';
 const testProps: Omit<Props, 'actions'> = {
   params: {
     subAction: 'invokeAI',
     subActionParams: { messages: [{ content: 'hello', role: 'user' }] },
   },
+  llmType: '.bedrock',
   request,
   connectorId,
-  onMessageSent,
+  onLlmResponse,
 };
 
 describe('executeAction', () => {
@@ -55,7 +57,7 @@ describe('executeAction', () => {
       data: 'Test message',
       status: 'ok',
     });
-    expect(onMessageSent).toHaveBeenCalledWith('Test message');
+    expect(onLlmResponse).toHaveBeenCalledWith('Test message');
   });
 
   it('should execute an action and return a Readable object when the response from the actions framework is a stream', async () => {

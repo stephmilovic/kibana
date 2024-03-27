@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { transformRawData } from '@kbn/elastic-assistant-common';
+import { Replacement, transformRawData } from '@kbn/elastic-assistant-common';
 import { getAnonymizedValue as defaultGetAnonymizedValue } from '../get_anonymized_value';
 import type { Message } from '../../assistant_context/types';
 import type { SelectedPromptContext } from '../prompt_context/types';
@@ -35,13 +35,12 @@ export const getSystemMessages = ({
 export function getCombinedMessage({
   currentReplacements,
   getAnonymizedValue = defaultGetAnonymizedValue,
-  onNewReplacements,
   isNewChat,
   promptText,
   selectedPromptContexts,
   selectedSystemPrompt,
 }: {
-  currentReplacements: Record<string, string> | undefined;
+  currentReplacements: Replacement[] | undefined;
   getAnonymizedValue?: ({
     currentReplacements,
     rawValue,
@@ -50,15 +49,19 @@ export function getCombinedMessage({
     rawValue: string;
   }) => string;
   isNewChat: boolean;
-  onNewReplacements: (newReplacements: Record<string, string>) => void;
   promptText: string;
   selectedPromptContexts: Record<string, SelectedPromptContext>;
   selectedSystemPrompt: Prompt | undefined;
 }): Message {
+  const replacements: Replacement[] = currentReplacements ?? [];
+  const onNewReplacements = (newReplacements: Replacement[]) => {
+    replacements.push(...newReplacements);
+  };
+
   const promptContextsContent = Object.keys(selectedPromptContexts)
     .sort()
     .map((id) => {
-      const promptContext = transformRawData({
+      const promptContextData = transformRawData({
         allow: selectedPromptContexts[id].allow,
         allowReplacement: selectedPromptContexts[id].allowReplacement,
         currentReplacements,
@@ -67,7 +70,7 @@ export function getCombinedMessage({
         rawData: selectedPromptContexts[id].rawData,
       });
 
-      return `${SYSTEM_PROMPT_CONTEXT_NON_I18N(promptContext)}`;
+      return `${SYSTEM_PROMPT_CONTEXT_NON_I18N(promptContextData)}`;
     });
 
   return {
@@ -76,5 +79,6 @@ export function getCombinedMessage({
     }${promptContextsContent}\n\n${promptText}`,
     role: 'user', // we are combining the system and user messages into one message
     timestamp: new Date().toLocaleString(),
+    replacements,
   };
 }

@@ -61,8 +61,17 @@ export const TraceData = z.object({
   traceId: z.string().optional(),
 });
 
+/**
+ * Replacements object used to anonymize/deanomymize messsages
+ */
 export type Replacement = z.infer<typeof Replacement>;
-export const Replacement = z.object({}).catchall(z.unknown());
+export const Replacement = z.object({
+  /**
+   * Actual value was anonymized.
+   */
+  value: z.string(),
+  uuid: UUID,
+});
 
 export type Reader = z.infer<typeof Reader>;
 export const Reader = z.object({}).catchall(z.unknown());
@@ -135,11 +144,7 @@ export const ApiConfig = z.object({
   /**
    * connector Id
    */
-  connectorId: z.string().optional(),
-  /**
-   * connector Type Title
-   */
-  connectorTypeTitle: z.string().optional(),
+  connectorId: z.string(),
   /**
    * defaultSystemPromptId
    */
@@ -206,7 +211,7 @@ export const ConversationResponse = z.object({
    * The last time conversation was updated.
    */
   createdAt: z.string(),
-  replacements: Replacement.optional(),
+  replacements: z.array(Replacement).optional(),
   users: z.array(User),
   /**
    * The conversation messages.
@@ -215,7 +220,7 @@ export const ConversationResponse = z.object({
   /**
    * LLM API configuration.
    */
-  apiConfig: ApiConfig,
+  apiConfig: ApiConfig.optional(),
   /**
    * Is default conversation.
    */
@@ -254,7 +259,7 @@ export const ConversationUpdateProps = z.object({
    * excludeFromLastConversationStorage.
    */
   excludeFromLastConversationStorage: z.boolean().optional(),
-  replacements: Replacement.optional(),
+  replacements: z.array(Replacement).optional(),
 });
 
 export type ConversationCreateProps = z.infer<typeof ConversationCreateProps>;
@@ -283,7 +288,7 @@ export const ConversationCreateProps = z.object({
    * excludeFromLastConversationStorage.
    */
   excludeFromLastConversationStorage: z.boolean().optional(),
-  replacements: Replacement.optional(),
+  replacements: z.array(Replacement).optional(),
 });
 
 export type ConversationMessageCreateProps = z.infer<typeof ConversationMessageCreateProps>;

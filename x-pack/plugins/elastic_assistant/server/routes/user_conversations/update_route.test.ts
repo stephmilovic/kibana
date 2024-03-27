@@ -120,6 +120,7 @@ describe('Update conversation route', () => {
           excludeFromLastConversationStorage: true,
           ...getUpdateConversationSchemaMock(),
           apiConfig: {
+            connectorId: '123',
             defaultSystemPromptId: 'test',
           },
         },

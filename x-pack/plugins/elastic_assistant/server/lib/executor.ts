@@ -16,12 +16,14 @@ import {
 import { handleStreamStorage } from './parse_stream';
 
 export interface Props {
-  onMessageSent?: (content: string) => void;
   abortSignal?: AbortSignal;
+  onLlmResponse?: (content: string) => Promise<void>;
   actions: ActionsPluginStart;
   connectorId: string;
-  params: ConnectorExecutionParams;
+  // TODO investigate
+  params: ConnectorExecutionParams | InvokeAIActionsParams;
   request: KibanaRequest<unknown, unknown, ExecuteConnectorRequestBody>;
+  llmType: string;
 }
 interface StaticResponse {
   connector_id: string;
@@ -29,19 +31,34 @@ interface StaticResponse {
   status: string;
 }
 
+interface InvokeAIActionsParams {
+  subActionParams: {
+    messages: Array<{ role: string; content: string }>;
+    model?: string;
+    n?: number;
+    stop?: string | string[] | null;
+    temperature?: number;
+  };
+  subAction: 'invokeAI' | 'invokeStream';
+}
+
+const convertToGenericType = (params: InvokeAIActionsParams): Record<string, unknown> =>
+  params as unknown as Record<string, unknown>;
+
 export const executeAction = async ({
   abortSignal,
+  onLlmResponse,
   actions,
-  connectorId,
-  onMessageSent,
   params,
+  connectorId,
+  llmType,
   request,
 }: Props): Promise<StaticResponse | Readable> => {
   const actionsClient = await actions.getActionsClientWithRequest(request);
   const actionResult = await actionsClient.execute({
     actionId: connectorId,
     params: {
-      ...params,
+      ...convertToGenericType(params),
       subActionParams: {
         ...params.subActionParams,
         signal: abortSignal,
@@ -56,8 +73,8 @@ export const executeAction = async ({
   }
   const content = get('data.message', actionResult);
   if (typeof content === 'string') {
-    if (onMessageSent) {
-      onMessageSent(content);
+    if (onLlmResponse) {
+      await onLlmResponse(content);
     }
     return {
       connector_id: connectorId,
@@ -72,7 +89,7 @@ export const executeAction = async ({
   }
 
   // do not await, blocks stream for UI
-  handleStreamStorage(readable, request.body.llmType, onMessageSent);
+  handleStreamStorage(readable, llmType, onLlmResponse);
 
   return readable.pipe(new PassThrough());
 };

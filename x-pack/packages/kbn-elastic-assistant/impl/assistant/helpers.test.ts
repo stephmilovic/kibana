@@ -8,13 +8,12 @@
 import {
   getBlockBotConversation,
   getDefaultConnector,
-  getFormattedMessageContent,
   getOptionalRequestParams,
   hasParsableResponse,
   mergeBaseWithPersistedConversations,
 } from './helpers';
 import { enterpriseMessaging } from './use_conversation/sample_conversations';
-import { ActionConnector } from '@kbn/triggers-actions-ui-plugin/public';
+import { AIConnector } from '../connectorland/connector_selector';
 
 describe('helpers', () => {
   describe('isAssistantEnabled = false', () => {
@@ -25,7 +24,8 @@ describe('helpers', () => {
         category: 'assistant',
         theme: {},
         messages: [],
-        apiConfig: {},
+        apiConfig: { connectorId: '123' },
+        replacements: [],
         title: 'conversation_id',
       };
       const result = getBlockBotConversation(conversation, isAssistantEnabled);
@@ -47,7 +47,8 @@ describe('helpers', () => {
             },
           },
         ],
-        apiConfig: {},
+        apiConfig: { connectorId: '123' },
+        replacements: [],
         category: 'assistant',
         title: 'conversation_id',
       };
@@ -60,7 +61,8 @@ describe('helpers', () => {
         id: 'conversation_id',
         title: 'conversation_id',
         messages: enterpriseMessaging,
-        apiConfig: {},
+        apiConfig: { connectorId: '123' },
+        replacements: [],
         category: 'assistant',
       };
       const result = getBlockBotConversation(conversation, isAssistantEnabled);
@@ -85,7 +87,8 @@ describe('helpers', () => {
             },
           },
         ],
-        apiConfig: {},
+        apiConfig: { connectorId: '123' },
+        replacements: [],
       };
       const result = getBlockBotConversation(conversation, isAssistantEnabled);
       expect(result.messages.length).toEqual(3);
@@ -100,7 +103,8 @@ describe('helpers', () => {
         title: 'conversation_id',
         category: 'assistant',
         messages: [],
-        apiConfig: {},
+        apiConfig: { connectorId: '123' },
+        replacements: [],
       };
       const result = getBlockBotConversation(conversation, isAssistantEnabled);
       expect(result.messages.length).toEqual(3);
@@ -121,7 +125,8 @@ describe('helpers', () => {
             },
           },
         ],
-        apiConfig: {},
+        apiConfig: { connectorId: '123' },
+        replacements: [],
       };
       const result = getBlockBotConversation(conversation, isAssistantEnabled);
       expect(result.messages.length).toEqual(4);
@@ -137,15 +142,14 @@ describe('helpers', () => {
     });
 
     it('should return undefined if connectors array is empty', () => {
-      const connectors: Array<ActionConnector<Record<string, unknown>, Record<string, unknown>>> =
-        [];
+      const connectors: AIConnector[] = [];
       const result = getDefaultConnector(connectors);
 
       expect(result).toBeUndefined();
     });
 
     it('should return the connector id if there is only one connector', () => {
-      const connectors: Array<ActionConnector<Record<string, unknown>, Record<string, unknown>>> = [
+      const connectors: AIConnector[] = [
         {
           actionTypeId: '.gen-ai',
           isPreconfigured: false,
@@ -168,7 +172,7 @@ describe('helpers', () => {
     });
 
     it('should return undefined if there are multiple connectors', () => {
-      const connectors: Array<ActionConnector<Record<string, unknown>, Record<string, unknown>>> = [
+      const connectors: AIConnector[] = [
         {
           actionTypeId: '.gen-ai',
           isPreconfigured: false,
@@ -202,43 +206,6 @@ describe('helpers', () => {
       ];
       const result = getDefaultConnector(connectors);
       expect(result).toBeUndefined();
-    });
-  });
-
-  describe('getFormattedMessageContent', () => {
-    it('returns the value of the action_input property when `content` has properly prefixed and suffixed JSON with the action_input property', () => {
-      const content = '```json\n{"action_input": "value from action_input"}\n```';
-
-      expect(getFormattedMessageContent(content)).toBe('value from action_input');
-    });
-
-    it('returns the original content when `content` has properly formatted JSON WITHOUT the action_input property', () => {
-      const content = '```json\n{"some_key": "some value"}\n```';
-      expect(getFormattedMessageContent(content)).toBe(content);
-    });
-
-    it('returns the original content when `content` has improperly formatted JSON', () => {
-      const content = '```json\n{"action_input": "value from action_input",}\n```'; // <-- the trailing comma makes it invalid
-
-      expect(getFormattedMessageContent(content)).toBe(content);
-    });
-
-    it('returns the original content when `content` is missing the prefix', () => {
-      const content = '{"action_input": "value from action_input"}\n```'; // <-- missing prefix
-
-      expect(getFormattedMessageContent(content)).toBe(content);
-    });
-
-    it('returns the original content when `content` is missing the suffix', () => {
-      const content = '```json\n{"action_input": "value from action_input"}'; // <-- missing suffix
-
-      expect(getFormattedMessageContent(content)).toBe(content);
-    });
-
-    it('returns the original content when `content` does NOT contain a JSON string', () => {
-      const content = 'plain text content';
-
-      expect(getFormattedMessageContent(content)).toBe(content);
     });
   });
 
@@ -290,44 +257,6 @@ describe('helpers', () => {
     });
   });
 
-  describe('hasParsableResponse', () => {
-    it('returns true when just isEnabledKnowledgeBase is true', () => {
-      const result = hasParsableResponse({
-        isEnabledRAGAlerts: false,
-        isEnabledKnowledgeBase: true,
-      });
-
-      expect(result).toBe(true);
-    });
-
-    it('returns true when just isEnabledRAGAlerts is true', () => {
-      const result = hasParsableResponse({
-        isEnabledRAGAlerts: true,
-        isEnabledKnowledgeBase: false,
-      });
-
-      expect(result).toBe(true);
-    });
-
-    it('returns true when both isEnabledKnowledgeBase and isEnabledRAGAlerts are true', () => {
-      const result = hasParsableResponse({
-        isEnabledRAGAlerts: true,
-        isEnabledKnowledgeBase: true,
-      });
-
-      expect(result).toBe(true);
-    });
-
-    it('returns false when both isEnabledKnowledgeBase and isEnabledRAGAlerts are false', () => {
-      const result = hasParsableResponse({
-        isEnabledRAGAlerts: false,
-        isEnabledKnowledgeBase: false,
-      });
-
-      expect(result).toBe(false);
-    });
-  });
-
   describe('mergeBaseWithPersistedConversations', () => {
     const messages = [
       { content: 'Message 1', role: 'user' as const, timestamp: '2024-02-14T22:29:43.862Z' },
@@ -337,7 +266,8 @@ describe('helpers', () => {
       messages,
       category: 'assistant',
       theme: {},
-      apiConfig: {},
+      apiConfig: { connectorId: '123' },
+      replacements: [],
     };
     const baseConversations = {
       conversation1: {
@@ -482,6 +412,43 @@ describe('helpers', () => {
           ],
         },
       });
+    });
+  });
+  describe('hasParsableResponse', () => {
+    it('returns true when just isEnabledKnowledgeBase is true', () => {
+      const result = hasParsableResponse({
+        isEnabledRAGAlerts: false,
+        isEnabledKnowledgeBase: true,
+      });
+
+      expect(result).toBe(true);
+    });
+
+    it('returns true when just isEnabledRAGAlerts is true', () => {
+      const result = hasParsableResponse({
+        isEnabledRAGAlerts: true,
+        isEnabledKnowledgeBase: false,
+      });
+
+      expect(result).toBe(true);
+    });
+
+    it('returns true when both isEnabledKnowledgeBase and isEnabledRAGAlerts are true', () => {
+      const result = hasParsableResponse({
+        isEnabledRAGAlerts: true,
+        isEnabledKnowledgeBase: true,
+      });
+
+      expect(result).toBe(true);
+    });
+
+    it('returns false when both isEnabledKnowledgeBase and isEnabledRAGAlerts are false', () => {
+      const result = hasParsableResponse({
+        isEnabledRAGAlerts: false,
+        isEnabledKnowledgeBase: false,
+      });
+
+      expect(result).toBe(false);
     });
   });
 });

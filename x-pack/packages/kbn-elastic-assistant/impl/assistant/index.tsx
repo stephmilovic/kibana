@@ -29,8 +29,6 @@ import {
 import { createPortal } from 'react-dom';
 import { css } from '@emotion/react';
 
-import { OpenAiProviderType } from '@kbn/stack-connectors-plugin/common/openai/constants';
-import { ActionConnectorProps } from '@kbn/triggers-actions-ui-plugin/public/types';
 import { useChatSend } from './chat_send/use_chat_send';
 import { ChatSend } from './chat_send';
 import { BlockBotCallToAction } from './block_bot/cta';
@@ -137,18 +135,10 @@ const AssistantComponent: React.FC<Props> = ({
   }, [refetch]);
 
   // Connector details
-  const { data: connectors, isSuccess: areConnectorsFetched } = useLoadConnectors({ http });
-  const defaultConnectorId = useMemo(() => getDefaultConnector(connectors)?.id, [connectors]);
-  const defaultProvider = useMemo(
-    () =>
-      (
-        getDefaultConnector(connectors) as ActionConnectorProps<
-          { apiProvider: OpenAiProviderType },
-          unknown
-        >
-      )?.config?.apiProvider,
-    [connectors]
-  );
+  const { data: connectors, isSuccess: areConnectorsFetched } = useLoadConnectors({
+    http,
+  });
+  const defaultConnector = useMemo(() => getDefaultConnector(connectors), [connectors]);
 
   const [selectedConversationTitle, setSelectedConversationTitle] = useState<string>(
     isAssistantEnabled ? getLastConversationTitle(conversationTitle) : WELCOME_CONVERSATION_TITLE
@@ -172,13 +162,16 @@ const AssistantComponent: React.FC<Props> = ({
       const updatedConversation = await getConversation(
         cId ?? conversations[selectedConversationTitle].id
       );
+      if (updatedConversation) {
+        setCurrentConversation(updatedConversation);
+      }
       return updatedConversation;
     },
     [conversations, getConversation, selectedConversationTitle]
   );
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && Object.keys(conversations).length > 0) {
       const conversation =
         conversations[selectedConversationTitle ?? getLastConversationTitle(conversationTitle)];
       if (conversation) {
@@ -246,9 +239,9 @@ const AssistantComponent: React.FC<Props> = ({
   useLayoutEffect(() => {
     // need in order for code block controls to be added to the DOM
     setTimeout(() => {
-      setMessageCodeBlocks(augmentMessageCodeBlocks(currentConversation));
+      setMessageCodeBlocks(augmentMessageCodeBlocks(currentConversation, showAnonymizedValues));
     }, 0);
-  }, [augmentMessageCodeBlocks, currentConversation]);
+  }, [augmentMessageCodeBlocks, currentConversation, showAnonymizedValues]);
 
   const isSendingDisabled = useMemo(() => {
     return isDisabled || showMissingConnectorCallout;
@@ -312,16 +305,12 @@ const AssistantComponent: React.FC<Props> = ({
       } else {
         setSelectedConversationTitle(cTitle);
         const refetchedConversation = await refetchCurrentConversation(cId);
-        if (refetchedConversation) {
-          setCurrentConversation(refetchedConversation);
-          setConversations({ ...(conversations ?? {}), [cTitle]: refetchedConversation });
-        }
         setEditingSystemPromptId(
           getDefaultSystemPrompt({ allSystemPrompts, conversation: refetchedConversation })?.id
         );
       }
     },
-    [allSystemPrompts, conversations, refetchCurrentConversation, refetchResults]
+    [allSystemPrompts, refetchCurrentConversation, refetchResults]
   );
 
   const { comments: connectorComments, prompt: connectorPrompt } = useConnectorSetup({
@@ -566,8 +555,7 @@ const AssistantComponent: React.FC<Props> = ({
           <AssistantHeader
             currentConversation={currentConversation}
             setCurrentConversation={setCurrentConversation}
-            defaultConnectorId={defaultConnectorId}
-            defaultProvider={defaultProvider}
+            defaultConnector={defaultConnector}
             docLinks={docLinks}
             isDisabled={isDisabled}
             isSettingsModalVisible={isSettingsModalVisible}

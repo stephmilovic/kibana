@@ -5,8 +5,8 @@
  * 2.0.
  */
 
-import { ActionConnector } from '@kbn/triggers-actions-ui-plugin/public';
 import { merge } from 'lodash/fp';
+import { AIConnector } from '../connectorland/connector_selector';
 import { FetchConnectorExecuteResponse, FetchConversationsResponse } from './api';
 import { Conversation } from '../..';
 import type { Message } from '../assistant_context/types';
@@ -78,30 +78,8 @@ export const getBlockBotConversation = (
  * @param connectors
  */
 export const getDefaultConnector = (
-  connectors: Array<ActionConnector<Record<string, unknown>, Record<string, unknown>>> | undefined
-): ActionConnector<Record<string, unknown>, Record<string, unknown>> | undefined =>
-  connectors?.length === 1 ? connectors[0] : undefined;
-
-/**
- * When `content` is a JSON string, prefixed with "```json\n"
- * and suffixed with "\n```", this function will attempt to parse it and return
- * the `action_input` property if it exists.
- */
-export const getFormattedMessageContent = (content: string): string => {
-  const formattedContentMatch = content.match(/```json\n([\s\S]+)\n```/);
-
-  if (formattedContentMatch) {
-    try {
-      const parsedContent = JSON.parse(formattedContentMatch[1]);
-
-      return parsedContent.action_input ?? content;
-    } catch {
-      // we don't want to throw an error here, so we'll fall back to the original content
-    }
-  }
-
-  return content;
-};
+  connectors: AIConnector[] | undefined
+): AIConnector | undefined => (connectors?.length === 1 ? connectors[0] : undefined);
 
 interface OptionalRequestParams {
   alertsIndexPattern?: string;
@@ -149,8 +127,3 @@ export const hasParsableResponse = ({
   isEnabledKnowledgeBase: boolean;
 }): boolean => isEnabledKnowledgeBase || isEnabledRAGAlerts;
 
-export const llmTypeDictionary: Record<string, string> = {
-  'Amazon Bedrock': 'bedrock',
-  'Azure OpenAI': 'openai',
-  OpenAI: 'openai',
-};

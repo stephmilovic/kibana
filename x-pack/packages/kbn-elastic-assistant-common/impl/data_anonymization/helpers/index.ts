@@ -5,6 +5,8 @@
  * 2.0.
  */
 
+import { Replacement } from '../../schemas';
+
 export const getIsDataAnonymizable = (rawData: string | Record<string, string[]>): boolean =>
   typeof rawData !== 'string';
 
@@ -22,16 +24,30 @@ export const isAnonymized = ({
   field: string;
 }): boolean => allowReplacementSet.has(field);
 
-export const getMessageContentWithoutReplacements = ({
+export const replaceAnonymizedValuesWithOriginalValues = ({
   messageContent,
   replacements,
 }: {
   messageContent: string;
-  replacements: Record<string, string> | undefined;
+  replacements: Replacement[];
 }): string =>
   replacements != null
-    ? Object.keys(replacements).reduce(
-        (acc, replacement) => acc.replaceAll(replacement, replacements[replacement]),
-        messageContent
-      )
+    ? replacements.reduce((acc, replacement) => {
+        const value = replacement.value;
+        return replacement.uuid && value ? acc.replaceAll(replacement.uuid, value) : acc;
+      }, messageContent)
+    : messageContent;
+
+export const replaceOriginalValuesWithUuidValues = ({
+  messageContent,
+  replacements,
+}: {
+  messageContent: string;
+  replacements: Replacement[];
+}): string =>
+  replacements != null
+    ? replacements.reduce((acc, replacement) => {
+        const value = replacement.value;
+        return replacement.uuid && value ? acc.replaceAll(value, replacement.uuid) : acc;
+      }, messageContent)
     : messageContent;

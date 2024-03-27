@@ -16,6 +16,7 @@ import {
   getEmptyFindResult,
 } from '../../__mocks__/response';
 import {
+  getConversationMock,
   getCreateConversationSchemaMock,
   getPerformBulkActionSchemaMock,
   getUpdateConversationSchemaMock,
@@ -26,7 +27,7 @@ describe('Perform bulk action route', () => {
   let server: ReturnType<typeof serverMock.create>;
   let { clients, context } = requestContextMock.createTools();
   let logger: ReturnType<typeof loggingSystemMock.createLogger>;
-  const mockConversation = getFindConversationsResultWithSingleHit().data[0];
+  const mockConversation = getConversationMock(getUpdateConversationSchemaMock());
   const mockUser1 = {
     profile_uid: 'u_mGBROF_q5bmFCATbLXAcCwKa0k8JvONAwSruelyKA5E_0',
     username: 'my_username',
@@ -41,8 +42,8 @@ describe('Perform bulk action route', () => {
     logger = loggingSystemMock.createLogger();
     ({ clients, context } = requestContextMock.createTools());
 
-    clients.elasticAssistant.getAIAssistantConversationsDataClient.findConversations.mockResolvedValue(
-      getFindConversationsResultWithSingleHit()
+    clients.elasticAssistant.getAIAssistantConversationsDataClient.findDocuments.mockResolvedValue(
+      Promise.resolve(getFindConversationsResultWithSingleHit())
     );
     (
       (await clients.elasticAssistant.getAIAssistantConversationsDataClient.getWriter())
@@ -59,8 +60,8 @@ describe('Perform bulk action route', () => {
 
   describe('status codes', () => {
     it('returns 200 when performing bulk action with all dependencies present', async () => {
-      clients.elasticAssistant.getAIAssistantConversationsDataClient.findConversations.mockResolvedValueOnce(
-        getEmptyFindResult()
+      clients.elasticAssistant.getAIAssistantConversationsDataClient.findDocuments.mockResolvedValueOnce(
+        Promise.resolve(getEmptyFindResult())
       );
       const response = await server.inject(
         getConversationsBulkActionRequest(
@@ -112,8 +113,8 @@ describe('Perform bulk action route', () => {
         ],
         total: 5,
       });
-      clients.elasticAssistant.getAIAssistantConversationsDataClient.findConversations.mockResolvedValueOnce(
-        getEmptyFindResult()
+      clients.elasticAssistant.getAIAssistantConversationsDataClient.findDocuments.mockResolvedValueOnce(
+        Promise.resolve(getEmptyFindResult())
       );
       const response = await server.inject(
         getConversationsBulkActionRequest(

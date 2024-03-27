@@ -16,11 +16,11 @@ import {
   FindPromptsRequestQuery,
   FindPromptsResponse,
 } from '@kbn/elastic-assistant-common/impl/schemas/prompts/find_prompts_route.gen';
+import { buildRouteValidationWithZod } from '@kbn/elastic-assistant-common/impl/schemas/common';
 import { ElasticAssistantPluginRouter } from '../../types';
-import { buildRouteValidationWithZod } from '../route_validation';
 import { buildResponse } from '../utils';
-import { SearchEsPromptsSchema } from '../../promts_data_client/types';
-import { transformESToPrompts } from '../../promts_data_client/helpers';
+import { SearchEsPromptsSchema } from '../../ai_assistant_data_clients/prompts/types';
+import { transformESToPrompts } from '../../ai_assistant_data_clients/prompts/helpers';
 
 export const findPromptsRoute = (router: ElasticAssistantPluginRouter, logger: Logger) => {
   router.versioned

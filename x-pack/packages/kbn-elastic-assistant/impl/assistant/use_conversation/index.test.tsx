@@ -34,7 +34,10 @@ const mockConvo = {
   id: 'new-convo',
   title: 'new-convo',
   messages: [message, anotherMessage],
-  apiConfig: { defaultSystemPromptId: 'default-system-prompt' },
+  apiConfig: {
+    connectorId: '123',
+    defaultSystemPromptId: 'default-system-prompt',
+  },
 };
 
 const getConversationById = _getConversationById as jest.Mock;
@@ -62,7 +65,11 @@ describe('useConversation', () => {
       const createResult = await result.current.createConversation({
         id: mockConvo.id,
         messages: mockConvo.messages,
-        apiConfig: { defaultSystemPromptId: 'default-system-prompt' },
+        replacements: [],
+        apiConfig: {
+          connectorId: '123',
+          defaultSystemPromptId: 'default-system-prompt',
+        },
         title: mockConvo.title,
         category: 'assistant',
       });
