@@ -53,7 +53,7 @@ export const fetchConnectorExecuteAction = async ({
   signal,
   size,
 }: FetchConnectorExecuteAction): Promise<FetchConnectorExecuteResponse> => {
-
+const llmType == '';
   // TODO define llmType?!?!
   const isStream =
     assistantStreamingEnabled &&
