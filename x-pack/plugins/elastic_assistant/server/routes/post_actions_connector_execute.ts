@@ -255,7 +255,7 @@ export const postActionsConnectorExecuteRoute = (
               isStream:
                 // TODO implement llmClass for bedrock streaming
                 // tracked here: https://github.com/elastic/security-team/issues/7363
-                request.body.subAction !== 'invokeAI' && actionTypeId === '.gen-ai',
+                request.body.subAction !== 'invokeAI', // && actionTypeId === '.gen-ai',
               llmType: getLlmType(actionTypeId),
               kbResource: ESQL_RESOURCE,
               langChainMessages,

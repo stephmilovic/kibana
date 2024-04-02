@@ -19,6 +19,7 @@ import { AgentExecutor } from '../executors/types';
 import { withAssistantSpan } from '../tracers/with_assistant_span';
 import { APMTracer } from '../tracers/apm_tracer';
 import { AssistantToolParams } from '../../../types';
+import { BedrockLlm } from '../llm/bedrock';
 export const DEFAULT_AGENT_EXECUTOR_ID = 'Elastic AI Assistant Agent Executor';
 
 /**
@@ -54,18 +55,21 @@ export const callAgentExecutor: AgentExecutor<true | false> = async ({
   // tracked here: https://github.com/elastic/security-team/issues/7363
   const llmClass = isStream ? ActionsClientChatOpenAI : ActionsClientLlm;
 
-  const llm = new llmClass({
-    actions,
-    connectorId,
-    request,
-    llmType,
-    logger,
-    signal: abortSignal,
-    streaming: isStream,
-    // prevents the agent from retrying on failure
-    // failure could be due to bad connector, we should deliver that result to the client asap
-    maxRetries: 0,
-  });
+  const llm =
+    isStream && llmType === 'bedrock'
+      ? BedrockLlm
+      : new llmClass({
+          actions,
+          connectorId,
+          request,
+          llmType,
+          logger,
+          signal: abortSignal,
+          streaming: isStream,
+          // prevents the agent from retrying on failure
+          // failure could be due to bad connector, we should deliver that result to the client asap
+          maxRetries: 0,
+        });
 
   const pastMessages = langChainMessages.slice(0, -1); // all but the last message
   const latestMessage = langChainMessages.slice(-1); // the last message
