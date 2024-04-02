@@ -51,10 +51,7 @@ export const callAgentExecutor: AgentExecutor<true | false> = async ({
   telemetry,
   traceOptions,
 }) => {
-  // TODO implement llmClass for bedrock streaming
-  // tracked here: https://github.com/elastic/security-team/issues/7363
   const llmClass = isStream ? ActionsClientChatOpenAI : ActionsClientLlm;
-
   const llm =
     isStream && llmType === 'bedrock'
       ? BedrockLlm
@@ -120,7 +117,7 @@ export const callAgentExecutor: AgentExecutor<true | false> = async ({
   // isStream check is not on agentType alone because typescript doesn't like
   const executor = isStream
     ? await initializeAgentExecutorWithOptions(tools, llm, {
-        agentType: 'openai-functions',
+        agentType: 'structured-chat-zero-shot-react-description',
         memory,
         verbose: true,
       })

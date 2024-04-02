@@ -53,13 +53,6 @@ export const fetchConnectorExecuteAction = async ({
   signal,
   size,
 }: FetchConnectorExecuteAction): Promise<FetchConnectorExecuteResponse> => {
-  const isStream =
-    assistantStreamingEnabled &&
-    (apiConfig.actionTypeId === '.gen-ai' ||
-      // TODO add streaming support for bedrock with langchain on
-      // tracked here: https://github.com/elastic/security-team/issues/7363
-      (apiConfig.actionTypeId === '.bedrock' && !isEnabledRAGAlerts && !isEnabledKnowledgeBase));
-
   const optionalRequestParams = getOptionalRequestParams({
     isEnabledRAGAlerts,
     alertsIndexPattern,
@@ -71,7 +64,7 @@ export const fetchConnectorExecuteAction = async ({
   const requestBody = {
     model: apiConfig?.model,
     message,
-    subAction: isStream ? 'invokeStream' : 'invokeAI',
+    subAction: assistantStreamingEnabled ? 'invokeStream' : 'invokeAI',
     conversationId,
     actionTypeId: apiConfig.actionTypeId,
     replacements,
@@ -81,7 +74,7 @@ export const fetchConnectorExecuteAction = async ({
   };
 
   try {
-    if (isStream) {
+    if (assistantStreamingEnabled) {
       const response = await http.fetch(
         `/internal/elastic_assistant/actions/connector/${apiConfig?.connectorId}/_execute`,
         {
