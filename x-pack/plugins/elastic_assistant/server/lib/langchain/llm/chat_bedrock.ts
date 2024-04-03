@@ -55,20 +55,14 @@ export class ChatBedrock extends SimpleChatModel {
     options: this['ParsedCallOptions'],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    console.log('blackhawks', JSON.stringify(messages, null, 2));
-    console.log('blackhawks kwargs', messages[0].kwargs);
     if (!messages.length) {
       throw new Error('No messages provided.');
-    }
-    if (messages[0].kwargs?.content) {
-      console.log('blackhawks: .kwargs?.content', messages[0].kwargs?.content);
-      return messages[0].kwargs.content;
     }
 
     if (typeof messages[0].content !== 'string') {
       throw new Error('Multimodal messages are not supported.');
     }
-    const prompt = messages[0].content.slice(0, this.n);
+    const prompt = messages[0].content;
     const assistantMessage = getMessageContentAndRole(prompt);
     this.#logger.debug(
       `ActionsClientLlm#_call\ntraceId: ${this.#traceId}\nassistantMessage:\n${JSON.stringify(
