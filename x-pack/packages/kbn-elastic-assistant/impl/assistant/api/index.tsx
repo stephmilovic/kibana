@@ -10,6 +10,7 @@ import { IHttpFetchError } from '@kbn/core-http-browser';
 import { ApiConfig, Replacements } from '@kbn/elastic-assistant-common';
 import { API_ERROR } from '../translations';
 import { getOptionalRequestParams } from '../helpers';
+import { TraceOptions } from '../types';
 export * from './conversations';
 
 export interface FetchConnectorExecuteAction {
@@ -26,6 +27,7 @@ export interface FetchConnectorExecuteAction {
   replacements: Replacements;
   signal?: AbortSignal | undefined;
   size?: number;
+  traceOptions?: TraceOptions;
 }
 
 export interface FetchConnectorExecuteResponse {
@@ -52,7 +54,15 @@ export const fetchConnectorExecuteAction = async ({
   apiConfig,
   signal,
   size,
+  traceOptions,
 }: FetchConnectorExecuteAction): Promise<FetchConnectorExecuteResponse> => {
+  const isStream =
+    assistantStreamingEnabled &&
+    (apiConfig.actionTypeId === '.gen-ai' ||
+      // TODO add streaming support for bedrock with langchain on
+      // tracked here: https://github.com/elastic/security-team/issues/7363
+      (apiConfig.actionTypeId === '.bedrock' && !isEnabledRAGAlerts && !isEnabledKnowledgeBase));
+
   const optionalRequestParams = getOptionalRequestParams({
     isEnabledRAGAlerts,
     alertsIndexPattern,
@@ -64,17 +74,21 @@ export const fetchConnectorExecuteAction = async ({
   const requestBody = {
     model: apiConfig?.model,
     message,
-    subAction: assistantStreamingEnabled ? 'invokeStream' : 'invokeAI',
+    subAction: isStream ? 'invokeStream' : 'invokeAI',
     conversationId,
     actionTypeId: apiConfig.actionTypeId,
     replacements,
     isEnabledKnowledgeBase,
     isEnabledRAGAlerts,
+    langSmithProject:
+      traceOptions?.langSmithProject === '' ? undefined : traceOptions?.langSmithProject,
+    langSmithApiKey:
+      traceOptions?.langSmithApiKey === '' ? undefined : traceOptions?.langSmithApiKey,
     ...optionalRequestParams,
   };
 
   try {
-    if (assistantStreamingEnabled) {
+    if (isStream) {
       const response = await http.fetch(
         `/internal/elastic_assistant/actions/connector/${apiConfig?.connectorId}/_execute`,
         {

@@ -5,11 +5,11 @@
  * 2.0.
  */
 
+import type { MessageRole } from '@kbn/elastic-assistant-common';
 import { OpenAiProviderType } from '@kbn/stack-connectors-plugin/public/common';
 import { getComments } from '.';
-import type { ConversationRole } from '@kbn/elastic-assistant/impl/assistant_context/types';
 
-const user: ConversationRole = 'user';
+const user: MessageRole = 'user';
 const currentConversation = {
   apiConfig: {
     actionTypeId: '.gen-ai',
@@ -32,6 +32,7 @@ const currentConversation = {
 const showAnonymizedValues = false;
 const testProps = {
   abortStream: jest.fn(),
+  setIsStreaming: jest.fn(),
   refetchCurrentConversation: jest.fn(),
   regenerateMessage: jest.fn(),
   isEnabledLangChain: false,

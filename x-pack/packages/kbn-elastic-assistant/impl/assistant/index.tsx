@@ -113,12 +113,18 @@ const AssistantComponent: React.FC<Props> = ({
       mergeBaseWithPersistedConversations(baseConversations, conversationsData),
     [baseConversations]
   );
+  const [isStreaming, setIsStreaming] = useState(false);
+
   const {
     data: conversationsData,
     isLoading,
     isError,
     refetch,
-  } = useFetchCurrentUserConversations({ http, onFetch: onFetchedConversations });
+  } = useFetchCurrentUserConversations({
+    http,
+    onFetch: onFetchedConversations,
+    refetchOnWindowFocus: !isStreaming,
+  });
 
   useEffect(() => {
     if (!isLoading && !isError) {
@@ -474,6 +480,7 @@ const AssistantComponent: React.FC<Props> = ({
             regenerateMessage: handleRegenerateResponse,
             isEnabledLangChain: isEnabledKnowledgeBase || isEnabledRAGAlerts,
             isFetchingResponse: isLoadingChatSend,
+            setIsStreaming,
           })}
           css={css`
             margin-right: 20px;

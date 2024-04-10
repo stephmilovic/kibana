@@ -17,6 +17,7 @@ import {
   PostEvaluateResponse,
   ExecuteConnectorRequestBody,
 } from '@kbn/elastic-assistant-common';
+import { ActionsClientLlm } from '@kbn/elastic-assistant-common/impl/llm';
 import { buildRouteValidationWithZod } from '@kbn/elastic-assistant-common/impl/schemas/common';
 import { ESQL_RESOURCE } from '../knowledge_base/constants';
 import { buildResponse } from '../../lib/build_response';
@@ -24,7 +25,6 @@ import { ElasticAssistantRequestHandlerContext, GetElser } from '../../types';
 import { EVALUATE } from '../../../common/constants';
 import { performEvaluation } from '../../lib/model_evaluator/evaluation';
 import { AgentExecutorEvaluatorWithMetadata } from '../../lib/langchain/executors/types';
-import { ActionsClientLlm } from '../../lib/langchain/llm/actions_client_llm';
 import {
   indexEvaluations,
   setupEvaluationIndex,
@@ -129,9 +129,7 @@ export const postEvaluateRoute = (
           });
 
           // Fetch any tools registered by the request's originating plugin
-          const assistantTools = (await context.elasticAssistant).getRegisteredTools(
-            'securitySolution'
-          );
+          const assistantTools = (await context.elasticAssistant).getRegisteredTools(pluginName);
 
           // Get a scoped esClient for passing to the agents for retrieval, and
           // writing results to the output index
@@ -195,7 +193,11 @@ export const postEvaluateRoute = (
                         ...(connectorName != null ? [connectorName] : []),
                         runName,
                       ],
-                      tracers: getLangSmithTracer(detailedRunName, exampleId, logger),
+                      tracers: getLangSmithTracer({
+                        projectName: detailedRunName,
+                        exampleId,
+                        logger,
+                      }),
                     },
                     replacements: {},
                   });
@@ -219,6 +221,7 @@ export const postEvaluateRoute = (
                   connectorId: evalModel,
                   request: skeletonRequest,
                   logger,
+                  model: skeletonRequest.body.model,
                 });
 
           const { evaluationResults, evaluationSummary } = await performEvaluation({

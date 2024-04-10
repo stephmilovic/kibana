@@ -4,17 +4,16 @@
  * 2.0; you may not use this file except in compliance with the Elastic License
  * 2.0.
  */
+import agent, { Span } from 'elastic-apm-node';
 import { initializeAgentExecutorWithOptions } from 'langchain/agents';
-// import { RetrievalQAChain } from 'langchain/chains';
+
 import { BufferMemory, ChatMessageHistory } from 'langchain/memory';
 import { ToolInterface } from '@langchain/core/tools';
 import { streamFactory } from '@kbn/ml-response-stream/server';
 import { transformError } from '@kbn/securitysolution-es-utils';
 import { RetrievalQAChain } from 'langchain/chains';
-import { ChatBedrock } from '../llm/chat_bedrock';
+import { ActionsClientChatOpenAI, ActionsClientLlm } from '@kbn/elastic-assistant-common/impl/llm';
 import { ElasticsearchStore } from '../elasticsearch_store/elasticsearch_store';
-import { ActionsClientChatOpenAI } from '../llm/openai';
-import { ActionsClientLlm } from '../llm/actions_client_llm';
 import { KNOWLEDGE_BASE_INDEX_PATTERN } from '../../../routes/knowledge_base/constants';
 import { AgentExecutor } from '../executors/types';
 import { withAssistantSpan } from '../tracers/with_assistant_span';
@@ -51,20 +50,22 @@ export const callAgentExecutor: AgentExecutor<true | false> = async ({
   telemetry,
   traceOptions,
 }) => {
-  const llmClass =
-    llmType === 'bedrock' ? ChatBedrock : isStream ? ActionsClientChatOpenAI : ActionsClientLlm;
+  // TODO implement llmClass for bedrock streaming
+  // tracked here: https://github.com/elastic/security-team/issues/7363
+  const llmClass = isStream ? ActionsClientChatOpenAI : ActionsClientLlm;
+
   const llm = new llmClass({
     actions,
     connectorId,
     request,
     llmType,
     logger,
+    model: request.body.model,
     signal: abortSignal,
     streaming: isStream,
     // prevents the agent from retrying on failure
     // failure could be due to bad connector, we should deliver that result to the client asap
     maxRetries: 0,
-    n: 1,
   });
 
   const pastMessages = langChainMessages.slice(0, -1); // all but the last message
@@ -116,12 +117,12 @@ export const callAgentExecutor: AgentExecutor<true | false> = async ({
   // isStream check is not on agentType alone because typescript doesn't like
   const executor = isStream
     ? await initializeAgentExecutorWithOptions(tools, llm, {
-        agentType: 'structured-chat-zero-shot-react-description',
+        agentType: 'openai-functions',
         memory,
-        verbose: true,
+        verbose: false,
       })
     : await initializeAgentExecutorWithOptions(tools, llm, {
-        agentType: 'structured-chat-zero-shot-react-description',
+        agentType: 'chat-conversational-react-description',
         memory,
         verbose: false,
       });
@@ -132,6 +133,10 @@ export const callAgentExecutor: AgentExecutor<true | false> = async ({
 
   let traceData;
   if (isStream) {
+    let streamingSpan: Span | undefined;
+    if (agent.isStarted()) {
+      streamingSpan = agent.startSpan(`${DEFAULT_AGENT_EXECUTOR_ID} (Streaming)`) ?? undefined;
+    }
     const {
       end: streamEnd,
       push,
@@ -140,12 +145,23 @@ export const callAgentExecutor: AgentExecutor<true | false> = async ({
 
     let didEnd = false;
 
-    const handleStreamEnd = (finalResponse: string) => {
+    const handleStreamEnd = (finalResponse: string, isError = false) => {
       if (onLlmResponse) {
-        onLlmResponse(finalResponse);
+        onLlmResponse(
+          finalResponse,
+          {
+            transactionId: streamingSpan?.transaction?.ids?.['transaction.id'],
+            traceId: streamingSpan?.ids?.['trace.id'],
+          },
+          isError
+        );
       }
       streamEnd();
       didEnd = true;
+      if ((streamingSpan && !streamingSpan?.outcome) || streamingSpan?.outcome === 'unknown') {
+        streamingSpan.outcome = 'success';
+      }
+      streamingSpan?.end();
     };
 
     let message = '';
@@ -167,8 +183,11 @@ export const callAgentExecutor: AgentExecutor<true | false> = async ({
                   message += payload;
                 }
               },
-              handleChainEnd(llmResult) {
-                handleStreamEnd(llmResult.output);
+              handleChainEnd(outputs, runId, parentRunId) {
+                // if parentRunId is undefined, this is the end of the stream
+                if (!parentRunId) {
+                  handleStreamEnd(outputs.output);
+                }
               },
             },
             apmTracer,
@@ -190,10 +209,9 @@ export const callAgentExecutor: AgentExecutor<true | false> = async ({
         }
         logger.error(`Error streaming from LangChain: ${error.message}`);
         push({ payload: error.message, type: 'content' });
-        handleStreamEnd(error.message);
+        handleStreamEnd(error.message, true);
       });
 
-    // TODO figure out how to pass trace_data @spong
     return responseWithHeaders;
   }
 

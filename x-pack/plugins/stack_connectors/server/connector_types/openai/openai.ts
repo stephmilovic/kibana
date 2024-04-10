@@ -70,15 +70,17 @@ export class OpenAIConnector extends SubActionConnector<Config, Secrets> {
             apiKey: this.secrets.apiKey,
             baseURL: this.config.apiUrl,
             defaultQuery: { 'api-version': getAzureApiVersionParameter(this.config.apiUrl) },
-            defaultHeaders: { 'api-key': this.secrets.apiKey },
+            defaultHeaders: {
+              ...this.config.headers,
+              'api-key': this.secrets.apiKey,
+            },
           })
         : new OpenAI({
-            // default to empty string for unit tests x-pack/plugins/actions/server/integration_tests/connector_types.test.ts
-            apiKey: this.secrets.apiKey ?? '',
-            // without, this test fails x-pack/plugins/actions/server/integration_tests/connector_types.test.ts
-            // it seems the OpenAI sdk thinks the server emulation in jest is a browser environment
-            // without setting this flag, the sdk throws an error and the test will fail
-            dangerouslyAllowBrowser: true,
+            baseURL: this.config.apiUrl,
+            apiKey: this.secrets.apiKey,
+            defaultHeaders: {
+              ...this.config.headers,
+            },
           });
 
     this.registerSubActions();
@@ -129,6 +131,7 @@ export class OpenAIConnector extends SubActionConnector<Config, Secrets> {
   }
 
   protected getResponseErrorMessage(error: AxiosError<{ error?: { message?: string } }>): string {
+    // handle known Azure error from early release, we can probably get rid of this eventually
     if (error.message === '404 Unrecognized request argument supplied: functions') {
       // add information for known Azure error
       return `API Error: ${error.message}
@@ -167,6 +170,10 @@ export class OpenAIConnector extends SubActionConnector<Config, Secrets> {
       // give up to 2 minutes for response
       timeout: 120000,
       ...axiosOptions,
+      headers: {
+        ...this.config.headers,
+        ...axiosOptions.headers,
+      },
     });
     return response.data;
   }
@@ -189,6 +196,7 @@ export class OpenAIConnector extends SubActionConnector<Config, Secrets> {
     );
 
     const axiosOptions = getAxiosOptions(this.provider, this.key, stream);
+
     const response = await this.request({
       url: this.url,
       method: 'post',
@@ -196,6 +204,10 @@ export class OpenAIConnector extends SubActionConnector<Config, Secrets> {
       data: executeBody,
       signal,
       ...axiosOptions,
+      headers: {
+        ...this.config.headers,
+        ...axiosOptions.headers,
+      },
     });
     return stream ? pipeStreamingResponse(response) : response.data;
   }
@@ -259,12 +271,15 @@ export class OpenAIConnector extends SubActionConnector<Config, Secrets> {
    * Streamed security solution AI Assistant requests (langchain)
    * Uses the official OpenAI Node library, which handles Server-sent events for you.
    * @param body - the OpenAI Invoke request body
-   * @returns a Stream<ChatCompletionChunk> array "teed", teed[0] is used for the UI and teed[1] for token tracking
-   * the result is meant to be read/transformed on the server and sent to the client via Server Sent Events
+   * @returns {
+   *  consumerStream: Stream<ChatCompletionChunk>; the result to be read/transformed on the server and sent to the client via Server Sent Events
+   *  tokenCountStream: Stream<ChatCompletionChunk>; the result for token counting stream
+   * }
    */
-  public async invokeAsyncIterator(
-    body: InvokeAIActionParams
-  ): Promise<Array<Stream<ChatCompletionChunk>>> {
+  public async invokeAsyncIterator(body: InvokeAIActionParams): Promise<{
+    consumerStream: Stream<ChatCompletionChunk>;
+    tokenCountStream: Stream<ChatCompletionChunk>;
+  }> {
     try {
       const { signal, ...rest } = body;
       const messages = rest.messages as unknown as ChatCompletionMessageParam[];
@@ -281,7 +296,7 @@ export class OpenAIConnector extends SubActionConnector<Config, Secrets> {
       });
       // splits the stream in two, teed[0] is used for the UI and teed[1] for token tracking
       const teed = stream.tee();
-      return teed;
+      return { consumerStream: teed[0], tokenCountStream: teed[1] };
       // since we do not use the sub action connector request method, we need to do our own error handling
     } catch (e) {
       const errorMessage = this.getResponseErrorMessage(e);

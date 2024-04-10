@@ -13,11 +13,13 @@ export const ConfigSchema = schema.oneOf([
   schema.object({
     apiProvider: schema.oneOf([schema.literal(OpenAiProviderType.AzureAi)]),
     apiUrl: schema.string(),
+    headers: schema.maybe(schema.recordOf(schema.string(), schema.string())),
   }),
   schema.object({
     apiProvider: schema.oneOf([schema.literal(OpenAiProviderType.OpenAi)]),
     apiUrl: schema.string(),
     defaultModel: schema.string({ defaultValue: DEFAULT_OPENAI_MODEL }),
+    headers: schema.maybe(schema.recordOf(schema.string(), schema.string())),
   }),
 ]);
 
@@ -65,11 +67,7 @@ export const InvokeAIActionParamsSchema = schema.object({
           description: schema.string(),
           parameters: schema.object({
             type: schema.string(),
-            properties: schema.object({
-              input: schema.object({
-                type: schema.string(),
-              }),
-            }),
+            properties: schema.object({}, { unknowns: 'allow' }),
             additionalProperties: schema.boolean(),
             $schema: schema.string(),
           }),
@@ -78,6 +76,18 @@ export const InvokeAIActionParamsSchema = schema.object({
         { unknowns: 'allow' }
       )
     )
+  ),
+  function_call: schema.maybe(
+    schema.oneOf([
+      schema.literal('none'),
+      schema.literal('auto'),
+      schema.object(
+        {
+          name: schema.string(),
+        },
+        { unknowns: 'ignore' }
+      ),
+    ])
   ),
   n: schema.maybe(schema.number()),
   stop: schema.maybe(
