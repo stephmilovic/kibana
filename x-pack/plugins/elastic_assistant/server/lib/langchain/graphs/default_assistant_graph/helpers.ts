@@ -44,12 +44,13 @@ export const streamGraph = async ({
   apmTracer,
   assistantGraph,
   inputs,
-  isOpenAI,
+  // isOpenAI,
   logger,
   onLlmResponse,
   request,
   traceOptions,
 }: StreamGraphParams): Promise<StreamResponseWithHeaders> => {
+  const isOpenAI = false;
   let streamingSpan: Span | undefined;
   if (agent.isStarted()) {
     streamingSpan = agent.startSpan(`${DEFAULT_ASSISTANT_GRAPH_ID} (Streaming)`) ?? undefined;
@@ -105,6 +106,18 @@ export const streamGraph = async ({
               handleStreamEnd(message);
             }
           },
+          handleLLMError(err, runId, parentRunId) {
+            console.log('stephhh handleLLMError', { err, runId, parentRunId });
+            const error = transformError(err);
+
+            if (error.message === 'AbortError') {
+              // user aborted the stream, we must end it manually here
+              return handleStreamEnd(message);
+            }
+            logger.error(`Error streaming from LangChain: ${error.message}`);
+            push({ payload: error.message, type: 'content' });
+            handleStreamEnd(error.message, true);
+          },
         },
       ];
 
@@ -126,6 +139,7 @@ export const streamGraph = async ({
       // only process events that are part of the agent run
       if ((event.tags || []).includes(AGENT_NODE_TAG)) {
         if (event.event === 'on_llm_stream') {
+          console.log('stephhh event in helpers.ts', JSON.stringify(event));
           const chunk = event.data?.chunk;
           const msg = chunk.message;
 

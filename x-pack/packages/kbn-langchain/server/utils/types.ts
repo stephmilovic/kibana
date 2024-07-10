@@ -7,12 +7,21 @@
 
 import { Readable } from 'stream';
 import { Logger } from '@kbn/logging';
+import { ReadableStream } from 'web-streams-polyfill';
+// import { IterableReadableStream } from '@langchain/core/dist/utils/stream';
 
 export type StreamParser = (
   responseStream: Readable,
   logger: Logger,
   abortSignal?: AbortSignal,
   tokenHandler?: (token: string) => void
+) => Promise<string>;
+
+export type IterableParser<T> = (
+  responseStream: ReadableStream<T>,
+  logger: Logger,
+  abortSignal?: AbortSignal,
+  tokenHandler?: (token: string) => AsyncGenerator<{ message: { content: string }; done: boolean }>
 ) => Promise<string>;
 
 export interface GeminiResponseSchema {

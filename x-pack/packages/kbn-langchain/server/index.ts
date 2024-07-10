@@ -8,12 +8,13 @@
 import { ActionsClientChatOpenAI } from './language_models/chat_openai';
 import { ActionsClientLlm } from './language_models/llm';
 import { ActionsClientSimpleChatModel } from './language_models/simple_chat_model';
-import { parseBedrockStream } from './utils/bedrock';
+import { parseBedrockStream, parseBedrockIterable } from './utils/bedrock';
 import { parseGeminiResponse } from './utils/gemini';
 import { getDefaultArguments } from './language_models/constants';
 
 export {
   parseBedrockStream,
+  parseBedrockIterable,
   parseGeminiResponse,
   getDefaultArguments,
   ActionsClientChatOpenAI,

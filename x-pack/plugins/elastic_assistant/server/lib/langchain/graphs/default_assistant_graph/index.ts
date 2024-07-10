@@ -137,15 +137,20 @@ export const callAssistantGraph: AgentExecutor<true | false> = async ({
   const inputs = { input: latestMessage[0]?.content as string };
 
   if (isStream) {
-    return streamGraph({
-      apmTracer,
-      assistantGraph,
-      inputs,
-      isOpenAI,
-      logger,
-      onLlmResponse,
-      request,
-    });
+    try {
+      return streamGraph({
+        apmTracer,
+        assistantGraph,
+        inputs,
+        isOpenAI,
+        logger,
+        onLlmResponse,
+        request,
+      });
+    } catch (e) {
+      // do nothing
+      console.log('stephhh streamGraph catchcatch', { e });
+    }
   }
 
   const graphResponse = await invokeGraph({

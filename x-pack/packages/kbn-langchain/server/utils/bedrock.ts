@@ -9,7 +9,7 @@ import { finished } from 'stream/promises';
 import { Logger } from '@kbn/core/server';
 import { EventStreamCodec } from '@smithy/eventstream-codec';
 import { fromUtf8, toUtf8 } from '@smithy/util-utf8';
-import { StreamParser } from './types';
+import { StreamParser, IterableParser } from './types';
 
 export const parseBedrockStream: StreamParser = async (
   responseStream,
@@ -41,6 +41,53 @@ export const parseBedrockStream: StreamParser = async (
       throw err;
     }
   });
+
+  return parseBedrockBuffer(responseBuffer, logger);
+};
+
+export const parseBedrockIterable: IterableParser<Uint8Array> = async (
+  responseStream,
+  logger,
+  abortSignal,
+  tokenHandler
+) => {
+  const responseBuffer: Uint8Array[] = [];
+  if (abortSignal) {
+    abortSignal.addEventListener('abort', () => {
+      responseStream.cancel(new Error('Aborted'));
+      return parseBedrockBuffer(responseBuffer, logger);
+    });
+  }
+
+  const decoder = new TextDecoder();
+  const extra = '';
+  for await (const chunk of responseStream) {
+    responseBuffer.push(chunk);
+    if (tokenHandler) {
+      // Initialize an empty Uint8Array to store the concatenated buffer.
+      console.log('stephhh chunk', chunk);
+      const bedrockBuffer: Uint8Array = new Uint8Array(0);
+      handleBedrockChunk({ chunk, bedrockBuffer, logger, chunkHandler: tokenHandler });
+    }
+    // const decoded = extra + decoder.decode(chunk);
+    // const lines = decoded.split('\n');
+    // extra = lines.pop() || '';
+    // for (const line of lines) {
+    //   try {
+    //     yield JSON.parse(line);
+    //   } catch (e) {
+    //     console.warn(`Received a non-JSON parseable chunk: ${line}`);
+    //   }
+    // }
+  }
+  //
+  // await finished(responseStream).catch((err) => {
+  //   if (abortSignal?.aborted) {
+  //     logger.info('Bedrock stream parsing was aborted.');
+  //   } else {
+  //     throw err;
+  //   }
+  // });
 
   return parseBedrockBuffer(responseBuffer, logger);
 };
@@ -90,9 +137,17 @@ export const handleBedrockChunk = ({
   // Initialize an array to store fully formed message chunks.
   const buildChunks = [];
   // Process the buffer until no complete messages are left.
+  console.log('stephhh newBuffer', {
+    newBuffer,
+    messageLength,
+    byteLength: newBuffer.byteLength,
+    con1: newBuffer.byteLength > 0,
+    con2: newBuffer.byteLength >= messageLength,
+  });
   while (newBuffer.byteLength > 0 && newBuffer.byteLength >= messageLength) {
     // Extract a chunk of the specified length from the buffer.
     const extractedChunk = newBuffer.slice(0, messageLength);
+    console.log('stephhh extractedChunk', extractedChunk);
     // Add the extracted chunk to the array of fully formed message chunks.
     buildChunks.push(extractedChunk);
     // Remove the processed chunk from the buffer.
@@ -102,7 +157,7 @@ export const handleBedrockChunk = ({
   }
 
   const awsDecoder = new EventStreamCodec(toUtf8, fromUtf8);
-
+  console.log('stephhh buildChunks', buildChunks);
   // Decode and parse each message chunk, extracting the completion.
   const decodedChunk = buildChunks
     .map((bChunk) => {
@@ -110,8 +165,11 @@ export const handleBedrockChunk = ({
       const body = JSON.parse(
         Buffer.from(JSON.parse(new TextDecoder().decode(event.body)).bytes, 'base64').toString()
       );
+      console.log('stephhh bodybody', body);
       const decodedContent = prepareBedrockOutput(body, logger);
+      console.log('stephhh decodedContent', decodedContent);
       if (chunkHandler) {
+        console.log('stephhh calling chunkHandler:', decodedContent);
         chunkHandler(decodedContent);
       }
       return decodedContent;
