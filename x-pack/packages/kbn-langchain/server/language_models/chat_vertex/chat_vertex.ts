@@ -80,7 +80,8 @@ export class ActionsClientChatVertexAI extends ChatVertexAI {
     // prevent ChatVertexAI from overwriting our this.connection defined in super
   }
 
-  async *_streamResponseChunks(
+  // @JACOB rename this to _streamResponseChunks to get a working example
+  async *_streamResponseChunks2(
     messages: BaseMessage[],
     options: this['ParsedCallOptions'],
     runManager?: CallbackManagerForLLMRun

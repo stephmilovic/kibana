@@ -41,17 +41,29 @@ export class ActionsClientChatConnection<Auth> extends ChatConnection<Auth> {
     this.caller = caller;
     this.#model = fields.model;
     this.temperature = fields.temperature ?? 0;
-    // this.api.safeResponseToChatGeneration = ({
-    //   data,
-    // }: {
-    //   data: EnhancedGenerateContentResponse;
-    // }) => {
-    //   const ch = convertResponseContentToChatGenerationChunk(data, {
-    //     index: 0,
-    //   });
-    //   console.log('safeResponseToChatGeneration data', data);
-    //   console.log('safeResponseToChatGeneration chunk', ch);
-    //   return ch;
+    // @JACOB uncomment this to overwrite the safeResponseToChatGeneration method
+    // const storedApi = this.api.safeResponseToChatGeneration;
+    // this.api.safeResponseToChatGeneration = (
+    //   {
+    //     data,
+    //   }: {
+    //     data: EnhancedGenerateContentResponse;
+    //   },
+    //   safetyHandler: () => void
+    // ) => {
+    //   // const ch = convertResponseContentToChatGenerationChunk(data, {
+    //   //   index: 0,
+    //   // });
+    //   console.log('safeResponseToChatGenerationd data', data);
+    //   // console.log('safeResponseToChatGeneration chunk', ch);
+    //
+    //   const newData = {
+    //     candidates: [data],
+    //     functionCalls: () =>
+    //       data?.content.parts[0].functionCall ? [data?.content.parts[0].functionCall] : [],
+    //   };
+    //   console.log('safeResponseToChatGenerationd newData', newData);
+    //   return storedApi({ data: newData }, safetyHandler);
     // };
   }
 
@@ -162,39 +174,6 @@ class NodeJsonStream extends JsonStream {
       const text = decoder.decode(d, { stream: true });
       console.log(`NodeJsonStream text`, text);
       this.appendBuffer(text);
-      // const nextChunk = `${partialStreamChunk + text}`;
-      //
-      // try {
-      //   parsedStreamChunk = JSON.parse(nextChunk.replaceAll('data: ', '').replaceAll('\r\n', ''));
-      //   partialStreamChunk = '';
-      // } catch (_) {
-      //   partialStreamChunk += nextChunk;
-      // }
-      // if (parsedStreamChunk !== null && !parsedStreamChunk.candidates?.[0]?.finishReason) {
-      //   const functionCalls = parsedStreamChunk?.candidates?.[0]?.content.parts[0].functionCall
-      //     ? [parsedStreamChunk.candidates?.[0]?.content.parts[0].functionCall]
-      //     : [];
-      //   const response = {
-      //     ...parsedStreamChunk,
-      //     functionCalls: () => functionCalls,
-      //   };
-      //
-      //   index++;
-      //   console.log('appendBuffer parsedStreamChunk', JSON.stringify(parsedStreamChunk));
-      //   console.log('appendBuffer response', JSON.stringify(response));
-      //   console.log('appendBuffer functionCalls', JSON.stringify(functionCalls));
-      //   console.log(
-      //     'appendBuffer response.functionCalls',
-      //     JSON.stringify(response.functionCalls())
-      //   );
-      //   this.appendBuffer(`data: ${JSON.stringify(response)}`);
-      // } else if (parsedStreamChunk) {
-      //   // handle bad finish reason
-      //   const errorMessage = convertResponseBadFinishReasonToErrorMsg(parsedStreamChunk);
-      //   if (errorMessage != null) {
-      //     throw new Error(errorMessage);
-      //   }
-      // }
     });
     data.on('end', () => {
       const rest = decoder.decode();
