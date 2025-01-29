@@ -125,7 +125,7 @@ import {
   allRiskScoreIndexPattern,
 } from '../common/entity_analytics/risk_engine';
 import { isEndpointPackageV2 } from '../common/endpoint/utils/package_v2';
-import { assistantTools } from './assistant/tools';
+import { getAssistantTools } from './assistant/tools';
 import { turnOffAgentPolicyFeatures } from './endpoint/migrations/turn_off_agent_policy_features';
 import { getCriblPackagePolicyPostCreateOrUpdateCallback } from './security_integrations';
 import { scheduleEntityAnalyticsMigration } from './lib/entity_analytics/migrations';
@@ -585,7 +585,10 @@ export class Plugin implements ISecuritySolutionPlugin {
     this.telemetryConfigProvider.start(plugins.telemetry.isOptedIn$);
 
     // Assistant Tool and Feature Registration
-    plugins.elasticAssistant.registerTools(APP_UI_ID, assistantTools);
+    getAssistantTools().then((assistantTools) => {
+      plugins.elasticAssistant.registerTools(APP_UI_ID, assistantTools);
+    });
+
     const features = {
       assistantModelEvaluation: config.experimentalFeatures.assistantModelEvaluation,
       attackDiscoveryAlertFiltering: config.experimentalFeatures.attackDiscoveryAlertFiltering,

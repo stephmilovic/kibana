@@ -26,3 +26,7 @@ export const assistantTools = [
   PRODUCT_DOCUMENTATION_TOOL,
   SECURITY_LABS_KNOWLEDGE_BASE_TOOL,
 ];
+
+export const getAssistantTools = async () => {
+  return assistantTools;
+};

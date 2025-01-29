@@ -47,6 +47,15 @@ export const localPrompts: Prompt[] = [
     promptId: promptDictionary.systemPrompt,
     promptGroupId: promptGroupId.aiAssistant,
     provider: 'openai',
+    model: 'gpt-4o',
+    prompt: {
+      default: DEFAULT_SYSTEM_PROMPT,
+    },
+  },
+  {
+    promptId: promptDictionary.systemPrompt,
+    promptGroupId: promptGroupId.aiAssistant,
+    provider: 'openai',
     prompt: {
       default: DEFAULT_SYSTEM_PROMPT,
     },
