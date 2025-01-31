@@ -13,7 +13,8 @@
     "server/**/*.json",
     "scripts/**/*.json",
     "public/**/*.json",
-    "../../../../../typings/**/*"
+    "../../../../../typings/**/*",
+    "emotion.d.ts"
   ],
   "exclude": ["target/**/*", "**/cypress/**", "public/management/cypress.config.ts"],
   "kbn_references": [
@@ -236,6 +237,6 @@
     "@kbn/charts-theme",
     "@kbn/product-doc-base-plugin",
     "@kbn/shared-ux-error-boundary",
-    "@kbn/ai-prompt-manager",
+    "@kbn/security-ai-prompts",
   ]
 }

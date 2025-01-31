@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { Prompt } from '@kbn/ai-prompt-manager';
+import { Prompt } from '@kbn/security-ai-prompts';
 import {
   ATTACK_DISCOVERY_GENERATION_DETAILS_MARKDOWN,
   ATTACK_DISCOVERY_GENERATION_ENTITY_SUMMARY_MARKDOWN,
@@ -43,15 +43,6 @@ export const promptDictionary = {
 };
 
 export const localPrompts: Prompt[] = [
-  {
-    promptId: promptDictionary.systemPrompt,
-    promptGroupId: promptGroupId.aiAssistant,
-    provider: 'openai',
-    model: 'gpt-4o',
-    prompt: {
-      default: DEFAULT_SYSTEM_PROMPT,
-    },
-  },
   {
     promptId: promptDictionary.systemPrompt,
     promptGroupId: promptGroupId.aiAssistant,
