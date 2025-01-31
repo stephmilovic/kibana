@@ -296,12 +296,7 @@ describe('get_prompt', () => {
         provider: 'bedrock',
         connectorId: 'connector-123',
       });
-
-<<<<<<<< HEAD:x-pack/solutions/security/packages/ai-prompt-manager/src/get_prompt.test.ts
-      expect(result).toBe('BEDROCK_SYSTEM_PROMPT');
-========
       expect(result).toBe('provider:bedrock default system prompt');
->>>>>>>> main:x-pack/solutions/security/packages/security-ai-prompts/src/get_prompt.test.ts
     });
 
     it('returns the default prompt when no prompts are found', async () => {
@@ -321,11 +316,7 @@ describe('get_prompt', () => {
         connectorId: 'connector-123',
       });
 
-<<<<<<<< HEAD:x-pack/solutions/security/packages/ai-prompt-manager/src/get_prompt.test.ts
-      expect(result).toBe('DEFAULT_SYSTEM_PROMPT');
-========
       expect(result).toBe('default system prompt');
->>>>>>>> main:x-pack/solutions/security/packages/security-ai-prompts/src/get_prompt.test.ts
     });
 
     it('throws an error when no prompts are found', async () => {
@@ -456,11 +447,7 @@ describe('get_prompt', () => {
         },
         {
           promptId: promptDictionary.userPrompt,
-<<<<<<<< HEAD:x-pack/solutions/security/packages/ai-prompt-manager/src/get_prompt.test.ts
-          prompt: 'GEMINI_USER_PROMPT',
-========
           prompt: 'provider:gemini user prompt',
->>>>>>>> main:x-pack/solutions/security/packages/security-ai-prompts/src/get_prompt.test.ts
         },
       ]);
     });
@@ -493,11 +480,7 @@ describe('get_prompt', () => {
         },
         {
           promptId: promptDictionary.userPrompt,
-<<<<<<<< HEAD:x-pack/solutions/security/packages/ai-prompt-manager/src/get_prompt.test.ts
-          prompt: 'GEMINI_USER_PROMPT',
-========
           prompt: 'provider:gemini user prompt',
->>>>>>>> main:x-pack/solutions/security/packages/security-ai-prompts/src/get_prompt.test.ts
         },
       ]);
     });

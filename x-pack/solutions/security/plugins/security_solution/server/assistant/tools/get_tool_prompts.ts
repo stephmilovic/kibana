@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import type { GetPromptArgs } from '@kbn/ai-prompt-manager';
+import type { GetPromptArgs } from '@kbn/security-ai-prompts';
 import { promptGroupId } from '../prompt/local_prompt_object';
 import { getPromptsByGroupId, promptDictionary } from '../prompt';
 

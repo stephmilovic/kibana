@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import type { Prompt } from '@kbn/ai-prompt-manager';
+import type { Prompt } from '@kbn/security-ai-prompts';
 import { ALERT_COUNTS_TOOL_DESCRIPTION } from './prompts';
 
 export const promptGroupId = {
