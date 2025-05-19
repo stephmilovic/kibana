@@ -10,6 +10,7 @@ import { BaseChatModelParams } from '@langchain/core/language_models/chat_models
 import { Logger } from '@kbn/logging';
 import { PublicMethodsOf } from '@kbn/utility-types';
 import type { TelemetryMetadata } from '@kbn/actions-plugin/server/lib';
+import { NodeHttpHandler } from '@smithy/node-http-handler';
 import { BedrockRuntimeClient } from './bedrock_runtime_client';
 import { DEFAULT_BEDROCK_MODEL, DEFAULT_BEDROCK_REGION } from '../../utils/bedrock';
 
@@ -48,6 +49,10 @@ export class ActionsClientChatBedrockConverse extends ChatBedrockConverse {
       streaming: this.streaming,
       region: DEFAULT_BEDROCK_REGION,
       telemetryMetadata: fields?.telemetryMetadata,
+      requestHandler: new NodeHttpHandler({
+        connectionTimeout: 5000,
+        requestTimeout: 1200000, // <-- 20 minutes, in ms
+      }),
     });
   }
 }
