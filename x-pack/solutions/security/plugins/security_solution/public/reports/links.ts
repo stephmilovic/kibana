@@ -50,8 +50,9 @@ export const getAiValueFilteredLinks = async (
   }
 
   const userRoles = currentUser.roles || [];
-  const allowedRoles = ['admin', 'soc_manager', '_search_ai_lake_soc_manager'];
-
+  // to do, fix roles
+  const allowedRoles = ['superuser', 'admin', 'soc_manager', '_search_ai_lake_soc_manager'];
+  console.log('userRoles', userRoles);
   const hasRequiredRole = allowedRoles.some((role) => userRoles.includes(role));
 
   return hasRequiredRole ? aiValueLinks : null;

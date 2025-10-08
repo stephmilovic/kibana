@@ -132,6 +132,12 @@ function ManagedFlyout({
   const getReport = useCallback(async () => {
     try {
       setIsCreatingExport(true);
+      // generate here
+      console.log('does this run on click???', {
+        shareObjectTypeMeta,
+        shareObjectType,
+        shareObjectTypeAlias,
+      });
       await exportIntegration.config.generateAssetExport({
         intl,
         optimizedForPrinting: usePrintLayout,

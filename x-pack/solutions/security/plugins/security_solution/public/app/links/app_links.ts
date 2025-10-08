@@ -52,7 +52,7 @@ export const getFilteredLinks = async (
 ): Promise<AppLinkItems> => {
   const managementFilteredLinks = await getManagementFilteredLinks(core, plugins);
   const aiValueFilteredLinks = await getAiValueFilteredLinks(core, plugins);
-
+  console.log('aiValueFilteredLinks', aiValueFilteredLinks);
   const filteredLinks = [
     dashboardsLinks,
     alertsLink,

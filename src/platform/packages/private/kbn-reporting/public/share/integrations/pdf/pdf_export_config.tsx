@@ -36,7 +36,10 @@ export const getShareMenuItems =
     ...shareOpts
   }: ShareContext): ReturnType<ExportShare['config']> extends Promise<infer R> ? R : never => {
     const { sharingData } = shareOpts as unknown as { sharingData: ReportingSharingData };
-
+    console.log('getShareMenuItems', {
+      objectType,
+      objectId,
+    });
     const jobProviderOptions: JobParamsProviderOptions = {
       shareableUrl: isDirty ? shareableUrl : shareableUrlForSavedObject ?? shareableUrl,
       objectType,
@@ -49,12 +52,13 @@ export const getShareMenuItems =
       const decoratedJobParams = apiClient.getDecoratedJobParams({
         ...getJobParams({ ...jobProviderOptions, optimizedForPrinting }, 'printablePdfV2')(),
       });
-
+      console.log('decoratedJobParams', decoratedJobParams);
       return firstValueFrom(startServices$).then(([startServices]) => {
         const {
           notifications: { toasts },
           rendering,
         } = startServices;
+        // here
         return apiClient
           .createReportingJob('printablePdfV2', decoratedJobParams)
           .then(() => {

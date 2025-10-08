@@ -493,6 +493,18 @@ export const initUiSettings = (
       schema: schema.boolean(),
       solutionViews: ['classic', 'security'],
     },
+    // to do, remove, temp for development
+    ...getDefaultAIConnectorSetting([
+      {
+        id: 'my-gpt5-ai',
+        actionTypeId: '.gen-ai',
+        name: 'Azure OpenAI GPT-5 2025-01-01',
+        isPreconfigured: true,
+        isDeprecated: false,
+        isSystemAction: false,
+      },
+    ]),
+    ...getDefaultValueReportSettings(),
     ...(experimentalFeatures.disableESQLRiskScoring
       ? {}
       : {
