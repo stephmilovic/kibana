@@ -131,11 +131,13 @@ export const createNavigationTree = (services: Services): NavigationTreeDefiniti
                   sideNavVersion: 'v2',
                 },
                 {
+                  id: SecurityPageName.siemReadiness,
                   link: securityLink(SecurityPageName.siemReadiness),
                   sideNavVersion: 'v2',
                 },
                 {
                   // value report
+                  id: SecurityPageName.aiValue,
                   link: securityLink(SecurityPageName.aiValue),
                   sideNavVersion: 'v2',
                 },

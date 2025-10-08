@@ -7,18 +7,16 @@
 
 import { getDefaultConnector } from '@kbn/elastic-assistant/impl/assistant/helpers';
 import { useMemo } from 'react';
-import {
-  AI_ASSISTANT_DEFAULT_LLM_SETTING_ENABLED,
-  DEFAULT_AI_CONNECTOR,
-} from '../../../common/constants';
+import { AI_ASSISTANT_DEFAULT_LLM_SETTING_ENABLED } from '../../../common/constants';
 import { useAIConnectors } from './use_ai_connectors';
 import { useKibana } from '../lib/kibana';
 
 export const useDefaultAIConnectorId = () => {
-  const { settings, uiSettings, featureFlags } = useKibana().services;
+  const { settings, featureFlags } = useKibana().services;
 
   const { aiConnectors: connectors, isLoading: isLoadingConnectors } = useAIConnectors();
-  const legacyDefaultConnectorId = uiSettings.get<string>(DEFAULT_AI_CONNECTOR);
+  // do not merge until defaultLlmSettingEnabled is true or removed
+  const legacyDefaultConnectorId = ''; // uiSettings.get<string>(DEFAULT_AI_CONNECTOR);
   const useNewDefaultConnector = featureFlags.getBooleanValue(
     AI_ASSISTANT_DEFAULT_LLM_SETTING_ENABLED,
     false
