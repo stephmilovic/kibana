@@ -4,7 +4,7 @@
  * 2.0; you may not use this file except in compliance with the Elastic License
  * 2.0.
  */
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { EuiButtonEmpty, EuiFlexGroup, EuiFlexItem, EuiLoadingSpinner } from '@elastic/eui';
 import type { DocLinks } from '@kbn/doc-links';
 import { pick } from 'lodash/fp';
@@ -27,6 +27,7 @@ import { useDataView } from '../../data_view_manager/hooks/use_data_view';
 import { PageLoader } from '../../common/components/page_loader';
 import { inputsSelectors } from '../../common/store';
 import { useAiValueRoleCheck } from '../hooks/use_ai_value_role_check';
+import { useKibana } from '../../common/lib/kibana';
 
 /**
  * The dashboard includes key performance metrics such as:
@@ -58,9 +59,37 @@ const AIValueComponent = () => {
 
   const { hasRequiredRole, isLoading: isRoleCheckLoading } = useAiValueRoleCheck();
 
+  const { serverless } = useKibana().services;
+  const isServerless = !!serverless;
+  const exportButton = useMemo(
+    () =>
+      isServerless ? (
+        <EuiButtonEmpty
+          className="exportPdfButton"
+          iconType="export"
+          onClick={() => exportPDFRef.current?.()}
+          size="s"
+          aria-label={EXPORT_REPORT}
+        >
+          {EXPORT_REPORT}
+        </EuiButtonEmpty>
+      ) : (
+        <EuiButtonEmpty
+          className="exportPdfButton"
+          iconType="export"
+          onClick={() => {
+            console.log('export report');
+          }}
+          size="s"
+          aria-label={EXPORT_REPORT}
+        >
+          {EXPORT_REPORT}
+        </EuiButtonEmpty>
+      ),
+    []
+  );
   const [hasAttackDiscoveries, setHasAttackDiscoveries] = useState(false);
   const exportPDFRef = useRef<(() => void) | null>(null);
-
   // since we do not have a search bar in the AI Value page, we need to sync the timerange
   useSyncTimerangeUrlParam();
 
@@ -93,18 +122,7 @@ const AIValueComponent = () => {
             width="auto"
             compressed
           />,
-          ...(hasAttackDiscoveries
-            ? [
-                <EuiButtonEmpty
-                  className="exportPdfButton"
-                  iconType="export"
-                  onClick={() => exportPDFRef.current?.()}
-                  size="s"
-                >
-                  {EXPORT_REPORT}
-                </EuiButtonEmpty>,
-              ]
-            : []),
+          ...(hasAttackDiscoveries ? [exportButton] : []),
         ]}
       />
       {isSourcererLoading ? (
