@@ -20,6 +20,7 @@ export interface EvalsSuiteMetadataEntry {
   configPath?: string;
   serverConfigSet?: string;
   weeklyEisModelGroups?: string[];
+  playwrightSpec?: string;
 }
 
 function pathExistsInGitTree(repoRelativePath: string): boolean {
@@ -149,6 +150,9 @@ function buildEvalsYaml({
       const evalServerConfigSetEnv = suite.serverConfigSet
         ? `          EVAL_SERVER_CONFIG_SET: '${suite.serverConfigSet}'`
         : null;
+      const evalPlaywrightSpecEnv = suite.playwrightSpec
+        ? `          EVAL_PLAYWRIGHT_SPEC: '${suite.playwrightSpec}'`
+        : null;
       return [
         `      - label: '${label}'`,
         `        key: ${key}`,
@@ -162,6 +166,7 @@ function buildEvalsYaml({
         ...(includeEisModelsEnv ? [includeEisModelsEnv] : []),
         ...(modelGroupsEnv ? [modelGroupsEnv] : []),
         ...(evalServerConfigSetEnv ? [evalServerConfigSetEnv] : []),
+        ...(evalPlaywrightSpecEnv ? [evalPlaywrightSpecEnv] : []),
         `        timeout_in_minutes: 60`,
         `        agents:`,
         `          image: family/kibana-ubuntu-2404`,

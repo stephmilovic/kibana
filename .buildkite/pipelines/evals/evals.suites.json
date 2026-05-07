@@ -14,6 +14,21 @@
       ]
     },
     {
+      "id": "agent-builder-security-skills",
+      "name": "Agent Builder - Security Skills",
+      "slackChannel": "#agent-builder-alerts",
+      "configPath": "x-pack/platform/packages/shared/agent-builder/kbn-evals-suite-agent-builder/playwright.config.ts",
+      "playwrightSpec": "x-pack/platform/packages/shared/agent-builder/kbn-evals-suite-agent-builder/evals/security/security_skills.spec.ts",
+      "tags": [
+        "platform",
+        "agent-builder",
+        "security-skills"
+      ],
+      "ciLabels": [
+        "evals:agent-builder-security-skills"
+      ]
+    },
+    {
       "id": "esql-generation",
       "name": "ES|QL Generation Evaluations",
       "slackChannel": "#agent-builder-alerts",

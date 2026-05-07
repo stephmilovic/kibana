@@ -185,6 +185,7 @@ EOF
           EVAL_FANOUT: "0"
           TEST_RUN_ID: "${TEST_RUN_ID:-}"
           EVAL_SERVER_CONFIG_SET: "${EVAL_SERVER_CONFIG_SET:-}"
+          EVAL_PLAYWRIGHT_SPEC: "${EVAL_PLAYWRIGHT_SPEC:-}"
         timeout_in_minutes: ${timeout_in_minutes}
         concurrency_group: "kbn-evals-${group_key_safe}"
         concurrency: ${EVAL_FANOUT_CONCURRENCY}
@@ -365,9 +366,14 @@ done
 # Run eval suite via @kbn/evals CLI (internal executor by default).
 # If EVAL_PROJECT is set, run a single Playwright project (used by CI fanout steps).
 # Otherwise, Playwright will run all projects defined by the suite config (useful locally).
+# EVAL_PLAYWRIGHT_SPEC, when set, is passed as a positional arg to Playwright to restrict
+# which spec files are executed (e.g. for label-targeted sub-suite runs).
+EVAL_RUN_ARGS=(run --suite "$EVAL_SUITE_ID")
 if [[ -n "${EVAL_PROJECT:-}" ]]; then
-  node scripts/evals run --suite "$EVAL_SUITE_ID" --project "$EVAL_PROJECT"
-else
-  node scripts/evals run --suite "$EVAL_SUITE_ID"
+  EVAL_RUN_ARGS+=(--project "$EVAL_PROJECT")
 fi
+if [[ -n "${EVAL_PLAYWRIGHT_SPEC:-}" ]]; then
+  EVAL_RUN_ARGS+=("$EVAL_PLAYWRIGHT_SPEC")
+fi
+node scripts/evals "${EVAL_RUN_ARGS[@]}"
 
