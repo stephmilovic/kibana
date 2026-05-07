@@ -217,6 +217,27 @@ Eval suites can be triggered in PR CI by adding GitHub labels:
 - `evals:<suite-id>` (or the explicit `ciLabels` value from `evals.suites.json`)
 - `evals:all` to run **all** eval suites
 
+Use `node scripts/evals ci-map` to see the full label → suite mapping.
+
+#### Sub-suite scoping with `playwrightSpec`
+
+Some entries in `evals.suites.json` reuse a parent suite's Playwright config but execute only a specific spec file. These suites include a `playwrightSpec` field pointing to the target spec.
+
+Example: `evals:agent-builder-security-skills` runs only the security skills spec within the agent-builder suite:
+
+```json
+{
+  "id": "agent-builder-security-skills",
+  "configPath": "...agent-builder/playwright.config.ts",
+  "playwrightSpec": "...agent-builder/evals/security/security_skills.spec.ts",
+  "ciLabels": ["evals:agent-builder-security-skills"]
+}
+```
+
+Adding this label triggers the same stack as `evals:agent-builder` but scopes Playwright execution to `security_skills.spec.ts` via the `EVAL_PLAYWRIGHT_SPEC` environment variable. The base `evals:agent-builder` label is unaffected and still runs all specs in that suite.
+
+To add a similar scoped label for another spec, register a new entry in `.buildkite/pipelines/evals/evals.suites.json` with `playwrightSpec` set to the target file path.
+
 ### CI labels: model selection + judge override
 
 Evals support optional PR labels for selecting which connector projects to run and (separately) which connector should be used for LLM-as-a-judge evaluators:
