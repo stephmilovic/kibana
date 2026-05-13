@@ -50,6 +50,10 @@ If you want to allow anonymous authentication in Kibana, these settings are supp
 ### Visualizations [ec_visualizations]
 
 
+#### Version 8.0+ [ec_vis_supported_versions_8_0_0]
+
+`vis_type_timelion.enable`
+:   For 8.0 version and later, set to `false` to disable Timelion vizualizations. **Default: `true`**
 
 #### Supported versions before 8.0.0 [ec_vis_supported_versions_before_8_0_0]
 
@@ -85,6 +89,14 @@ stack: ga 9.4+
 ## X-Pack configuration settings [ec-xpack-config]
 
 You can configure the following X-Pack settings from the Kibana **User Settings** editor.
+
+### Version 9.4+ [ec_version_9_4]
+```{applies_to}
+stack: ga 9.4
+```
+
+`xpack.securitySolution.maxEndpointScriptFileSize`
+:    The maximum file size in bytes for scripts uploaded to the Elastic Defend script library. Default is `26214400` (25MB).
 
 ### Version 9.3+ [ec_version_9_3]
 ```{applies_to}
@@ -452,11 +464,18 @@ This setting is not available in versions 8.0.0 through 8.2.0. As such, this set
 `csp.object_src` {applies_to}`stack: ga 9.3`
 :   Add sources for the [Content Security Policy `object-src` directive](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/object-src).
 
+`csp.form_action` {applies_to}`stack: ga 9.5`
+:   Add sources for the [Content Security Policy `form-action` directive](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/form-action). Rules may not contain `none` and will not override the defaults. **Default: [`'self'`]**
+
 `csp.report_uri`
 :   Add sources for the [Content Security Policy `report-uri` directive](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/report-uri).
 
-`csp.report_only.form_action`
+`csp.report_only.form_action` {applies_to}`stack: deprecated 9.5`
 :   Add sources for the [Content Security Policy `form-action` directive](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/form-action) in reporting mode.
+
+     :::{admonition} Deprecation details
+     Use `csp.form_action` instead. 
+     :::
 
 $$$csp-strict$$$ `csp.strict`
 :   Blocks Kibana access to any browser that does not enforce even rudimentary CSP rules. In practice, this disables support for older, less safe browsers like Internet Explorer. **Default: `true`** To learn more, check [Configure Kibana](/reference/configuration-reference/general-settings.md)].

@@ -14,12 +14,19 @@ import { WorkflowGraph } from '@kbn/workflows/graph';
 import type { WorkflowsExecutionEngineConfig } from '../config';
 
 import { ConnectorExecutor } from '../connector_executor';
+import {
+  extractEventChainDepthFromExecution,
+  extractEventChainVisitedWorkflowIdsFromExecution,
+  mergeEmitterWorkflowIntoEventChainVisited,
+} from '../lib/telemetry/utils/extract_execution_metadata';
 import { WorkflowExecutionTelemetryClient } from '../lib/telemetry/workflow_execution_telemetry_client';
 import { StepExecutionRepository } from '../repositories/step_execution_repository';
 import { WorkflowExecutionRepository } from '../repositories/workflow_execution_repository';
 import { NodesFactory } from '../step/nodes_factory';
+import { setWorkflowEventChainContext } from '../trigger_events/event_context/event_chain_context';
 import type { WorkflowsExecutionEnginePluginStart } from '../types';
 import { StepExecutionRuntimeFactory } from '../workflow_context_manager/step_execution_runtime_factory';
+import { StepIoService } from '../workflow_context_manager/step_io_service';
 import type { ContextDependencies } from '../workflow_context_manager/types';
 import { WorkflowExecutionRuntimeManager } from '../workflow_context_manager/workflow_execution_runtime_manager';
 import { WorkflowExecutionState } from '../workflow_context_manager/workflow_execution_state';
@@ -40,7 +47,7 @@ export async function setupDependencies(
   fakeRequest?: KibanaRequest,
   workflowsExecutionEngine?: WorkflowsExecutionEnginePluginStart
 ) {
-  const { coreStart, actions, taskManager } = dependencies;
+  const { coreStart, actions, taskManager, workflowsExtensions } = dependencies;
 
   // Get ES client from core services (guaranteed to be available at task execution time)
   const internalEsClient = coreStart.elasticsearch.client.asInternalUser;
@@ -51,6 +58,9 @@ export async function setupDependencies(
     esClient: internalEsClient,
     logger,
   });
+
+  // Wait for the workflows extensions registries to be ready
+  await workflowsExtensions.isReady();
 
   const workflowExecution = await workflowExecutionRepository.getWorkflowExecutionById(
     workflowRunId,
@@ -67,6 +77,22 @@ export async function setupDependencies(
       `Workflow execution id ${workflowRunId} cannot execute a workflow without Kibana Request`
     );
   }
+
+  const eventChainDepth = extractEventChainDepthFromExecution(workflowExecution) ?? -1;
+  const baseVisited = extractEventChainVisitedWorkflowIdsFromExecution(
+    workflowExecution,
+    config.eventDriven.maxChainDepth
+  );
+  const visitedWorkflowIds = mergeEmitterWorkflowIntoEventChainVisited(
+    baseVisited,
+    workflowExecution.workflowId,
+    config.eventDriven.maxChainDepth
+  );
+  setWorkflowEventChainContext(fakeRequest, {
+    depth: eventChainDepth,
+    sourceExecutionId: workflowExecution.id,
+    ...(visitedWorkflowIds.length > 0 ? { visitedWorkflowIds } : {}),
+  });
 
   let workflowExecutionGraph = WorkflowGraph.fromWorkflowDefinition(
     workflowExecution.workflowDefinition,
@@ -96,9 +122,15 @@ export async function setupDependencies(
 
   const workflowExecutionState = new WorkflowExecutionState(
     workflowExecution as EsWorkflowExecution,
-    workflowExecutionRepository,
-    stepExecutionRepository
+    workflowExecutionRepository
   );
+
+  const stepIoService = new StepIoService({
+    stepRepository: stepExecutionRepository,
+    state: workflowExecutionState,
+    evictionMinBytes: config.eviction.minPayloadSize.getValueInBytes(),
+    logger,
+  });
 
   // Create telemetry client
   const telemetryClient = new WorkflowExecutionTelemetryClient(coreStart.analytics, logger);
@@ -109,6 +141,7 @@ export async function setupDependencies(
     workflowExecutionGraph,
     workflowLogger,
     workflowExecutionState,
+    stepIoService,
     coreStart,
     dependencies,
     telemetryClient,
@@ -132,6 +165,7 @@ export async function setupDependencies(
   const stepExecutionRuntimeFactory = new StepExecutionRuntimeFactory({
     workflowExecutionGraph,
     workflowExecutionState,
+    stepIoService,
     workflowLogger,
     esClient,
     fakeRequest,
@@ -145,7 +179,8 @@ export async function setupDependencies(
     workflowLogger,
     workflowExecutionGraph,
     stepExecutionRuntimeFactory,
-    enhancedDependencies
+    enhancedDependencies,
+    stepIoService
   );
 
   return {
@@ -153,10 +188,12 @@ export async function setupDependencies(
     workflowRuntime,
     stepExecutionRuntimeFactory,
     workflowExecutionState,
+    stepIoService,
     workflowLogger,
     workflowTaskManager,
     nodesFactory,
     workflowExecutionRepository,
     esClient,
+    telemetryClient,
   };
 }

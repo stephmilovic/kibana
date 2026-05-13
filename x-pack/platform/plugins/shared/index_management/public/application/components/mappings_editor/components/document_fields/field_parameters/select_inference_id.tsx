@@ -207,7 +207,7 @@ const SelectInferenceIdContent: React.FC<SelectInferenceIdContentProps> = ({
                   isReady={isSelectInferenceIdOpen}
                 >
                   <EuiButton
-                    iconType="arrowDown"
+                    iconType="chevronSingleDown"
                     iconSide="right"
                     color="text"
                     fullWidth
@@ -233,7 +233,7 @@ const SelectInferenceIdContent: React.FC<SelectInferenceIdContentProps> = ({
             <EuiContextMenuPanel>
               <EuiContextMenuItem
                 key="createInferenceEndpointButton"
-                icon="plusInCircle"
+                icon="plusCircle"
                 size="s"
                 data-test-subj="createInferenceEndpointButton"
                 onClick={(e) => {
@@ -325,7 +325,10 @@ const SelectInferenceIdContent: React.FC<SelectInferenceIdContentProps> = ({
               </EuiPanel>
             </EuiContextMenuPanel>
             <EuiHorizontalRule margin="none" />
-            <EuiContextMenuItem icon={<EuiIcon type="question" color="primary" />} size="m">
+            <EuiContextMenuItem
+              icon={<EuiIcon type="question" color="primary" aria-hidden={true} />}
+              size="m"
+            >
               <EuiLink
                 href={docLinks.links.inferenceManagement.inferenceAPIDocumentation}
                 target="_blank"
@@ -350,6 +353,7 @@ const SelectInferenceIdContent: React.FC<SelectInferenceIdContentProps> = ({
                 isEdit={false}
                 onSubmitSuccess={onSubmitSuccess}
                 enforceAdaptiveAllocations={enforceAdaptiveAllocations}
+                allowedTaskTypes={['text_embedding', 'sparse_embedding']}
               />
             </Suspense>
           )}

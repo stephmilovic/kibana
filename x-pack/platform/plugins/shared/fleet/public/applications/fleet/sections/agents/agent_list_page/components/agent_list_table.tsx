@@ -210,16 +210,12 @@ export const AgentListTable: React.FC<Props> = (props: Props) => {
 
         return (
           agentPolicy && (
-            <EuiFlexGroup gutterSize="xs" alignItems="center" wrap={false} css={{ minWidth: 0 }}>
-              <EuiFlexItem grow={true} css={{ minWidth: 0 }}>
-                <AgentPolicySummaryLine
-                  policy={agentPolicy}
-                  agent={agent}
-                  showPolicyId
-                  isVersionSpecific={isVersionSpecific}
-                />
-              </EuiFlexItem>
-            </EuiFlexGroup>
+            <AgentPolicySummaryLine
+              policy={agentPolicy}
+              agent={agent}
+              showPolicyId
+              isVersionSpecific={isVersionSpecific}
+            />
           )
         );
       },
@@ -240,7 +236,7 @@ export const AgentListTable: React.FC<Props> = (props: Props) => {
           <span tabIndex={0}>
             <FormattedMessage id="xpack.fleet.agentList.cpuTitle" defaultMessage="CPU" />
             &nbsp;
-            <EuiIcon type="info" />
+            <EuiIcon type="info" aria-hidden={true} />
           </span>
         </EuiToolTip>
       ),
@@ -268,7 +264,7 @@ export const AgentListTable: React.FC<Props> = (props: Props) => {
           <span tabIndex={0}>
             <FormattedMessage id="xpack.fleet.agentList.memoryTitle" defaultMessage="Memory" />
             &nbsp;
-            <EuiIcon type="info" />
+            <EuiIcon type="info" aria-hidden={true} />
           </span>
         </EuiToolTip>
       ),

@@ -48,7 +48,11 @@ export async function syncAgentlessDeployments(
 
   try {
     // retrieve all agentless deployments
-    const currentDeployments: Array<{ policy_id: string; revision_idx?: number }> = [];
+    const currentDeployments: Array<{
+      policy_id: string;
+      revision_idx?: number;
+      cluster_id?: string;
+    }> = [];
     let hasMore = true;
     let nextPageToken: string | undefined;
 
@@ -83,6 +87,10 @@ export async function syncAgentlessDeployments(
           }
           const agentPolicy = agentPolicies.find((ap) => ap.id === deployment.policy_id);
 
+          if (agentPolicy?.is_verifier) {
+            return;
+          }
+
           if (!agentPolicy) {
             logger.info(
               `[Agentless Deployment Sync]${dryRunTag(opts?.dryRun)} Deleting deployment ${
@@ -104,7 +112,7 @@ export async function syncAgentlessDeployments(
             (agentPolicy.monitoring_enabled?.length ?? 0) > 0
           ) {
             const esClient = appContextService.getInternalUserESClient();
-            const spacedScoppedSoClient = appContextService.getInternalUserSOClientForSpaceId(
+            const spacedScopedSoClient = appContextService.getInternalUserSOClientForSpaceId(
               agentPolicy.namespace || undefined
             );
             logger.info(
@@ -112,11 +120,45 @@ export async function syncAgentlessDeployments(
                 opts?.dryRun
               )} Updating agentless policy monitoring settings ${agentPolicy.id}`
             );
-            await agentPolicyService.update(spacedScoppedSoClient, esClient, agentPolicy.id, {
+            await agentPolicyService.update(spacedScopedSoClient, esClient, agentPolicy.id, {
               // Ensure agentless policies keep monitoring alive so http monitoring server continue to work even without monitoring enabled
               keep_monitoring_alive: true,
               monitoring_enabled: [],
             });
+          } else if (
+            deployment.cluster_id &&
+            deployment.cluster_id !== agentPolicy.agentless?.cluster_id
+          ) {
+            const esClient = appContextService.getInternalUserESClient();
+            const spacedScopedSoClient = appContextService.getInternalUserSOClientForSpaceId(
+              agentPolicy.namespace || undefined
+            );
+            logger.debug(
+              `[Agentless Deployment Sync]${dryRunTag(
+                opts?.dryRun
+              )} Updating cluster_id for policy ${agentPolicy.id}`
+            );
+            if (!opts?.dryRun) {
+              await agentPolicyService
+                .update(
+                  spacedScopedSoClient,
+                  esClient,
+                  agentPolicy.id,
+                  {
+                    agentless: {
+                      ...agentPolicy.agentless,
+                      cluster_id: deployment.cluster_id,
+                    },
+                  },
+                  { bumpRevision: false }
+                )
+                .catch((error) => {
+                  logger.error(
+                    `[Agentless Deployment Sync] Failed to update cluster_id for policy ${agentPolicy.id}`,
+                    { error }
+                  );
+                });
+            }
           } else if (
             deployment.revision_idx === undefined ||
             deployment.revision_idx < agentPolicy.revision
@@ -127,12 +169,12 @@ export async function syncAgentlessDeployments(
               }`
             );
             if (!opts?.dryRun) {
-              const spacedScoppedSoClient = appContextService.getInternalUserSOClientForSpaceId(
+              const spacedScopedSoClient = appContextService.getInternalUserSOClientForSpaceId(
                 agentPolicy.namespace || undefined
               );
               const esClient = appContextService.getInternalUserESClient();
               await agentlessAgentService
-                .createAgentlessAgent(esClient, spacedScoppedSoClient, agentPolicy)
+                .createAgentlessAgent(esClient, spacedScopedSoClient, agentPolicy)
                 .catch((error) => {
                   logger.error(
                     `[Agentless Deployment Sync] Failed to update deployment ${deployment.policy_id}`,
@@ -157,8 +199,9 @@ export async function syncAgentlessDeployments(
         'global_data_tags',
         'fleet_server_host_id',
         'agentless',
+        'is_verifier',
       ],
-      kuery: `${AGENT_POLICY_SAVED_OBJECT_TYPE}.supports_agentless:true`,
+      kuery: `${AGENT_POLICY_SAVED_OBJECT_TYPE}.supports_agentless:true AND NOT ${AGENT_POLICY_SAVED_OBJECT_TYPE}.is_verifier:true`,
       spaceId: '*',
     });
 
@@ -180,12 +223,12 @@ export async function syncAgentlessDeployments(
             }`
           );
           if (!opts?.dryRun) {
-            const spacedScoppedSoClient = appContextService.getInternalUserSOClientForSpaceId(
+            const spacedScopedSoClient = appContextService.getInternalUserSOClientForSpaceId(
               agentPolicy.namespace || undefined
             );
             const esClient = appContextService.getInternalUserESClient();
             await agentlessAgentService
-              .createAgentlessAgent(esClient, spacedScoppedSoClient, agentPolicy)
+              .createAgentlessAgent(esClient, spacedScopedSoClient, agentPolicy)
               .catch((error) => {
                 logger.error(
                   `[Agentless Deployment Sync] Failed to create deployment ${agentPolicy.id}`,

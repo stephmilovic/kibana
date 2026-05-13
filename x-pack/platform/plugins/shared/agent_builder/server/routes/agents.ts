@@ -7,6 +7,7 @@
 
 import { schema } from '@kbn/config-schema';
 import path from 'node:path';
+import { AgentVisibility } from '@kbn/agent-builder-common';
 import type { RouteDependencies } from './types';
 import { getHandlerWrapper } from './wrap_handler';
 import { publicApiPath } from '../../common/constants';
@@ -36,6 +37,36 @@ const TOOL_SELECTION_SCHEMA = schema.arrayOf(
       meta: { description: 'Tool selection configuration for the agent.' },
     }
   )
+);
+
+const SKILLS_SCHEMA = schema.arrayOf(
+  schema.string({
+    meta: { description: 'Skill ID to be available to the agent.' },
+  }),
+  {
+    maxSize: 100,
+    meta: { description: 'Array of skill IDs to be available to the agent.' },
+  }
+);
+
+const PLUGINS_SCHEMA = schema.arrayOf(
+  schema.string({
+    meta: { description: 'Plugin ID to assign to the agent.' },
+  }),
+  {
+    maxSize: 100,
+    meta: { description: 'Array of plugin IDs to assign to the agent.' },
+  }
+);
+
+const CONNECTORS_SCHEMA = schema.arrayOf(
+  schema.string({
+    meta: { description: 'Connector ID to associate with the agent.' },
+  }),
+  {
+    maxSize: 100,
+    meta: { description: 'Array of connector IDs to associate with the agent.' },
+  }
 );
 
 export function registerAgentRoutes({
@@ -172,6 +203,21 @@ export function registerAgentRoutes({
                   }
                 )
               ),
+              visibility: schema.maybe(
+                schema.oneOf(
+                  [
+                    schema.literal(AgentVisibility.Public),
+                    schema.literal(AgentVisibility.Shared),
+                    schema.literal(AgentVisibility.Private),
+                  ],
+                  {
+                    meta: {
+                      description:
+                        '**Technical Preview; added in 9.4.0.** Optional visibility setting: `public` (any privileged user can read/write), `shared` (any privileged user can read, only owner can write), `private` (only owner can read/write).',
+                    },
+                  }
+                )
+              ),
               configuration: schema.object(
                 {
                   instructions: schema.maybe(
@@ -182,6 +228,15 @@ export function registerAgentRoutes({
                     })
                   ),
                   tools: TOOL_SELECTION_SCHEMA,
+                  skill_ids: schema.maybe(SKILLS_SCHEMA),
+                  enable_elastic_capabilities: schema.maybe(
+                    schema.boolean({
+                      meta: {
+                        description:
+                          'When true, enables built-in Elastic capabilities for the agent.',
+                      },
+                    })
+                  ),
                   workflow_ids: schema.maybe(
                     schema.arrayOf(
                       schema.string({
@@ -193,6 +248,8 @@ export function registerAgentRoutes({
                       { maxSize: 100 }
                     )
                   ),
+                  plugin_ids: schema.maybe(PLUGINS_SCHEMA),
+                  connector_ids: schema.maybe(CONNECTORS_SCHEMA),
                 },
                 {
                   meta: { description: 'Configuration settings for the agent.' },
@@ -288,6 +345,21 @@ export function registerAgentRoutes({
                   }
                 )
               ),
+              visibility: schema.maybe(
+                schema.oneOf(
+                  [
+                    schema.literal(AgentVisibility.Public),
+                    schema.literal(AgentVisibility.Shared),
+                    schema.literal(AgentVisibility.Private),
+                  ],
+                  {
+                    meta: {
+                      description:
+                        '**Technical Preview; added in 9.4.0.** Updated visibility setting: `public` (any privileged user can read/write), `shared` (any privileged user can read, only owner can write), `private` (only owner can read/write).',
+                    },
+                  }
+                )
+              ),
               configuration: schema.maybe(
                 schema.object(
                   {
@@ -300,6 +372,15 @@ export function registerAgentRoutes({
                       })
                     ),
                     tools: schema.maybe(TOOL_SELECTION_SCHEMA),
+                    skill_ids: schema.maybe(SKILLS_SCHEMA),
+                    enable_elastic_capabilities: schema.maybe(
+                      schema.boolean({
+                        meta: {
+                          description:
+                            'When true, enables built-in Elastic capabilities for the agent.',
+                        },
+                      })
+                    ),
                     workflow_ids: schema.maybe(
                       schema.arrayOf(
                         schema.string({
@@ -311,6 +392,8 @@ export function registerAgentRoutes({
                         { maxSize: 100 }
                       )
                     ),
+                    plugin_ids: schema.maybe(PLUGINS_SCHEMA),
+                    connector_ids: schema.maybe(CONNECTORS_SCHEMA),
                   },
                   {
                     meta: { description: 'Updated configuration settings for the agent.' },

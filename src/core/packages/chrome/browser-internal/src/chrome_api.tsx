@@ -11,7 +11,10 @@ import React, { type ReactNode } from 'react';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 import type { RecentlyAccessedService } from '@kbn/recently-accessed';
 import { SidebarServiceProvider } from '@kbn/core-chrome-sidebar-context';
+import { ChromeServiceProvider } from '@kbn/core-chrome-browser-context';
 import type { SidebarStart } from '@kbn/core-chrome-sidebar';
+import type { FeatureFlagsStart } from '@kbn/core-feature-flags-browser';
+import { isNextChrome } from '@kbn/core-chrome-feature-flags';
 import type { InternalChromeStart } from './types';
 import type { ChromeState } from './state/chrome_state';
 import type { NavControlsService } from './services/nav_controls';
@@ -25,16 +28,6 @@ type ProjectNavigationStart = ReturnType<ProjectNavigationService['start']>;
 type DocTitleStart = ReturnType<DocTitleService['start']>;
 type RecentlyAccessedStart = ReturnType<RecentlyAccessedService['start']>;
 
-interface ChromeComponents {
-  getClassicHeader: () => JSX.Element;
-  getProjectHeader: () => JSX.Element;
-  getProjectSideNav: () => JSX.Element;
-  getHeaderBanner: () => JSX.Element;
-  getChromelessHeader: () => JSX.Element;
-  getProjectAppMenu: () => JSX.Element;
-  getSidebar: () => JSX.Element;
-}
-
 export interface ChromeApiDeps {
   state: ChromeState;
   services: {
@@ -44,15 +37,15 @@ export interface ChromeApiDeps {
     docTitle: DocTitleStart;
     projectNavigation: ProjectNavigationStart;
   };
-  components: ChromeComponents;
   sidebar: SidebarStart;
+  featureFlags: FeatureFlagsStart;
 }
 
 export function createChromeApi({
   state,
   services,
-  components,
   sidebar,
+  featureFlags,
 }: ChromeApiDeps): InternalChromeStart {
   const { projectNavigation } = services;
 
@@ -82,19 +75,16 @@ export function createChromeApi({
     setBreadcrumbs: (breadcrumbs, params) =>
       projectNavigation.setProjectBreadcrumbs(breadcrumbs, params),
     getBreadcrumbs$: () => projectNavigation.getProjectBreadcrumbs$(),
+    getProjectHome$: () => projectNavigation.getProjectHome$(),
   };
 
-  return {
-    // Component factories (deprecated)
-    getClassicHeaderComponent: components.getClassicHeader,
-    getProjectHeaderComponent: components.getProjectHeader,
-    getProjectSideNavComponent: components.getProjectSideNav,
-    getHeaderBanner: components.getHeaderBanner,
-    getChromelessHeader: components.getChromelessHeader,
-    getProjectAppMenuComponent: components.getProjectAppMenu,
-    getSidebarComponent: components.getSidebar,
+  const chromeStart: InternalChromeStart = {
     withProvider: (children: ReactNode) => {
-      return <SidebarServiceProvider value={{ sidebar }}>{children}</SidebarServiceProvider>;
+      return (
+        <ChromeServiceProvider value={{ chrome: chromeStart }}>
+          <SidebarServiceProvider value={{ sidebar }}>{children}</SidebarServiceProvider>
+        </ChromeServiceProvider>
+      );
     },
 
     // Sub-services
@@ -107,9 +97,9 @@ export function createChromeApi({
     getIsVisible$: () => state.visibility.isVisible$,
     setIsVisible: state.visibility.setIsVisible,
 
-    // Badge
-    getBadge$: () => state.badge.$,
-    setBadge: state.badge.set,
+    // Badge (delegates to breadcrumbs badge pipeline)
+    getBadge$: () => state.breadcrumbs.legacyBadge.$,
+    setBadge: state.breadcrumbs.legacyBadge.set,
 
     // Footer
     getGlobalFooter$: () => state.globalFooter.$,
@@ -126,6 +116,7 @@ export function createChromeApi({
       }
     },
     getBreadcrumbsAppendExtensions$: () => state.breadcrumbs.appendExtensions.$,
+    getBreadcrumbsAppendExtensionsWithBadges$: () => state.breadcrumbs.appendExtensionsWithBadges$,
     setBreadcrumbsAppendExtension: (extension) => {
       state.breadcrumbs.appendExtensions.addSorted(
         extension,
@@ -148,6 +139,7 @@ export function createChromeApi({
     setHelpSupportUrl: state.help.supportUrl.set,
     getGlobalHelpExtensionMenuLinks$: () => state.help.globalMenuLinks.$,
     registerGlobalHelpExtensionMenuLink: (link) => state.help.globalMenuLinks.add(link),
+    getHelpMenuLinks$: () => services.navControls.getHelpMenuLinks$(),
     setHelpMenuLinks: services.navControls.setHelpMenuLinks,
 
     // Custom Nav Link
@@ -156,16 +148,23 @@ export function createChromeApi({
 
     // Header Banner
     setHeaderBanner: state.headerBanner.set,
+    getHeaderBanner$: () => state.headerBanner.$,
     hasHeaderBanner$: () => hasHeaderBanner$,
+    hasHeaderBanner: () => Boolean(state.headerBanner.get()),
 
     // Chrome Style
     setChromeStyle: state.style.setChromeStyle,
     getChromeStyle$: () => state.style.chromeStyle$,
+    getChromeStyle: () => state.style.chromeStyle.get(),
 
     // Side Nav
     sideNav: {
       getIsCollapsed$: () => state.sideNav.collapsed.$,
+      getIsCollapsed: () => state.sideNav.collapsed.get(),
       setIsCollapsed: state.sideNav.collapsed.set,
+      getWidth$: () => state.sideNav.width.$,
+      getWidth: () => state.sideNav.width.get(),
+      setWidth: state.sideNav.width.set,
     },
 
     // Project Navigation
@@ -173,7 +172,15 @@ export function createChromeApi({
       projectNavigation.getActiveSolutionNavId$() as ReturnType<
         InternalChromeStart['getActiveSolutionNavId$']
       >,
+    getActiveSolutionNavId: () => projectNavigation.getActiveSolutionNavId(),
     project,
+    next: {
+      get isEnabled() {
+        return isNextChrome(featureFlags);
+      },
+    },
     sidebar,
   };
+
+  return chromeStart;
 }

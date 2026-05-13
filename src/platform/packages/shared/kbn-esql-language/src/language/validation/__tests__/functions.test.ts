@@ -15,7 +15,7 @@ import { getNoValidCallSignatureError } from '../../../commands/definitions/util
 import { Location } from '../../../commands/registry/types';
 import { setTestFunctions } from '../../../commands/definitions/utils/test_functions';
 import { setup } from './helpers';
-import { PARAM_TYPES_THAT_SUPPORT_IMPLICIT_STRING_CASTING } from '../../../commands/definitions/utils/expressions';
+import { PARAM_TYPES_THAT_SUPPORT_IMPLICIT_STRING_CASTING } from '../../../commands/definitions/utils/signatures';
 
 describe('function validation', () => {
   afterEach(() => {
@@ -1152,6 +1152,30 @@ describe('function validation', () => {
       await expectErrors('FROM index | EVAL result = CONDITIONAL_MOCK("string", keywordField)', [
         getNoValidCallSignatureError('conditional_mock', ['keyword', 'keyword']),
       ]);
+    });
+
+    it('allows null as a result value in combination with other types', async () => {
+      const { expectErrors } = await setup();
+
+      await expectErrors(
+        'FROM index | EVAL result = CONDITIONAL_MOCK(booleanField, "text", booleanField, null)',
+        []
+      );
+    });
+
+    it('allows null as a result value in combination with other types, being null in the first position', async () => {
+      const { expectErrors } = await setup();
+
+      await expectErrors(
+        'FROM index | EVAL result = CONDITIONAL_MOCK(booleanField, null, booleanField, "text")',
+        []
+      );
+    });
+
+    it('allows null as the elseValue in combination with other types', async () => {
+      const { expectErrors } = await setup();
+
+      await expectErrors('FROM index | EVAL result = CONDITIONAL_MOCK(booleanField, 42, null)', []);
     });
   });
 });

@@ -59,6 +59,8 @@ import { registerAssetInventoryRoutes } from '../lib/asset_inventory/routes';
 import { registerSiemReadinessRoutes } from '../lib/siem_readiness';
 import type { TrialCompanionRoutesDeps } from '../lib/trial_companion/types';
 import { registerDataGeneratorRoutes } from './data_generator/register_data_generator_routes';
+import { registerInitializationRoutes } from '../lib/initialization';
+import { registerAlertAnalysisRoutes } from '../lib/alert_analysis/routes/register_alert_analysis_routes';
 
 export const initRoutes = (
   router: SecuritySolutionPluginRouter,
@@ -143,7 +145,15 @@ export const initRoutes = (
     telemetryDetectionRulesPreviewRoute(router, logger, previewTelemetryReceiver, telemetrySender);
   }
 
-  registerEntityAnalyticsRoutes({ router, config, getStartServices, logger, telemetrySender, ml });
+  registerEntityAnalyticsRoutes({
+    router,
+    config,
+    docLinks,
+    getStartServices,
+    logger,
+    telemetrySender,
+    ml,
+  });
   registerSiemMigrationsRoutes(router, config, logger);
 
   // Security Integrations
@@ -153,9 +163,12 @@ export const initRoutes = (
 
   registerAssetInventoryRoutes({ router, logger });
 
-  registerSiemReadinessRoutes({ router, logger });
+  registerSiemReadinessRoutes({ router, logger, isServerless });
 
   registerTrialCompanionRoutes(trialCompanionDeps);
+
+  registerInitializationRoutes({ router, logger });
+  registerAlertAnalysisRoutes(router);
 
   if (enableDataGeneratorRoutes) {
     registerDataGeneratorRoutes(router, getStartServices);
