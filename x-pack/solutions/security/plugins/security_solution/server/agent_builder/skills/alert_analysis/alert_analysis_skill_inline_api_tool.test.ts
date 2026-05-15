@@ -29,9 +29,6 @@ interface ResultData {
     sourceIps: string[];
     destIps: string[];
   };
-  totalMatched?: number;
-  returnedCount?: number;
-  isTruncated?: boolean;
 }
 
 const getData = (result: ToolHandlerStandardReturn, idx = 0): ResultData =>
@@ -75,6 +72,13 @@ describe('alertAnalysisInlineApiToolSkill', () => {
       expect(inlineTools).toHaveLength(1);
       expect(inlineTools![0].id).toBe('security.alert-analysis.get-related-alerts');
     });
+
+    it('inline tool schema only exposes alertId and timeWindowHours', async () => {
+      const inlineTools = await alertAnalysisInlineApiToolSkill.getInlineTools?.();
+      const tool = inlineTools![0] as BuiltinSkillBoundedTool;
+      const shape = (tool.schema as { shape?: Record<string, unknown> }).shape ?? {};
+      expect(Object.keys(shape)).toEqual(['alertId', 'timeWindowHours']);
+    });
   });
 
   describe('get-related-alerts inline tool handler', () => {
@@ -89,15 +93,7 @@ describe('alertAnalysisInlineApiToolSkill', () => {
     });
 
     const callHandler = async (
-      params: {
-        alertId: string;
-        timeWindowHours?: number;
-        maxResults?: number;
-        hostNames?: string[];
-        userNames?: string[];
-        sourceIps?: string[];
-        destIps?: string[];
-      },
+      params: { alertId: string; timeWindowHours?: number },
       spaceId = 'default'
     ) => {
       return tool.handler(
@@ -106,19 +102,16 @@ describe('alertAnalysisInlineApiToolSkill', () => {
       ) as Promise<ToolHandlerStandardReturn>;
     };
 
-    it('calls findRelatedAlerts with correct params', async () => {
+    it('calls findRelatedAlerts with alertId, alertsIndex, timeWindowHours, and maxResults: 25', async () => {
       findRelatedAlerts.mockResolvedValueOnce(
         makeSuccess({
           message: 'Found 1 related alerts sharing entities with alert alert-123.',
           relatedAlerts: [{ _id: 'rel-1', _index: '.alerts-security.alerts-default' }],
           sourceEntities: { hostNames: ['host-1'], userNames: [], sourceIps: [], destIps: [] },
-          totalMatched: 1,
-          returnedCount: 1,
-          isTruncated: false,
         })
       );
 
-      await callHandler({ alertId: 'alert-123', timeWindowHours: 48, hostNames: ['host-1'] });
+      await callHandler({ alertId: 'alert-123', timeWindowHours: 48 });
 
       expect(findRelatedAlerts).toHaveBeenCalledWith(
         mockEsClient.asCurrentUser,
@@ -126,9 +119,21 @@ describe('alertAnalysisInlineApiToolSkill', () => {
           alertId: 'alert-123',
           alertsIndex: '.alerts-security.alerts-default',
           timeWindowHours: 48,
-          hostNames: ['host-1'],
+          maxResults: 25,
         })
       );
+    });
+
+    it('does not pass entity shortcut params to findRelatedAlerts', async () => {
+      findRelatedAlerts.mockResolvedValueOnce(makeSuccess());
+
+      await callHandler({ alertId: 'alert-123' });
+
+      const callArgs = findRelatedAlerts.mock.calls[0][1] as Record<string, unknown>;
+      expect(callArgs).not.toHaveProperty('hostNames');
+      expect(callArgs).not.toHaveProperty('userNames');
+      expect(callArgs).not.toHaveProperty('sourceIps');
+      expect(callArgs).not.toHaveProperty('destIps');
     });
 
     it('uses the correct space-scoped alerts index', async () => {
@@ -144,7 +149,7 @@ describe('alertAnalysisInlineApiToolSkill', () => {
       );
     });
 
-    it('returns other result with data on success', async () => {
+    it('returns message, sourceEntities, and relatedAlerts only — no surplus metadata', async () => {
       findRelatedAlerts.mockResolvedValueOnce(
         makeSuccess({
           message: 'Found 2 related alerts sharing entities with alert alert-123.',
@@ -153,8 +158,6 @@ describe('alertAnalysisInlineApiToolSkill', () => {
             { _id: 'r2', _index: 'idx' },
           ],
           sourceEntities: { hostNames: ['h1'], userNames: [], sourceIps: [], destIps: [] },
-          totalMatched: 2,
-          returnedCount: 2,
         })
       );
 
@@ -162,8 +165,10 @@ describe('alertAnalysisInlineApiToolSkill', () => {
 
       expect(result.results[0].type).toBe(ToolResultType.other);
       expect(getData(result).relatedAlerts).toHaveLength(2);
-      expect(getData(result).totalMatched).toBe(2);
-      expect(getData(result).isTruncated).toBe(false);
+      expect(getData(result).sourceEntities?.hostNames).toEqual(['h1']);
+      expect(getData(result)).not.toHaveProperty('totalMatched');
+      expect(getData(result)).not.toHaveProperty('returnedCount');
+      expect(getData(result)).not.toHaveProperty('isTruncated');
     });
 
     it('returns error result when findRelatedAlerts returns ok: false', async () => {
@@ -173,18 +178,6 @@ describe('alertAnalysisInlineApiToolSkill', () => {
 
       expect(result.results[0].type).toBe(ToolResultType.error);
       expect(getData(result).message).toBe('Alert not found');
-    });
-
-    it('surfaces isTruncated when results are capped', async () => {
-      findRelatedAlerts.mockResolvedValueOnce(
-        makeSuccess({ totalMatched: 100, returnedCount: 25, isTruncated: true })
-      );
-
-      const result = await callHandler({ alertId: 'alert-123' });
-
-      expect(getData(result).isTruncated).toBe(true);
-      expect(getData(result).totalMatched).toBe(100);
-      expect(getData(result).returnedCount).toBe(25);
     });
   });
 });
