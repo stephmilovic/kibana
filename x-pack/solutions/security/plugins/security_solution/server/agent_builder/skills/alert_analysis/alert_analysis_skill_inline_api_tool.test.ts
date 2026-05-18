@@ -73,11 +73,18 @@ describe('alertAnalysisInlineApiToolSkill', () => {
       expect(inlineTools![0].id).toBe('security.alert-analysis.get-related-alerts');
     });
 
-    it('inline tool schema only exposes alertId and timeWindowHours', async () => {
+    it('inline tool schema exposes alertId, timeWindowHours, and optional entity shortcut params', async () => {
       const inlineTools = await alertAnalysisInlineApiToolSkill.getInlineTools?.();
       const tool = inlineTools![0] as BuiltinSkillBoundedTool;
       const shape = (tool.schema as { shape?: Record<string, unknown> }).shape ?? {};
-      expect(Object.keys(shape)).toEqual(['alertId', 'timeWindowHours']);
+      expect(Object.keys(shape)).toEqual([
+        'alertId',
+        'timeWindowHours',
+        'hostNames',
+        'userNames',
+        'sourceIps',
+        'destIps',
+      ]);
     });
   });
 
@@ -93,7 +100,14 @@ describe('alertAnalysisInlineApiToolSkill', () => {
     });
 
     const callHandler = async (
-      params: { alertId: string; timeWindowHours?: number },
+      params: {
+        alertId: string;
+        timeWindowHours?: number;
+        hostNames?: string[];
+        userNames?: string[];
+        sourceIps?: string[];
+        destIps?: string[];
+      },
       spaceId = 'default'
     ) => {
       return tool.handler(
@@ -124,16 +138,18 @@ describe('alertAnalysisInlineApiToolSkill', () => {
       );
     });
 
-    it('does not pass entity shortcut params to findRelatedAlerts', async () => {
+    it('passes entity shortcut params through to findRelatedAlerts when provided', async () => {
       findRelatedAlerts.mockResolvedValueOnce(makeSuccess());
 
-      await callHandler({ alertId: 'alert-123' });
+      await callHandler({ alertId: 'alert-123', hostNames: ['host-1'], userNames: ['user-1'] });
 
-      const callArgs = findRelatedAlerts.mock.calls[0][1] as Record<string, unknown>;
-      expect(callArgs).not.toHaveProperty('hostNames');
-      expect(callArgs).not.toHaveProperty('userNames');
-      expect(callArgs).not.toHaveProperty('sourceIps');
-      expect(callArgs).not.toHaveProperty('destIps');
+      expect(findRelatedAlerts).toHaveBeenCalledWith(
+        mockEsClient.asCurrentUser,
+        expect.objectContaining({
+          hostNames: ['host-1'],
+          userNames: ['user-1'],
+        })
+      );
     });
 
     it('uses the correct space-scoped alerts index', async () => {

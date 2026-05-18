@@ -46,6 +46,7 @@ Use this skill when:
 ### 2. Find Related Alerts
 - Use 'security.alert-analysis.get-related-alerts' to find alerts sharing entities with the investigated alert
 - Specify the alert ID and an appropriate time window (default 24h, extend to 168h for slow attacks)
+- If you already have entity values (host.name, user.name, source.ip, destination.ip) from a previous tool call, pass them as optional parameters to skip refetching the alert
 - Review the related alerts for patterns: same rule triggering, escalating severity, or multi-stage attack chains
 
 ### 3. Search Security Labs
@@ -96,7 +97,7 @@ Use this skill when:
       id: 'security.alert-analysis.get-related-alerts',
       type: ToolType.builtin,
       description:
-        'Find alerts that share entities (host.name, user.name, source.ip, destination.ip) with a given alert. Returns related alerts within the specified time window.',
+        'Find alerts that share entities (host.name, user.name, source.ip, destination.ip) with a given alert. Returns related alerts within the specified time window. Pass entity values directly if already available to skip refetching the alert.',
       schema: z.object({
         alertId: z.string().describe('The _id of the alert to find related alerts for'),
         timeWindowHours: z
@@ -105,8 +106,32 @@ Use this skill when:
           .max(168)
           .default(24)
           .describe('Time window in hours to search for related alerts (1-168, default 24)'),
+        hostNames: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Optional: host.name values from the alert. If provided along with other entity fields, skips refetching the alert.'
+          ),
+        userNames: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Optional: user.name values from the alert. If provided along with other entity fields, skips refetching the alert.'
+          ),
+        sourceIps: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Optional: source.ip values from the alert. If provided along with other entity fields, skips refetching the alert.'
+          ),
+        destIps: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Optional: destination.ip values from the alert. If provided along with other entity fields, skips refetching the alert.'
+          ),
       }),
-      handler: async ({ alertId, timeWindowHours }, context) => {
+      handler: async ({ alertId, timeWindowHours, hostNames, userNames, sourceIps, destIps }, context) => {
         const alertsIndex = `${DEFAULT_ALERTS_INDEX}-${context.spaceId}`;
 
         const result = await findRelatedAlerts(context.esClient.asCurrentUser, {
@@ -114,6 +139,10 @@ Use this skill when:
           alertsIndex,
           timeWindowHours,
           maxResults: 25,
+          hostNames,
+          userNames,
+          sourceIps,
+          destIps,
         });
 
         if (!result.ok) {
