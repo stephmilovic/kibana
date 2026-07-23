@@ -33,6 +33,8 @@ so the scores are reproducible and cheap.
 | `Technique Hallucination Rate` | Fraction of proposed techniques that are NOT real ATT&CK IDs | Service's own `dropped_unknown_ids` (validated against `@kbn/securitysolution-mitre-catalog`) |
 | `Expected Calibration Error` | Whether the model's `llm_confidence` tracks actual correctness, binned by confidence level | Per-technique confidence vs. ground-truth correctness; raw pairs stashed in `metadata` for offline aggregate ECE (gate: ECE ≤ 0.10, high-conf bin ≥0.80 correct) |
 | `Confidence Calibration (Brier)` | Mean squared error between confidence and correctness (supporting view to ECE) | Per-technique confidence vs. ground-truth correctness |
+| `Extraction Grounding` | Fraction of proposed techniques evidenced in the source report body (not model prior) — catches *correct-but-ungrounded* extractions that drift silently | Report `body_text` + per-technique behavioral cues (PR #35 § 5.4, extraction-time grounding) |
+| `Cost Fan-out Per Unit` | Tokens / tool-calls per report vs. a declared per-unit budget — scheduled-worker cost projected to scale | OTel trace token totals ÷ units processed (PR #35 § 5.2) |
 | `latency` / `inputTokens` / `outputTokens` | Cost/speed regression signals | OTel trace (zero extra LLM cost) |
 
 ## How the per-model scorecard works

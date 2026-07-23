@@ -7,7 +7,7 @@
 
 import type { DefaultEvaluators, EvalsExecutorClient } from '@kbn/evals';
 import type { ToolingLog } from '@kbn/tooling-log';
-import { threatIntelHuntDataset } from './dataset';
+import { threatIntelHuntDataset, GROUNDING_CUES_BY_TECHNIQUE } from './dataset';
 import type { HuntBehaviorClient } from './hunt_behavior_client';
 import type { HuntTaskOutput } from './types';
 import {
@@ -17,7 +17,17 @@ import {
   createHallucinationRateEvaluator,
   createCalibrationEvaluator,
   createEceEvaluator,
+  createGroundingEvaluator,
+  createCostFanoutEvaluator,
 } from './evaluators';
+
+/**
+ * Per-report token budget for the Cost Fan-out evaluator (PR #35 § 5.2). This
+ * is a *scheduled* worker, so per-report token fan-out projected to target
+ * volume is a first-class efficiency gate. Set conservatively for a
+ * single-call structured extraction; raise only with an explicit budget review.
+ */
+const TOKEN_BUDGET_PER_REPORT = 8000;
 
 export type EvaluateThreatIntelHuntDataset = () => Promise<void>;
 
@@ -41,6 +51,12 @@ export function createEvaluateThreatIntelHuntDataset({
       ex.input?.report_id ?? '',
       new Set(ex.output?.techniques ?? []),
     ])
+  );
+
+  // Grounding cues per technique, so the Extraction Grounding evaluator can
+  // check each proposed technique is evidenced in the source body (PR #35 § 5.4).
+  const groundingCuesByTechnique = new Map<string, string[]>(
+    Object.entries(GROUNDING_CUES_BY_TECHNIQUE)
   );
 
   return async function evaluateThreatIntelHuntDataset(): Promise<void> {
@@ -83,6 +99,19 @@ export function createEvaluateThreatIntelHuntDataset({
         createTechniqueAccuracyEvaluator(expectedByReport),
         createEsqlValidityEvaluator(),
         createHallucinationRateEvaluator(),
+        // Grounding — each proposed technique must be evidenced in the source
+        // report body, not model prior (PR #35 § 5.4, extraction-time grounding).
+        createGroundingEvaluator(groundingCuesByTechnique),
+        // Cost — per-report token fan-out vs. a declared budget; this is a
+        // scheduled worker, so scale cost is a first-class gate (PR #35 § 5.2).
+        // The budget check reads `totalTokens` off the task output; per-example
+        // trace token totals are surfaced by @kbn/evals' trace-based evaluators
+        // (inputTokens/outputTokens below) rather than the route response, so
+        // this evaluator returns `unavailable` until those trace tokens are
+        // threaded into the output. It is wired now so the budget gate exists
+        // and activates automatically once the token thread lands — the raw
+        // per-report token counts are already visible via inputTokens/outputTokens.
+        createCostFanoutEvaluator({ tokenBudgetPerUnit: TOKEN_BUDGET_PER_REPORT }),
         // Calibration — ECE is the primary metric (PR #35 § 5.3, gate <= 0.10);
         // Brier retained as a supporting view.
         createEceEvaluator(expectedByReport),

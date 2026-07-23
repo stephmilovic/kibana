@@ -37,7 +37,22 @@ export type HuntExample = Example<HuntReportInput, HuntReportExpected>;
  *
  * To extend: add an entry, keep the body evidence-anchored, and pin the count in
  * `dataset.test.ts`.
+ *
+ * Dataset versioning (see the Watch eval authoring guide, § 6 — dataset
+ * versioning): this corpus is a versioned artifact, not a loose fixture. On any
+ * change to the examples or their labels, bump `DATASET_VERSION`, re-baseline
+ * (scores across versions are not directly comparable), and record the reason.
+ * Every per-model score doc carries this version so a number is always
+ * reproducible against a known corpus.
  */
+
+/**
+ * Version of the golden threat-intel hunt corpus. Bump on any change to the
+ * examples or labels. Surfaced into each score doc's metadata for
+ * reproducibility (a score is only meaningful against a named dataset version).
+ */
+export const DATASET_VERSION = 'threat-intel-hunt-golden-v0';
+
 export const threatIntelHuntDataset: HuntExample[] = [
   {
     input: {
@@ -129,3 +144,27 @@ export const threatIntelHuntDataset: HuntExample[] = [
   },
 ];
 export const REPORTS = threatIntelHuntDataset;
+
+/**
+ * Behavioral surface cues per technique, used by the Extraction Grounding
+ * evaluator (PR #35 § 5.4) to check that a proposed technique is actually
+ * evidenced in the source report body rather than produced from model prior.
+ * Each list is the set of phrases the corpus bodies use to describe the
+ * technique's behavior — a deliberately conservative anchor set. Keep in sync
+ * with the dataset bodies above when adding examples.
+ */
+export const GROUNDING_CUES_BY_TECHNIQUE: Record<string, string[]> = {
+  T1078: ['valid account', 'stolen', 'session token', 'legitimate employee', 'session cookie'],
+  T1566: ['spearphishing', 'phishing', 'attachment', 'malicious attachment', 'invoice'],
+  T1059: ['powershell', 'command interpreter', 'macro executed', 'script'],
+  T1486: ['encrypted for impact', 'ransom', 'encrypt', 'encryption'],
+  T1490: ['shadow copies', 'inhibit system recovery', 'volume shadow'],
+  T1548: ['user account control', 'uac', 'elevate privileges', 'bypass'],
+  T1071: ['command and control', 'c2', 'https', 'application-layer', 'beacon'],
+  T1027: ['obfuscated', 'base64', 'xor', 'packed', 'evade static detection'],
+  T1547: ['registry run key', 'run key', 'relaunches at user logon', 'logon'],
+  T1003: ['lsass', 'credential', 'dump', 'password hash'],
+  T1021: ['lateral', 'remote services', 'moved laterally'],
+  T1053: ['scheduled task', 'run at fixed intervals'],
+  T1057: ['enumerated running processes', 'process discovery', 'queried system information'],
+};

@@ -155,6 +155,166 @@ export function createEsqlValidityEvaluator(): Evaluator {
 }
 
 /**
+ * Extraction-grounding evaluator (PR #35 § 5.4 — Grounding / context provenance).
+ *
+ * The Context Engine framing is *extraction-time* grounding: a Worker persists
+ * a derived claim (here, an extracted ATT&CK technique) and the source data is
+ * not re-read at answer time. So the eval has to prove each persisted claim was
+ * actually evidenced by the source report — not produced from model prior.
+ *
+ * This is deliberately distinct from Technique Accuracy: a technique can be a
+ * *correct* label for the report (matches ground truth) yet be *ungrounded* in
+ * the specific body text the model was given (the model recognized the scenario
+ * from training, not from the evidence). Ungrounded-but-correct extractions are
+ * a calibration/robustness risk: they degrade silently when the input drifts.
+ *
+ * Heuristic, deterministic, no judge LLM: a proposed technique is considered
+ * grounded when the report body contains a recognizable surface cue for it —
+ * the technique id itself, or one of the behavioral keywords the labeled corpus
+ * anchors each technique on. Score = fraction of proposed techniques that are
+ * grounded in the body. Reports the ungrounded ids so a reviewer can inspect.
+ *
+ * Note: this is a floor, not a ceiling — a surface-cue match can be coincidental.
+ * It catches the gross failure (a technique with zero textual anchor in the
+ * body) which is the one that matters for grounding. A stronger span-level
+ * grounding check belongs at L3 once the route returns evidence spans.
+ */
+export function createGroundingEvaluator(
+  groundingCuesByTechnique: Map<string, string[]>
+): Evaluator {
+  return {
+    name: 'Extraction Grounding',
+    kind: 'CODE',
+    evaluate: async ({ input, output }) => {
+      const out = output as HuntTaskOutput | undefined;
+      const body = ((input as { body_text?: string } | undefined)?.body_text ?? '').toLowerCase();
+      const proposed = out?.techniques ?? [];
+
+      if (proposed.length === 0) {
+        return {
+          score: null,
+          label: 'unavailable',
+          explanation: 'No techniques proposed to check for grounding',
+        };
+      }
+      if (!body) {
+        return {
+          score: null,
+          label: 'unavailable',
+          explanation: 'No source body_text available to ground against',
+        };
+      }
+
+      const isGrounded = (techniqueId: string): boolean => {
+        // Direct id mention in the report body.
+        if (body.includes(techniqueId.toLowerCase())) return true;
+        // Parent id mention (a sub-technique grounded by its parent cue).
+        if (body.includes(techniqueId.split('.')[0].toLowerCase())) return true;
+        // Behavioral surface cues the corpus anchors this technique on.
+        const cues =
+          groundingCuesByTechnique.get(techniqueId) ??
+          groundingCuesByTechnique.get(techniqueId.split('.')[0]) ??
+          [];
+        return cues.some((cue) => body.includes(cue.toLowerCase()));
+      };
+
+      const grounded = proposed.filter(isGrounded);
+      const ungrounded = proposed.filter((t) => !grounded.includes(t));
+
+      return {
+        score: grounded.length / proposed.length,
+        explanation:
+          ungrounded.length === 0
+            ? `All ${proposed.length} proposed techniques are grounded in the report body`
+            : `${ungrounded.length}/${proposed.length} proposed techniques are ungrounded in the body (${ungrounded.join(
+                ', '
+              )}) — correct-but-ungrounded is a silent-drift risk`,
+        metadata: { grounded: grounded.length, total: proposed.length, ungrounded },
+      };
+    },
+  };
+}
+
+/**
+ * Cost fan-out-per-unit evaluator (PR #35 § 5.2 — production cost-at-scale).
+ *
+ * For a scheduled / high-volume worker, per-run latency and total tokens are
+ * not the whole cost story: the architecture requires measuring *fan-out per
+ * processed unit* (tokens and tool-calls per report) because a modest per-unit
+ * cost projects to millions of runs/year at target volume. This is the read-side
+ * cost telemetry a shared-infra capability owes — do not rely on platform
+ * billing to surface a runaway scheduled worker.
+ *
+ * This evaluator surfaces the per-report token fan-out from the trace-derived
+ * output and checks it against a declared per-unit budget. It scores 1.0 when
+ * within budget and degrades linearly past it, so a model that is accurate but
+ * economically infeasible at scale is visible before Pilot rather than after.
+ *
+ * `unitsProcessed` defaults to 1 (one report per example). When a single run
+ * fans out over N reports, pass the real N so the metric is per-report, not
+ * per-run. Deterministic — no judge LLM.
+ */
+export function createCostFanoutEvaluator(opts: {
+  tokenBudgetPerUnit: number;
+  toolCallBudgetPerUnit?: number;
+}): Evaluator {
+  const { tokenBudgetPerUnit, toolCallBudgetPerUnit } = opts;
+  return {
+    name: 'Cost Fan-out Per Unit',
+    kind: 'CODE',
+    evaluate: async ({ output }) => {
+      const out = output as (HuntTaskOutput & {
+        totalTokens?: number;
+        toolCalls?: number;
+        unitsProcessed?: number;
+      }) | undefined;
+
+      const totalTokens = out?.totalTokens;
+      if (typeof totalTokens !== 'number' || !Number.isFinite(totalTokens)) {
+        return {
+          score: null,
+          label: 'unavailable',
+          explanation: 'No trace-derived token total available for fan-out cost',
+        };
+      }
+
+      const units = Math.max(1, out?.unitsProcessed ?? 1);
+      const tokensPerUnit = totalTokens / units;
+      const toolCalls = out?.toolCalls;
+      const toolCallsPerUnit =
+        typeof toolCalls === 'number' && Number.isFinite(toolCalls) ? toolCalls / units : undefined;
+
+      // Within budget -> 1.0; linear degrade to 0 at 2x budget.
+      const overshoot = Math.max(0, tokensPerUnit - tokenBudgetPerUnit);
+      const score = Math.max(0, 1 - overshoot / tokenBudgetPerUnit);
+      const withinToolBudget =
+        toolCallBudgetPerUnit === undefined ||
+        toolCallsPerUnit === undefined ||
+        toolCallsPerUnit <= toolCallBudgetPerUnit;
+
+      return {
+        score,
+        explanation: `${tokensPerUnit.toFixed(0)} tokens/unit (budget ${tokenBudgetPerUnit})${
+          toolCallsPerUnit !== undefined
+            ? `, ${toolCallsPerUnit.toFixed(1)} tool-calls/unit${
+                toolCallBudgetPerUnit !== undefined ? ` (budget ${toolCallBudgetPerUnit})` : ''
+              }`
+            : ''
+        }${score >= 1 && withinToolBudget ? ' — within budget' : ' — OVER budget'}`,
+        metadata: {
+          tokensPerUnit,
+          tokenBudgetPerUnit,
+          toolCallsPerUnit,
+          toolCallBudgetPerUnit,
+          unitsProcessed: units,
+          withinToolBudget,
+        },
+      };
+    },
+  };
+}
+
+/**
  * Deterministic safety evaluator: the fraction of technique IDs the model
  * proposed that were NOT real MITRE ATT&CK techniques. The service already
  * validates every extracted ID against `@kbn/securitysolution-mitre-catalog`

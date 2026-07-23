@@ -40,6 +40,13 @@ import type { PersistableHuntSnapshot } from '../services/persist_hunt_findings'
 //   INV-4  Scheduled == still a job -> the worker declares an explicit cadence
 //                                     trigger, so its schedule is itself a
 //                                     testable, reviewable contract.
+//   INV-5  Output validation        -> malformed / empty extraction fails to a
+//                                     visible state, never a silent verdict
+//                                     (Family A / gate A2).
+//   INV-6  Degraded != unchanged     -> a degraded run must not emit high-impact
+//                                     findings as if healthy; provenance
+//                                     survives and high-impact output is
+//                                     suppressed / down-ranked (§ 4.6).
 // ---------------------------------------------------------------------------
 
 const logger = { warn: jest.fn(), debug: jest.fn(), info: jest.fn() } as unknown as Logger;
@@ -269,5 +276,71 @@ describe('INV-5 (Family A / A2) output validation: malformed output fails visibl
     // produce a persisted finding. For now, document the behavior.
     expect(result.attempted).toBe(1);
     expect(create).toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// INV-6 (Family A / § 4.6 degraded -> autonomy reduction): a degraded run must
+// not emit high-impact findings *unchanged*.
+//
+// PR #35 § 4.6 (updated Jul-23): "A degraded capability must suppress or
+// down-rank high-impact proposals, not merely render a distinct status." For a
+// scheduled hunt, a degraded run (stale corpus, ingest fault, a dependency
+// down) that keeps proposing high-severity detections as if healthy is a real
+// safety gap: downstream consumers act on findings whose provenance is a broken
+// run.
+//
+// The persistence layer today writes `hunt_run_status: result.status` onto every
+// finding but does NOT gate on it — a `degraded` run's high-severity behaviors
+// are persisted identically to a `completed` run's, distinguishable only by a
+// tag. That is the gap this test pins: it asserts the CURRENT behavior (degraded
+// high-impact findings persist, only tagged) and documents the target
+// (suppress/down-rank on degradation). When the guard lands, flip the assertion
+// to expect suppression of high-severity findings on a degraded run.
+// ---------------------------------------------------------------------------
+describe('INV-6 (§ 4.6) degraded run must not emit high-impact findings unchanged', () => {
+  const highImpactBehavior = { ...behavior, severity: 'high', risk_score: 90, llm_confidence: 0.95 };
+
+  it('tags the persisted finding with the degraded run status (provenance survives)', async () => {
+    // Provenance MUST survive: a finding from a degraded run has to carry that
+    // status so a consumer can tell it apart from a healthy-run finding.
+    const create = jest.fn();
+    const esClient = { create } as unknown as ElasticsearchClient;
+    const degraded: PersistableHuntSnapshot = {
+      status: 'degraded',
+      report_id: 'report-degraded',
+      tier1: { status: 'no_hits' },
+      tier2: { behaviors: [highImpactBehavior] },
+    };
+    await persistHuntFindings(esClient, logger, { spaceId: 'default', result: degraded, now: NOW });
+    expect(create).toHaveBeenCalled();
+    const call = (create.mock.calls[0]?.[0] ?? {}) as { document?: { hunt_run_status?: string } };
+    expect(call.document?.hunt_run_status).toBe('degraded');
+  });
+
+  it('GAP: persists high-severity findings from a degraded run unchanged (no suppression/down-rank)', async () => {
+    // § 4.6 wants a degraded run to suppress or down-rank high-impact findings.
+    // The persistence layer currently does neither — the high-severity finding
+    // is written with its severity/risk_score intact. This test documents the
+    // gap so a reviewer sees it is a known, tracked shortfall rather than an
+    // oversight. When the guard lands, expect 0 high-severity findings persisted
+    // (or a down-ranked severity) for a degraded run.
+    const create = jest.fn();
+    const esClient = { create } as unknown as ElasticsearchClient;
+    const degraded: PersistableHuntSnapshot = {
+      status: 'degraded',
+      report_id: 'report-degraded-2',
+      tier1: { status: 'no_hits' },
+      tier2: { behaviors: [highImpactBehavior] },
+    };
+    const result = await persistHuntFindings(esClient, logger, {
+      spaceId: 'default',
+      result: degraded,
+      now: NOW,
+    });
+    // GAP: high-impact finding from a degraded run is persisted unchanged.
+    expect(result.attempted).toBe(1);
+    const call = (create.mock.calls[0]?.[0] ?? {}) as { document?: { severity?: string } };
+    expect(call.document?.severity).toBe('high');
   });
 });
