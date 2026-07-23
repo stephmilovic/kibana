@@ -299,7 +299,12 @@ describe('INV-5 (Family A / A2) output validation: malformed output fails visibl
 // to expect suppression of high-severity findings on a degraded run.
 // ---------------------------------------------------------------------------
 describe('INV-6 (§ 4.6) degraded run must not emit high-impact findings unchanged', () => {
-  const highImpactBehavior = { ...behavior, severity: 'high', risk_score: 90, llm_confidence: 0.95 };
+  const highImpactBehavior = {
+    ...behavior,
+    severity: 'high',
+    risk_score: 90,
+    llm_confidence: 0.95,
+  };
 
   it('tags the persisted finding with the degraded run status (provenance survives)', async () => {
     // Provenance MUST survive: a finding from a degraded run has to carry that

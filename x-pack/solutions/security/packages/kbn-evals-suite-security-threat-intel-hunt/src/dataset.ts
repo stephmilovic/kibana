@@ -17,7 +17,14 @@ export interface HuntReportExpected {
   techniques: string[];
 }
 
-export type HuntExample = Example<HuntReportInput, HuntReportExpected>;
+/**
+ * A hunt example with `input` and `output` required (the base `Example` type
+ * makes them optional). Every entry in the golden corpus always populates both,
+ * so this narrowing lets consumers read `example.input`/`example.output`
+ * directly without non-null assertions.
+ */
+export type HuntExample = Example<HuntReportInput, HuntReportExpected> &
+  Required<Pick<Example<HuntReportInput, HuntReportExpected>, 'input' | 'output'>>;
 
 /**
  * Golden threat-intel report corpus for the live-LLM Tier-2 scorecard.

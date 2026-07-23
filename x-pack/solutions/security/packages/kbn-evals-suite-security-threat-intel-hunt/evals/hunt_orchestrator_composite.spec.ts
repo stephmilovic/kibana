@@ -31,7 +31,7 @@
  *   - log                : ToolingLog
  */
 
-import { tags, selectEvaluators, getToolCallSteps } from '@kbn/evals';
+import { tags, selectEvaluators } from '@kbn/evals';
 import type { EvaluationDataset } from '@kbn/evals';
 import { evaluate as base } from '../src/evaluate';
 import { REPORTS } from '../src/dataset';
@@ -47,17 +47,6 @@ const toQuestion = (report: typeof GOLDEN_REPORT, opts?: { tier2_when?: string }
     opts?.tier2_when ? `Use tier2_when='${opts.tier2_when}'. ` : ''
   }${`Report: ${report.input.title}\n${report.input.body_text}`}`;
 
-// ── Evaluators ───────────────────────────────────────────────────────────────
-
-const compositeEvaluators = [
-  'skillInvoked',
-  'correctToolCalled',
-  'trajectory',
-  'inputTokens',
-  'outputTokens',
-  'latency',
-];
-
 // ── Spec ─────────────────────────────────────────────────────────────────────
 
 base.describe(
@@ -68,7 +57,7 @@ base.describe(
       'golden-path: tier1 → tier2 → persist',
       { tag: tags.stateful.classic },
       async ({ agentBuilderClient, esClient, evaluators, log }) => {
-        const selected = selectEvaluators(evaluators, compositeEvaluators);
+        const selected = selectEvaluators(Object.values(evaluators.traceBasedEvaluators));
 
         log.info('[L3] Running golden-path composite test');
 
@@ -78,8 +67,7 @@ base.describe(
           input: toQuestion(GOLDEN_REPORT),
         });
 
-        const steps = getToolCallSteps(response.steps);
-        const toolCalls = steps.filter((s) => s.type === 'tool_call');
+        const toolCalls = response.steps.filter((s) => s.type === 'tool_call');
         const toolIds = new Set(toolCalls.map((s) => s.tool_id).filter(Boolean));
 
         // ── Step 2: skill-invoked gate ────────────────────────────────────────
@@ -119,7 +107,9 @@ base.describe(
               size: 10,
             });
             persistedCount = (searchRes.hits.hits as unknown[]).length;
-            log.info(`[L3] Persisted findings for ${GOLDEN_REPORT.input.report_id}: ${persistedCount}`);
+            log.info(
+              `[L3] Persisted findings for ${GOLDEN_REPORT.input.report_id}: ${persistedCount}`
+            );
           } catch (e) {
             log.warning(`[L3] ES search failed: ${(e as Error).message}`);
           }
@@ -168,7 +158,7 @@ base.describe(
       'tier1-only: short-circuit with tier2_when=never',
       { tag: tags.stateful.classic },
       async ({ agentBuilderClient, esClient, evaluators, log }) => {
-        const selected = selectEvaluators(evaluators, compositeEvaluators);
+        const selected = selectEvaluators(Object.values(evaluators.traceBasedEvaluators));
 
         log.info('[L3] Running tier1-only short-circuit test');
 
@@ -177,8 +167,7 @@ base.describe(
           input: toQuestion(TIER1_ONLY_REPORT, { tier2_when: 'never' }),
         });
 
-        const steps = getToolCallSteps(response.steps);
-        const toolCalls = steps.filter((s) => s.type === 'tool_call');
+        const toolCalls = response.steps.filter((s) => s.type === 'tool_call');
         const toolIds = new Set(toolCalls.map((s) => s.tool_id).filter(Boolean));
 
         const orchestratorInvoked = toolIds.has(THREAT_INTEL_TOOL_IDS.hunt_orchestrator);

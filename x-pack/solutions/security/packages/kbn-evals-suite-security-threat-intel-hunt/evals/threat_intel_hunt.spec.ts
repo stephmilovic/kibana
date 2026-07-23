@@ -33,13 +33,7 @@
  *   project (per model), so swapping the connector changes the scored model.
  */
 
-import {
-  tags,
-  selectEvaluators,
-  getToolCallSteps,
-  type Example,
-  type EvaluationDataset,
-} from '@kbn/evals';
+import { tags, selectEvaluators, type Example, type EvaluationDataset } from '@kbn/evals';
 import { evaluate as base } from '../src/evaluate';
 import { REPORTS } from '../src/dataset';
 import { THREAT_INTEL_TOOL_IDS } from '../src/constants';
@@ -83,20 +77,6 @@ const buildExamples = (): HuntEvalExample[] =>
     },
   }));
 
-// ── Evaluator selection ──────────────────────────────────────────────────────
-
-const allEvaluators = [
-  'skillInvoked',
-  'correctToolCalled',
-  'toolArgsValid',
-  'llmCorrectness',
-  'groundedness',
-  'trajectory',
-  'inputTokens',
-  'outputTokens',
-  'latency',
-];
-
 // ── Spec ─────────────────────────────────────────────────────────────────────
 
 base.describe(
@@ -114,10 +94,10 @@ base.describe(
 
     for (const example of examples) {
       base(
-        example.id,
+        example.id ?? 'hunt-example',
         { tag: tags.stateful.classic },
         async ({ agentBuilderClient, evaluators, log }) => {
-          const selected = selectEvaluators(evaluators, allEvaluators);
+          const selected = selectEvaluators(Object.values(evaluators.traceBasedEvaluators));
 
           log.info(`[L2] Running ${example.id} — ${example.metadata?.category}`);
 
@@ -126,8 +106,7 @@ base.describe(
             input: example.input.question,
           });
 
-          const steps = getToolCallSteps(response.steps);
-          const toolCalls = steps.filter((s) => s.type === 'tool_call');
+          const toolCalls = response.steps.filter((s) => s.type === 'tool_call');
           const toolIds = new Set(toolCalls.map((s) => s.tool_id).filter(Boolean));
           const behaviorStep = toolCalls.find(
             (s) => s.tool_id === THREAT_INTEL_TOOL_IDS.hunt_behavior

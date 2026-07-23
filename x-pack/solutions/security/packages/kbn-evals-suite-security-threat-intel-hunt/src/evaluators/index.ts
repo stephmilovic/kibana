@@ -226,7 +226,9 @@ export function createGroundingEvaluator(
         explanation:
           ungrounded.length === 0
             ? `All ${proposed.length} proposed techniques are grounded in the report body`
-            : `${ungrounded.length}/${proposed.length} proposed techniques are ungrounded in the body (${ungrounded.join(
+            : `${ungrounded.length}/${
+                proposed.length
+              } proposed techniques are ungrounded in the body (${ungrounded.join(
                 ', '
               )}) — correct-but-ungrounded is a silent-drift risk`,
         metadata: { grounded: grounded.length, total: proposed.length, ungrounded },
@@ -263,11 +265,13 @@ export function createCostFanoutEvaluator(opts: {
     name: 'Cost Fan-out Per Unit',
     kind: 'CODE',
     evaluate: async ({ output }) => {
-      const out = output as (HuntTaskOutput & {
-        totalTokens?: number;
-        toolCalls?: number;
-        unitsProcessed?: number;
-      }) | undefined;
+      const out = output as
+        | (HuntTaskOutput & {
+            totalTokens?: number;
+            toolCalls?: number;
+            unitsProcessed?: number;
+          })
+        | undefined;
 
       const totalTokens = out?.totalTokens;
       if (typeof totalTokens !== 'number' || !Number.isFinite(totalTokens)) {
