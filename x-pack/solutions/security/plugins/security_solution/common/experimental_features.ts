@@ -82,6 +82,16 @@ export const allowedExperimentalValues = Object.freeze({
   defendRemoteOutputCcs: false,
 
   /**
+   * AI Agent chat-first endpoint response actions skill (isolate, unisolate, etc.)
+   * Release: TBD
+   *
+   * Enabled by default on this branch to support the BlackHat three-phase demo
+   * (forensic → hunt → response). The skill dispatches destructive endpoint
+   * response actions, each gated by Human-in-the-Loop confirmation cards.
+   */
+  endpointResponseActionsSkill: true,
+
+  /**
    * Enables the Assistant Model Evaluation advanced setting and API endpoint, introduced in `8.11.0`.
    */
   assistantModelEvaluation: false,
@@ -253,6 +263,14 @@ export const allowedExperimentalValues = Object.freeze({
   pciComplianceAgentBuilder: true,
 
   /**
+   * Enables the Endpoint Forensic Analysis Agent Builder skill (DFIR / patient zero / timeline).
+   * Gates skill registration so the feature can ship dark and be enabled per environment.
+   *
+   * Enabled by default on this branch to support the BlackHat three-phase demo.
+   */
+  endpointForensicAnalysisSkill: true,
+
+  /**
    * Enables the investigate-rule Agent Builder skill.
    * Gates skill registration so the feature can ship dark and be enabled per environment.
    */
@@ -333,6 +351,14 @@ export const allowedExperimentalValues = Object.freeze({
    * Default true on this demo-only branch (do not merge).
    */
   threatIntelligenceSkillEnabled: true,
+
+  /**
+   * Enables the Deep Watch forensic specialist skill.
+   * Receives evidence packages from Dark Watch escalations and produces
+   * draft forensic specialist reports for human review.
+   * Default true on this demo-only branch (do not merge).
+   */
+  deepWatchSkillEnabled: true,
 
   /**
    * Enables Promote threat indicators background task.

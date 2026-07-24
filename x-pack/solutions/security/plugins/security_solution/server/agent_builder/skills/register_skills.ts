@@ -18,14 +18,17 @@ import { threatHuntingSkill } from './threat_hunting';
 import { alertAnalysisSkill } from './alert_analysis';
 import { alertTriageSkill } from './alert_triage';
 import type { EntityAnalyticsRoutesDeps } from '../../lib/entity_analytics/types';
+import { createEndpointResponseActionsSkill } from './endpoint_response_actions';
 import { findSecurityMlJobsSkill } from './find_security_ml_jobs';
 import { createInvestigateRuleSkill } from './investigate_rule';
 import { createFindRulesSkill } from './find_rules';
 import { siemReadinessSkill } from './siem_readiness';
 import { entityAnalyticsLeadsSkill } from './entity_analytics_leads';
 import { createRecommendPrebuiltRulesSkill } from './recommend_prebuilt_rules';
-import { threatIntelligenceSkill } from './threat_intelligence';
 import { SIEM_READINESS_AGENT_BUILDER_ENABLED } from '../siem_readiness_feature_flag';
+import { threatIntelligenceSkill } from './threat_intelligence';
+import { endpointForensicAnalysisSkill } from './endpoint_forensic_analysis';
+import { deepWatchForensicsSkill } from './deep_watch_forensics';
 
 interface RegisterSkillsOpts {
   agentBuilder: AgentBuilderPluginSetup;
@@ -99,6 +102,16 @@ export const registerSkills = async ({
     agentBuilder.skills.register(pciComplianceSkill);
   }
 
+  if (experimentalFeatures.endpointForensicAnalysisSkill) {
+    await agentBuilder.skills.register(endpointForensicAnalysisSkill);
+  }
+
+  if (experimentalFeatures.endpointResponseActionsSkill) {
+    agentBuilder.skills.register(
+      createEndpointResponseActionsSkill(options.endpointAppContextService)
+    );
+  }
+
   if (experimentalFeatures.investigateRuleSkill) {
     await agentBuilder.skills.register(createInvestigateRuleSkill());
   }
@@ -107,5 +120,13 @@ export const registerSkills = async ({
   // `threatIntelligenceSkillEnabled` so the feature ships dark until enabled.
   if (experimentalFeatures.threatIntelligenceSkillEnabled) {
     await agentBuilder.skills.register(threatIntelligenceSkill);
+  }
+
+  // Deep Watch forensic specialist skill. Gated behind
+  // `deepWatchSkillEnabled` — ships dark until enabled.
+  // Receives evidence packages from Dark Watch (threat-intelligence) escalations
+  // and produces draft forensic specialist reports for human review.
+  if (experimentalFeatures.deepWatchSkillEnabled) {
+    await agentBuilder.skills.register(deepWatchForensicsSkill);
   }
 };
