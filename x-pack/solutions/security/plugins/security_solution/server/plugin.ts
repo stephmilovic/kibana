@@ -55,6 +55,12 @@ import { initEncryptedSavedObjects, initSavedObjects } from './saved_objects';
 import { AppClientFactory } from './client';
 import type { ConfigType } from './config';
 import { createConfig } from './config';
+import type { ThreatIntelRuntime } from './threat_intel/wiring';
+import {
+  createThreatIntelRuntime,
+  setupThreatIntel,
+  startThreatIntel,
+} from './threat_intel/wiring';
 import { initUiSettings } from './ui_settings';
 import { registerDeprecations } from './deprecations';
 import {
@@ -219,6 +225,9 @@ export class Plugin implements ISecuritySolutionPlugin {
   private defendCpsEnabled = false;
   private platformCpsEnabled = false;
 
+  /** Cross-lifecycle state for the threat-intel supply pipeline. */
+  private threatIntelRuntime: ThreatIntelRuntime = createThreatIntelRuntime();
+
   constructor(context: PluginInitializerContext) {
     const serverConfig = createConfig(context);
 
@@ -320,6 +329,17 @@ export class Plugin implements ISecuritySolutionPlugin {
     });
   }
 
+  /**
+   * Threat-intel supply pipeline setup. Gated on
+   * `threatIntelSupplyEnabled`. Does not install managed workflows (that
+   * lands in the follow-up PR that folds into the existing install-then-ready
+   * path).
+   */
+  /**
+   * Threat-intel supply pipeline start. Captures optional spaces /
+   * inference / actions / taskManager contracts, heals an empty catalog, and
+   * schedules the promote task. Does not install managed workflows.
+   */
   public setup(
     core: SecuritySolutionPluginCoreSetupDependencies,
     plugins: SecuritySolutionPluginSetupDependencies
@@ -846,6 +866,14 @@ export class Plugin implements ISecuritySolutionPlugin {
       registerSecurityManagedWorkflowOwner(plugins.workflowsExtensions);
     }
 
+    setupThreatIntel({
+      experimentalFeatures,
+      plugins,
+      core,
+      logger: this.logger,
+      runtime: this.threatIntelRuntime,
+    });
+
     setupAlertsCapabilitiesSwitcher({
       core,
       logger: this.logger,
@@ -884,6 +912,14 @@ export class Plugin implements ISecuritySolutionPlugin {
         logger,
       });
     }
+
+    startThreatIntel({
+      experimentalFeatures: this.config.experimentalFeatures,
+      plugins,
+      core,
+      logger: this.logger,
+      runtime: this.threatIntelRuntime,
+    });
 
     const savedObjectsClient = new SavedObjectsClient(
       core.savedObjects.createInternalRepository([
