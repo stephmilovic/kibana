@@ -6,6 +6,7 @@
  */
 
 import { extractArticleHtml } from './extract_article';
+import { stripHtml } from './text';
 
 describe('extractArticleHtml', () => {
   it('returns empty string for empty input', () => {
@@ -157,7 +158,10 @@ describe('extractArticleHtml', () => {
     expect(result).toContain('10.0.0.1');
   });
 
-  it('strips <form> and <noscript>', () => {
+  // `noscript` was in this list and is not chrome: it is reader-visible fallback, which
+  // `text.ts` keeps for that reason, so stripping it here made the two stages disagree and
+  // an article serving its body as fallback reached `stripHtml` empty. `form` stays.
+  it('strips <form> but keeps <noscript>', () => {
     const html = `
       <article>
         <form action="/search"><input name="q" /><button>Search</button></form>
@@ -167,7 +171,7 @@ describe('extractArticleHtml', () => {
     `;
     const result = extractArticleHtml(html);
     expect(result).not.toContain('/search');
-    expect(result).not.toContain('Please enable JavaScript');
+    expect(result).toContain('Please enable JavaScript');
     expect(result).toContain('203.0.113.0');
   });
 
@@ -367,5 +371,434 @@ describe('deeply nested markup', () => {
     // The fallback is scoped to RangeError, so a TypeError from a real defect still
     // surfaces instead of being reported as a page that could not be simplified.
     expect(() => extractArticleHtml(undefined as unknown as string)).not.toThrow();
+  });
+});
+
+/**
+ * Simplification must stay cheap on hostile input.
+ *
+ * Every case here was measured before it was fixed. The timing bounds are roughly 100x
+ * the measured cost so they are not sensitive to a contended CI worker, but the
+ * quadratic behavior they replaced overruns them by orders of magnitude.
+ */
+describe('hostile markup stays cheap', () => {
+  const within = (budgetMs: number, fn: () => string): string => {
+    const started = process.hrtime.bigint();
+    const result = fn();
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(budgetMs);
+    return result;
+  };
+
+  // parse5's tree construction is quadratic in depth, and it ran before any output-side
+  // guard could help: 433ms at 10,000 nested elements and 2.2s at 20,000.
+  it('does not pay a quadratic parse on deeply nested markup', () => {
+    const input = `<html><body><article>${'<div>'.repeat(100000)}evil.test</article></body></html>`;
+
+    expect(within(5000, () => extractArticleHtml(input))).toContain('evil.test');
+  });
+
+  // Overlapping candidates each got their own subtree traversal: 770ms from 14KB of
+  // input at 1,600 nested `<article>` elements. The depth guard alone does not cover
+  // this, since candidates can overlap well inside the depth bound.
+  it('scores overlapping candidates without rescanning their subtrees', () => {
+    const filler = '<p>lorem ipsum dolor sit amet consectetur adipiscing elit</p>';
+    const nested = Array.from({ length: 250 }, () => `<article>${filler}`).join('');
+    const input = `<html><body>${nested}evil.test</body></html>`;
+
+    expect(within(5000, () => extractArticleHtml(input))).toContain('evil.test');
+  });
+
+  // A page past the depth bound is returned unsimplified rather than being processed
+  // slowly or dropped. What must not happen is losing the content.
+  it('returns a page past the depth bound unsimplified rather than empty', () => {
+    const input = `<html><body><article>${'<div>'.repeat(1000)}evil.test</article></body></html>`;
+    const result = extractArticleHtml(input);
+
+    expect(result).toContain('evil.test');
+  });
+
+  it('still simplifies a page just inside the depth bound', () => {
+    const input = `<html><body><header>site nav</header><article>${'<div>'.repeat(
+      100
+    )}evil.test</article><footer>foot</footer></body></html>`;
+    const result = extractArticleHtml(input);
+
+    expect(result).toContain('evil.test');
+    expect(result).not.toContain('site nav');
+    expect(result).not.toContain('foot');
+  });
+});
+
+/**
+ * HTML has no self-closing syntax for raw-text elements, so a spec-compliant parser reads
+ * `<script src="x.js"/>` as a script whose body is everything after it. Chrome removal
+ * then deleted the script and the report along with it. RSS payloads are frequently
+ * XHTML, where the form is legitimately self-closing.
+ */
+describe('self-closed raw-text elements', () => {
+  it('keeps the report following a self-closed script', () => {
+    const result = extractArticleHtml(
+      '<html><body><article><script src="x.js"/><p>IOC: evil.test</p></article></body></html>'
+    );
+
+    expect(result).toContain('evil.test');
+  });
+
+  it('keeps the report following a self-closed style', () => {
+    const result = extractArticleHtml(
+      '<html><body><article><style/><p>IOC: evil.test</p></article></body></html>'
+    );
+
+    expect(result).toContain('evil.test');
+  });
+
+  it('still removes a properly terminated script from the article', () => {
+    const result = extractArticleHtml(
+      '<html><body><article><script>var tracker = 1;</script><p>IOC: evil.test</p></article></body></html>'
+    );
+
+    expect(result).toContain('evil.test');
+    expect(result).not.toContain('tracker');
+  });
+});
+
+/**
+ * `$container.find(selectorList)` is quadratic in the container's child count. Measured
+ * through this function: 2.7s at 50,000 children, 10.7s at 100,000, 44s at 200,000, on a
+ * page well inside the byte cap and far too shallow for the depth guard to fire. The same
+ * selector list evaluated from the document root is linear (18ms / 34ms / 80ms), so chrome
+ * is now removed document-wide before the container is chosen.
+ */
+describe('chrome removal cost', () => {
+  it('does not go quadratic in the container child count', () => {
+    const input = `<html><body><article>${'<b>x</b>'.repeat(
+      200000
+    )}<nav>menu</nav></article></body></html>`;
+
+    const started = process.hrtime.bigint();
+    const result = extractArticleHtml(input);
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(5000);
+    expect(result).not.toContain('menu');
+    expect(result).toContain('x');
+  });
+
+  it('stays linear in the number of candidates', () => {
+    const input = `<html><body>${'<article>x</article>'.repeat(80000)}</body></html>`;
+
+    const started = process.hrtime.bigint();
+    extractArticleHtml(input);
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(3000);
+  });
+});
+
+/**
+ * The two stages have to agree about what the document contains. `text.ts` recognizes
+ * CDATA; this file did not, so a feed body carried that way was serialized back out as a
+ * comment and then discarded by `stripHtml`, losing the whole article.
+ */
+describe('CDATA survives article extraction', () => {
+  it('keeps a CDATA article body through extraction', () => {
+    const extracted = extractArticleHtml(
+      '<html><body><article><![CDATA[<p>IOC: evil.test</p>]]></article></body></html>'
+    );
+
+    expect(stripHtml(extracted)).toBe('IOC: evil.test');
+  });
+});
+
+/**
+ * Selectors cannot see inside a CDATA node, so chrome removal missed a `<script>` bundle
+ * carried that way while the scoring walk still counted its bytes as visible text. A teaser
+ * whose CDATA held a large bundle outscored the real report, won selection, and then
+ * collapsed to almost nothing once `stripHtml` expanded the CDATA and dropped the script,
+ * losing the real indicator entirely. CDATA is now unwrapped before the parse so both see
+ * the same document.
+ */
+describe('a teaser inflated by disappearing markup does not win selection', () => {
+  const BUNDLE = 'var x=1;'.repeat(4000);
+
+  // Counting bytes in the DOM was wrong the same way for each of these: markup that the
+  // downstream stage strips still inflated the candidate, so a teaser beat the real report
+  // and then collapsed to a few characters, losing every indicator. Scoring with `stripHtml`
+  // covers all of them, and any representation it learns to strip later.
+  it.each([
+    ['a CDATA script', `<article><![CDATA[<script>${BUNDLE}</script>teaser]]></article>`],
+    ['an entity-encoded script', `<article>&lt;script&gt;${BUNDLE}&lt;/script&gt;teaser</article>`],
+    ['an entity-encoded style', `<article>&lt;style&gt;${BUNDLE}&lt;/style&gt;teaser</article>`],
+    ['an ordinary script', `<article><script>${BUNDLE}</script>teaser</article>`],
+  ])('prefers the real report over a teaser inflated by %s', (_label, teaser) => {
+    const page = `<html><body>${teaser}<main><p>actual report with evil.test</p></main></body></html>`;
+
+    const result = stripHtml(extractArticleHtml(page));
+
+    expect(result).toContain('evil.test');
+    expect(result).not.toContain('var x=1');
+  });
+
+  // Precise scoring is one parse per candidate, so it is bounded. These shapes take the
+  // fallback path and must stay cheap rather than correct.
+  it.each([
+    ['many candidates', `<html><body>${'<article>x</article>'.repeat(80000)}</body></html>`],
+    [
+      'many children',
+      `<html><body><article>${'<b>x</b>'.repeat(200000)}<nav>m</nav></article></body></html>`,
+    ],
+  ])('stays cheap on %s', (_label, page) => {
+    const started = process.hrtime.bigint();
+    extractArticleHtml(page);
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(5000);
+  });
+
+  it('still keeps a CDATA article body that is the real content', () => {
+    const extracted = extractArticleHtml(
+      '<html><body><article><![CDATA[<p>IOC: evil.test</p>]]></article></body></html>'
+    );
+
+    expect(stripHtml(extracted)).toBe('IOC: evil.test');
+  });
+});
+
+/**
+ * `noscript` is reader-visible fallback, not chrome, and `text.ts` keeps it for that reason.
+ * Removing it here made the two stages disagree, so an article serving its body as fallback
+ * reached `stripHtml` empty.
+ */
+describe('noscript is not chrome', () => {
+  it('keeps an article body served as noscript fallback', () => {
+    const result = stripHtml(
+      extractArticleHtml(
+        '<html><body><article><noscript><p>IOC: c2.evil.test</p></noscript></article></body></html>'
+      )
+    );
+
+    expect(result).toBe('IOC: c2.evil.test');
+  });
+
+  it('still removes real chrome from the same article', () => {
+    const result = stripHtml(
+      extractArticleHtml(
+        '<html><body><article><nav>menu</nav><script>t=1</script><p>IOC: evil.test</p></article></body></html>'
+      )
+    );
+
+    expect(result).toBe('IOC: evil.test');
+  });
+});
+
+describe('CDATA stays opaque through article extraction', () => {
+  it('extracts a CDATA article body', () => {
+    expect(
+      stripHtml(
+        extractArticleHtml(
+          '<html><body><article><![CDATA[<p>IOC: evil.test</p>]]></article></body></html>'
+        )
+      )
+    ).toBe('IOC: evil.test');
+  });
+});
+
+/**
+ * Scoring calls `stripHtml`, so a hidden subtree that never reaches a reader must not inflate a
+ * candidate. One holding a large hidden block could otherwise outscore the real report.
+ */
+describe('hidden subtrees do not inflate candidate scores', () => {
+  it('prefers the real report over a teaser inflated by hidden text', () => {
+    const page =
+      `<html><body><article><div hidden>${'x '.repeat(20000)}</div>teaser</article>` +
+      '<main><p>report evil.test</p></main></body></html>';
+
+    expect(stripHtml(extractArticleHtml(page))).toContain('evil.test');
+  });
+});
+
+/**
+ * Page-level chrome is removed only when a narrower container wins.
+ *
+ * Removing it before selection lost report content on any page with no article container:
+ * `<body><header><p>IOC: c2.evil.test</p></header><div>…</div></body>` had the header deleted
+ * and then the body fallback returned only the div. A body-level `header` or `aside` is
+ * unambiguously chrome only when something narrower is the report, and this file's rule is that
+ * a false-keep is noise the section miner handles while a false-strip can drop an indicator.
+ */
+describe('page-level chrome and the body fallback', () => {
+  it.each([
+    [
+      'a body header',
+      '<html><body><header><p>IOC: c2.evil.test</p></header><div>details</div></body></html>',
+    ],
+    [
+      'a body aside',
+      '<html><body><aside><p>IOC: c2.evil.test</p></aside><div>details</div></body></html>',
+    ],
+  ])('keeps report content in %s when no container matches', (_label, html) => {
+    const result = stripHtml(extractArticleHtml(html));
+
+    expect(result).toContain('c2.evil.test');
+    expect(result).toContain('details');
+  });
+
+  it('still removes page chrome when a container wins', () => {
+    const result = stripHtml(
+      extractArticleHtml(
+        '<html><body><header>site nav</header><article><p>report evil.test</p></article><footer>foot</footer></body></html>'
+      )
+    );
+
+    expect(result).toBe('report evil.test');
+  });
+});
+
+/**
+ * A hidden candidate scores zero. Neither scoring path could see the candidate's own `hidden`
+ * attribute: the precise path passes inner HTML, which drops the wrapper, and the length map is
+ * built from text nodes. So a large `<article hidden>` outscored the visible report, and
+ * returning its inner HTML stripped the attribute that marked it non-rendered, so downstream
+ * treated stale hidden text as the report.
+ */
+describe('hidden candidates cannot win selection', () => {
+  const STALE = `${'stale '.repeat(3000)}c2.stale.test`;
+
+  it.each([
+    [
+      'article',
+      `<html><body><article hidden>${STALE}</article><main><p>report evil.test</p></main></body></html>`,
+    ],
+    [
+      'main',
+      `<html><body><main hidden>${STALE}</main><article><p>report evil.test</p></article></body></html>`,
+    ],
+    // Judged on the ancestor chain, not the element. Neither scoring path can see above the
+    // candidate, so one under a hidden ancestor, or inside page-level chrome, has to be excluded
+    // here or it competes on equal terms and its stale text is returned as the report. Removing
+    // the ancestor after selection does not un-select an already-detached container.
+    [
+      'article under a hidden ancestor',
+      `<html><body><div hidden><article>${STALE}</article></div><main><p>report evil.test</p></main></body></html>`,
+    ],
+    [
+      'article under a deep hidden ancestor',
+      `<html><body><div hidden><div><div><article>${STALE}</article></div></div></div><main><p>report evil.test</p></main></body></html>`,
+    ],
+    [
+      'article inside a body header',
+      `<html><body><header><article>${STALE}</article></header><main><p>report evil.test</p></main></body></html>`,
+    ],
+    [
+      'article inside a body footer',
+      `<html><body><footer><article>${STALE}</article></footer><main><p>report evil.test</p></main></body></html>`,
+    ],
+    [
+      'article inside a body aside',
+      `<html><body><aside><article>${STALE}</article></aside><main><p>report evil.test</p></main></body></html>`,
+    ],
+  ])('prefers the visible report over a hidden %s', (_label, html) => {
+    const result = stripHtml(extractArticleHtml(html));
+
+    expect(result).toContain('evil.test');
+    expect(result).not.toContain('c2.stale.test');
+  });
+
+  it('yields nothing when the only candidate is hidden', () => {
+    expect(
+      stripHtml(
+        extractArticleHtml(
+          '<html><body><article hidden>only hidden c2.stale.test</article></body></html>'
+        )
+      )
+    ).toBe('');
+  });
+});
+
+/**
+ * The fallback scorer has to discount hidden descendants too. Excluding only hidden candidates
+ * and hidden ancestors left this path summing them, so once precise scoring is off, past 32
+ * candidates or 2MB, a teaser inflated by a hidden block beat the visible report and `stripHtml`
+ * removed that block after selection.
+ */
+describe('the fallback scorer discounts hidden descendants', () => {
+  it('prefers the visible report when the fallback path is in use', () => {
+    const teaser = `<article><div hidden>${'stale '.repeat(
+      4000
+    )}c2.stale.test</div>teaser</article>`;
+    const page =
+      `<html><body>${teaser}${'<article>x</article>'.repeat(32)}` +
+      '<main><p>report evil.test</p></main></body></html>';
+
+    const result = stripHtml(extractArticleHtml(page));
+
+    expect(result).toContain('evil.test');
+    expect(result).not.toContain('c2.stale.test');
+  });
+});
+
+/**
+ * `template` is non-rendered, like `hidden`, and selection has to know that. Precise scoring and
+ * the returned value both use the candidate's inner HTML, which discards the wrapper that makes
+ * the contents inert, so a `<template class="post-content">` could beat a visible `<main>` and
+ * have its stale contents returned as the report.
+ *
+ * Fourth site for this rule after both text walkers and candidate exclusion, so it now comes
+ * from one shared predicate rather than a fourth copy of the condition.
+ */
+describe('template subtrees cannot win selection', () => {
+  const STALE = `${'stale '.repeat(1000)}c2.stale.test`;
+
+  it.each([
+    [
+      'a template candidate',
+      `<html><body><template class="post-content">${STALE}</template><main><p>report evil.test</p></main></body></html>`,
+    ],
+    [
+      'a candidate inside a template',
+      `<html><body><template><article>${STALE}</article></template><main><p>report evil.test</p></main></body></html>`,
+    ],
+  ])('prefers the visible report over %s', (_label, html) => {
+    const result = stripHtml(extractArticleHtml(html));
+
+    expect(result).toContain('evil.test');
+    expect(result).not.toContain('c2.stale.test');
+  });
+
+  // The fallback scorer needs the same rule, which is the path that took three rounds to cover
+  // for `hidden`.
+  it.each([
+    ['a template', `<template>${'stale '.repeat(4000)}c2.stale.test</template>`],
+    ['a hidden block', `<div hidden>${'stale '.repeat(4000)}c2.stale.test</div>`],
+  ])('discounts %s on the fallback scoring path', (_label, block) => {
+    const page =
+      `<html><body><article>${block}teaser</article>${'<article>x</article>'.repeat(32)}` +
+      '<main><p>report evil.test</p></main></body></html>';
+
+    const result = stripHtml(extractArticleHtml(page));
+
+    expect(result).toContain('evil.test');
+    expect(result).not.toContain('c2.stale.test');
+  });
+});
+
+/**
+ * Candidate scoring shares the non-rendered rule, so an iframe-heavy teaser must not outweigh the
+ * visible report on either scoring path.
+ */
+describe('iframe contents do not inflate candidate scores', () => {
+  it('prefers the visible report over a teaser inflated by an iframe', () => {
+    const page =
+      `<html><body><article><iframe>${'stale '.repeat(
+        4000
+      )}c2.stale.test</iframe>teaser</article>` +
+      `${'<article>x</article>'.repeat(32)}<main><p>report evil.test</p></main></body></html>`;
+
+    const result = stripHtml(extractArticleHtml(page));
+
+    expect(result).toContain('evil.test');
+    expect(result).not.toContain('c2.stale.test');
   });
 });

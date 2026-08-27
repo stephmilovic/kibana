@@ -749,3 +749,1014 @@ describe('markup that only a parser reads correctly', () => {
     });
   });
 });
+
+/**
+ * Inline markup must not create a token boundary.
+ *
+ * Threat reports split indicators across inline formatting constantly, and the regex
+ * implementation could not tell an inline element from a block one: it substituted a
+ * space for every tag, so `c2.<strong>evil</strong>.test` reached IOC extraction as
+ * `c2. evil .test` and the domain was never matched. Preserved here as an allowlist, so
+ * an unknown or custom element still yields a boundary; a spurious boundary splits one
+ * token, a missing one merges two indicators into an unextractable value.
+ */
+describe('inline markup does not split tokens', () => {
+  it.each([
+    ['strong inside a domain', '<p>c2.<strong>evil</strong>.test</p>', 'c2.evil.test'],
+    ['bold separator', '<p>evil<b>.</b>com</p>', 'evil.com'],
+    ['span mid-token', '<p>evi<span>l</span>.com</p>', 'evil.com'],
+    ['code mid-token', '<p>evil<code>.</code>com</p>', 'evil.com'],
+    ['anchor mid-token', '<p>c2.<a href="http://x">evil</a>.test</p>', 'c2.evil.test'],
+  ])('keeps %s intact', (_label, html, expected) => {
+    expect(stripHtml(html)).toBe(expected);
+  });
+
+  it.each([
+    ['paragraphs', '<p>evil.com</p><p>bad.net</p>'],
+    ['table cells', '<tr><td>evil.com</td><td>bad.net</td></tr>'],
+    ['list items', '<ul><li>evil.com<li>bad.net</ul>'],
+    ['line breaks', 'evil.com<br>bad.net'],
+    ['divs', '<div>evil.com</div><div>bad.net</div>'],
+    ['comments', 'evil.com<!-- x -->bad.net'],
+    ['unknown elements', '<my-widget>evil.com</my-widget><my-widget>bad.net</my-widget>'],
+  ])('still separates %s', (_label, html) => {
+    expect(stripHtml(html)).toBe('evil.com bad.net');
+  });
+
+  it('keeps inline content joined inside a table cell', () => {
+    expect(htmlToStructured('<tr><td>evi<span>l</span>.com</td><td>bad.net</td></tr>')).toBe(
+      '| evil.com | bad.net |'
+    );
+  });
+});
+
+/**
+ * CDATA carries an HTML document, not a comment.
+ *
+ * HTML treats `<![CDATA[ ... ]]>` as a bogus comment, which is correct for a web page and
+ * wrong for a feed: RSS and Atom use it precisely to ship article content. Read as a
+ * comment, the entire body was discarded and the report reached enrichment empty.
+ */
+describe('CDATA payloads', () => {
+  it('extracts text from a CDATA article body', () => {
+    expect(stripHtml('<description><![CDATA[<p>IOC: evil.test</p>]]></description>')).toBe(
+      'IOC: evil.test'
+    );
+  });
+
+  it('keeps structure from a CDATA article body', () => {
+    expect(
+      htmlToStructured(
+        '<description><![CDATA[<h2>Indicators of Compromise</h2><p>evil.test</p>]]></description>'
+      )
+    ).toBe('## Indicators of Compromise\nevil.test');
+  });
+
+  it('preserves table cell boundaries inside CDATA', () => {
+    expect(
+      htmlToStructured(
+        '<description><![CDATA[<tr><td>evil.com</td><td>bad.net</td></tr>]]></description>'
+      )
+    ).toBe('| evil.com | bad.net |');
+  });
+
+  // The payload is parsed, so script bodies inside it are removed as elements rather than
+  // surfacing as text that extraction would mine for IOCs.
+  it('removes a script carried inside CDATA', () => {
+    expect(stripHtml('<description><![CDATA[<script>bad()</script>ok]]></description>')).toBe('ok');
+  });
+
+  // Enabling CDATA recognition must not turn ordinary comments into content.
+  it('still discards ordinary comments', () => {
+    expect(stripHtml('visible<!-- hidden > c2.evil.test -->text')).toBe('visible text');
+  });
+});
+
+/**
+ * Escaped markup is also how a report displays markup on purpose.
+ *
+ * A single decode cannot tell an entity-encoded document from a snippet the author chose
+ * to show, so re-parse eligibility is decided from whether the input brought markup of
+ * its own. Re-parsing unconditionally deleted the escaped script in a `<code>` block and
+ * with it the IOC the report was published to communicate.
+ */
+describe('re-parsing entity-encoded markup', () => {
+  it('keeps an escaped snippet displayed inside real markup', () => {
+    expect(
+      stripHtml(`<code>&lt;script&gt;fetch('https://c2.evil.test')&lt;/script&gt;</code>`)
+    ).toBe(`<script>fetch('https://c2.evil.test')</script>`);
+  });
+
+  it('still decodes an entity-encoded document', () => {
+    expect(stripHtml('&lt;p&gt;evil.test&lt;/p&gt;')).toBe('evil.test');
+  });
+
+  it('still removes a script from an entity-encoded document', () => {
+    expect(stripHtml('&lt;script&gt;fetch("http://c2.evil.test")&lt;/script&gt;ok')).toBe('ok');
+  });
+
+  it('leaves prose mentioning an unclosed tag alone', () => {
+    expect(stripHtml('use &lt;script&gt; carefully')).toBe('use <script> carefully');
+  });
+});
+
+/**
+ * The structured walker has to default unknown elements to a boundary for the same reason
+ * the plain-text walker does. Treating them as inline merged separate indicators, and
+ * vendor web components make that common.
+ */
+describe('structured output boundaries for unknown elements', () => {
+  it('separates adjacent custom elements', () => {
+    expect(
+      htmlToStructured('<h2>IOCs</h2><ioc-value>evil.com</ioc-value><ioc-value>bad.net</ioc-value>')
+    ).toBe('## IOCs\nevil.com\nbad.net');
+  });
+
+  it('still joins inline markup inside a paragraph', () => {
+    expect(htmlToStructured('<h2>IOCs</h2><p>c2.<strong>evil</strong>.test</p>')).toBe(
+      '## IOCs\nc2.evil.test'
+    );
+  });
+});
+
+/**
+ * The self-closing normalizer runs on every page before the parser, so its own cost has
+ * to stay linear. The regex form restarted at every `<script` and spent its full
+ * attribute allowance before failing: about 293 character checks per input byte, or
+ * roughly 4.5 seconds at the 10MB cap. `'<script>'` openers exit that regex immediately
+ * at the `>` and never exercised the path, which is why the earlier adversarial test
+ * missed it.
+ */
+describe('self-closing normalization stays linear', () => {
+  it('handles many unterminated openers cheaply', () => {
+    const input = '<script'.repeat(512000);
+    const started = process.hrtime.bigint();
+    stripHtml(input);
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(400);
+  });
+
+  it('does not end a tag at a > inside a quoted attribute', () => {
+    expect(stripHtml('<script src="a>b.js"/>kept')).toBe('kept');
+  });
+
+  it('does not treat a longer element name as a raw-text tag', () => {
+    expect(stripHtml('<scriptfoo>not a script</scriptfoo>')).toBe('not a script');
+  });
+
+  it('still normalizes a self-closed script and style', () => {
+    expect(stripHtml('<article><script src="x.js"/><p>IOC: evil.test</p></article>')).toBe(
+      'IOC: evil.test'
+    );
+    expect(stripHtml('<article><style/><p>IOC: evil.test</p></article>')).toBe('IOC: evil.test');
+  });
+});
+
+/**
+ * A `<script/>`-looking token inside a raw-text body is not a tag.
+ *
+ * Normalizing it inserted a closing tag inside the outer element, which ended that
+ * element early and spilled the remainder of the script or stylesheet into `body_text`.
+ * That is a false-IOC injection primitive, not cosmetic noise: the escaping suffix
+ * carries whatever URL the attacker put after it, and extraction then publishes it as a
+ * real indicator.
+ */
+describe('self-closing normalization respects raw-text bodies', () => {
+  it('does not let a script body escape via a self-closing string literal', () => {
+    const result = stripHtml(
+      '<script>const x="<script/>"; fetch("https://false-ioc.test")</script><p>safe</p>'
+    );
+
+    expect(result).toBe('safe');
+    expect(result).not.toContain('false-ioc.test');
+  });
+
+  it('does not let a style body escape the same way', () => {
+    const result = stripHtml(
+      '<style>a{content:"<style/>"} .x{background:url(https://false-ioc.test/a.png)}</style><p>safe</p>'
+    );
+
+    expect(result).toBe('safe');
+    expect(result).not.toContain('false-ioc.test');
+  });
+
+  it('discards an unterminated script body rather than emitting it', () => {
+    expect(stripHtml('<script>fetch("https://false-ioc.test")')).toBe('');
+  });
+
+  // Skipping raw-text bodies must not stop the normalizer finding later candidates.
+  it('still normalizes a self-closed script that follows a real one', () => {
+    expect(stripHtml('<script>var a=1;</script><script src="y.js"/><p>keep.test</p>')).toBe(
+      'keep.test'
+    );
+  });
+});
+
+/**
+ * Custom and namespaced element names are exactly what vendor feeds encode, so the
+ * residual-tag probe has to recognize them or their tags leak into plain text and the
+ * structured renderer never reaches its custom-element boundaries.
+ */
+describe('entity-encoded custom elements', () => {
+  it('re-parses an encoded custom element', () => {
+    expect(stripHtml('&lt;ioc-value&gt;evil.com&lt;/ioc-value&gt;')).toBe('evil.com');
+  });
+
+  it('re-parses an encoded namespaced element', () => {
+    expect(stripHtml('&lt;ns:tag&gt;evil.com&lt;/ns:tag&gt;')).toBe('evil.com');
+  });
+
+  it('applies custom-element boundaries after re-parsing', () => {
+    expect(
+      htmlToStructured(
+        '&lt;ioc-value&gt;evil.com&lt;/ioc-value&gt;&lt;ioc-value&gt;bad.net&lt;/ioc-value&gt;'
+      )
+    ).toBe('evil.com\nbad.net');
+  });
+
+  // The wider name pattern must not defeat the guard that protects displayed markup.
+  it('still leaves an encoded custom element displayed inside real markup', () => {
+    expect(stripHtml('<code>&lt;ioc-value&gt;x&lt;/ioc-value&gt;</code>')).toBe(
+      '<ioc-value>x</ioc-value>'
+    );
+  });
+});
+
+/**
+ * Truncation counts UTF-16 code units, so a cap landing inside a surrogate pair used to
+ * keep the high half alone. An unpaired surrogate renders as a replacement character and
+ * is not valid UTF-8 for anything reading the field downstream.
+ */
+describe('truncate never splits a surrogate pair', () => {
+  const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+
+  it.each([
+    ['cap inside a pair', 'a\u{1F600}b', 3],
+    ['cap after a pair', 'a\u{1F600}b', 4],
+    ['leading pair', '\u{1F600}\u{1F600}', 3],
+    ['several pairs', '\u{1F600}\u{1F600}\u{1F600}', 5],
+    ['pair at the very cap', 'a\u{1F600}', 2],
+  ])('emits no lone surrogate: %s', (_label, input, cap) => {
+    const result = truncate(input, cap);
+
+    expect(LONE_SURROGATE.test(result)).toBe(false);
+    expect(result.length).toBeLessThanOrEqual(cap);
+  });
+
+  it('drops the orphaned half rather than the whole character before it', () => {
+    expect(truncate('a\u{1F600}b', 3)).toBe('a…');
+  });
+});
+
+/**
+ * A raw-text close tag has to end at a tag boundary.
+ *
+ * Matching any `</script` prefix meant `</scriptfoo>` looked like the close, so the scan
+ * resumed inside a body the parser still considers open and a later `<script/>` there was
+ * rewritten, letting the suffix escape as a false IOC again. Trailing junk after the name
+ * is legal and does close the element, so the test is the character after the name.
+ */
+describe('raw-text close tags must end at a tag boundary', () => {
+  it('does not accept a longer element name as the close tag', () => {
+    const result = stripHtml(
+      '<script>const x="</scriptfoo><script/>"; fetch("https://false-ioc.test")</script><p>safe</p>'
+    );
+
+    expect(result).toBe('safe');
+    expect(result).not.toContain('false-ioc.test');
+  });
+
+  it('does not accept a longer style name either', () => {
+    const result = stripHtml(
+      '<style>a{c:"</stylefoo><style/>"} .x{background:url(https://false-ioc.test/a.png)}</style><p>safe</p>'
+    );
+
+    expect(result).toBe('safe');
+    expect(result).not.toContain('false-ioc.test');
+  });
+
+  // Per spec a close tag may carry trailing junk and still close the element, so the
+  // stricter check must not reject these.
+  it.each([
+    ['trailing attribute junk', '<script>a=1</script foo><p>safe</p>'],
+    ['tab before the bracket', '<script>a=1</script\t><p>safe</p>'],
+    ['slash before the bracket', '<script>a=1</script/><p>safe</p>'],
+  ])('still treats %s as a close tag', (_label, html) => {
+    expect(stripHtml(html)).toBe('safe');
+  });
+
+  // The rejection path searches forward, so it must not become quadratic.
+  it('stays linear over many non-closing prefix matches', () => {
+    const input = `<script>${'</scriptfoo>'.repeat(320000)}`;
+    const started = process.hrtime.bigint();
+    stripHtml(input);
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(1500);
+  });
+});
+
+/**
+ * htmlparser2 ends an end tag at the first `>` and rejects a trailing slash, where the
+ * spec and parse5 both read the junk and close the element. Both divergences lost or
+ * leaked content, so the normalizer rewrites a junk-carrying raw-text end tag to its
+ * plain form before parsing. Semantically free, since the junk is ignored either way.
+ */
+describe('raw-text end tags carrying junk', () => {
+  // `</script foo="a>URL">` closed at the `>` inside the attribute value, spilling the
+  // rest of the end tag into body_text with an attacker-chosen URL in it.
+  it.each([
+    ['double-quoted attribute', '<script>a=1</script foo="a>https://false-ioc.test/x"><p>safe</p>'],
+    ['single-quoted attribute', "<script>a=1</script foo='a>https://false-ioc.test/y'><p>safe</p>"],
+    ['style element', '<style>a{b:1}</style foo="a>https://false-ioc.test/s"><p>safe</p>'],
+  ])('does not end the tag at a > inside a quoted attribute: %s', (_label, html) => {
+    const result = stripHtml(html);
+
+    expect(result).toBe('safe');
+    expect(result).not.toContain('false-ioc.test');
+  });
+
+  // `</script/>` kept the element open and swallowed the remainder of the document.
+  it.each([
+    ['trailing slash', '<script>a=1</script/><p>safe</p>'],
+    ['space then slash', '<script>a=1</script /><p>safe</p>'],
+    ['style trailing slash', '<style>a{b:1}</style/><p>safe</p>'],
+  ])('still closes the element: %s', (_label, html) => {
+    expect(stripHtml(html)).toBe('safe');
+  });
+
+  it('leaves an ordinary close tag untouched', () => {
+    expect(stripHtml('<p>a</p><script>x</script><p>b</p><script>y</script><p>c</p>')).toBe('a b c');
+  });
+
+  it('stays linear over many junk-carrying end tags', () => {
+    const input = '<script>a</script foo="x">'.repeat(150000);
+    const started = process.hrtime.bigint();
+    stripHtml(input);
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(1500);
+  });
+});
+
+/**
+ * An end tag may legally carry junk, and the raw-parser path normalizes that form, so the
+ * probe that decides whether to re-parse an entity-encoded document has to accept it too or
+ * the script body stays in body_text.
+ */
+describe('encoded documents whose end tag carries junk', () => {
+  it('re-parses a bare document with a junk-carrying close tag', () => {
+    const result = stripHtml(
+      '&lt;script&gt;fetch("https://false-ioc.test")&lt;/script foo&gt;safe'
+    );
+
+    expect(result).toBe('safe');
+    expect(result).not.toContain('false-ioc.test');
+  });
+});
+
+/**
+ * `String.prototype.toLowerCase` is not length-preserving: `İ` becomes two code units. The
+ * scanner took offsets from a lowercased copy and applied them to the original, so one such
+ * character anywhere in the page shifted every later offset, the enclosing-element check
+ * read the wrong character, and a fake `<script/>` inside a real script body was rewritten,
+ * letting the suffix escape as a false IOC.
+ */
+describe('non-ASCII characters do not shift scanner offsets', () => {
+  it('keeps a script body contained when the page contains a dotted capital I', () => {
+    const result = stripHtml(
+      'İ<script>const x="<script/>"; fetch("https://false-ioc.test")</script><p>safe</p>'
+    );
+
+    expect(result).not.toContain('false-ioc.test');
+    expect(result).toContain('safe');
+  });
+
+  it.each([['İ'], ['ẛ'], ['ΐ']])('still normalizes a self-closed script after %s', (prefix) => {
+    expect(
+      stripHtml(`${prefix}<article><script src="x.js"/><p>IOC: evil.test</p></article>`)
+    ).toContain('IOC: evil.test');
+  });
+
+  it('still handles uppercase raw-text tags', () => {
+    expect(stripHtml('<SCRIPT>bad()</SCRIPT>ok')).toBe('ok');
+    expect(stripHtml('<SCRIPT SRC="x.js"/><P>IOC: evil.test</P>')).toBe('IOC: evil.test');
+  });
+});
+
+/**
+ * The parse cap counts UTF-16 code units, so it could split a surrogate pair one layer
+ * earlier than `truncate` and put an unpaired surrogate into body_text.
+ */
+describe('the parse cap does not split a surrogate pair', () => {
+  const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+
+  it('emits no lone surrogate when the cap lands mid-pair', () => {
+    const result = stripHtml(`${'a'.repeat(MAX_PARSE_BYTES - 1)}\u{1F600}x`);
+
+    expect(LONE_SURROGATE.test(result)).toBe(false);
+  });
+});
+
+/**
+ * CDATA payloads are expanded into the current walk, not by re-entering the parser.
+ *
+ * Recursing undid the iterative guarantee the rest of this file maintains. Malformed
+ * nesting was quadratic and then fatal: 10ms at 200 openers, 740ms at 2,000, `RangeError`
+ * at 20,000. It also walked the payload with href-lifting forced off and, in the structured
+ * renderer, with section state reset to prose, so an anchor inside CDATA under an IOC
+ * heading lost the href that was the indicator.
+ */
+describe('CDATA expansion is bounded and inherits walk state', () => {
+  it.each([
+    ['200 openers', 200],
+    ['20000 openers', 20000],
+    ['100000 openers', 100000],
+  ])('does not overflow or go quadratic on %s', (_label, count) => {
+    const input = `${'<![CDATA['.repeat(count)}x]]>`;
+
+    const started = process.hrtime.bigint();
+    expect(() => stripHtml(input)).not.toThrow();
+    expect(() => htmlToStructured(input)).not.toThrow();
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(3000);
+  });
+
+  // Past the bound the payload is dropped, not emitted. Emitting unparsed markup put a
+  // script body and its URL into body_text as an extractable indicator.
+  it.each([[1], [2], [4], [5], [6], [100]])(
+    'never emits unparsed markup at %s levels of nesting',
+    (depth) => {
+      const input = `${'<![CDATA['.repeat(
+        depth
+      )}<script>fetch("https://false-ioc.test")</script>safe]]>`;
+
+      expect(stripHtml(input)).not.toContain('false-ioc.test');
+      expect(htmlToStructured(input)).not.toContain('false-ioc.test');
+    }
+  );
+
+  it('keeps the payload at legitimate nesting depth', () => {
+    expect(stripHtml('<![CDATA[<script>fetch("https://false-ioc.test")</script>safe]]>')).toBe(
+      'safe'
+    );
+  });
+
+  it('inherits the IOC section so an anchor inside CDATA keeps its href', () => {
+    expect(
+      htmlToStructured('<h2>IOCs</h2><![CDATA[<a href="https://c2.evil.test/x">indicator</a>]]>')
+    ).toBe('## IOCs\nindicator https://c2.evil.test/x');
+  });
+
+  it('inherits a references section too', () => {
+    expect(
+      htmlToStructured('<h2>References</h2><![CDATA[<a href="https://r.test/y">cite</a>]]>')
+    ).toBe('## References\ncite https://r.test/y');
+  });
+
+  // Prose sections deliberately do not lift, and inheriting state must not change that.
+  it('does not lift hrefs for CDATA under a prose heading', () => {
+    expect(
+      htmlToStructured('<h2>Analysis</h2><![CDATA[<a href="https://x.test/y">link</a>]]>')
+    ).toBe('## Analysis\nlink');
+  });
+
+  // CDATA content is literal, so a feed that encoded its body and also wrapped it in CDATA
+  // arrives still encoded after one parse.
+  it.each([
+    [
+      'a script',
+      '<![CDATA[&lt;script&gt;fetch("https://false-ioc.test")&lt;/script&gt;safe]]>',
+      'safe',
+    ],
+    ['a paragraph', '<![CDATA[&lt;p&gt;evil.com&lt;/p&gt;]]>', 'evil.com'],
+  ])('re-parses %s that was entity-encoded inside CDATA', (_label, html, expected) => {
+    const result = stripHtml(html);
+
+    expect(result).toBe(expected);
+    expect(result).not.toContain('false-ioc.test');
+  });
+});
+
+/**
+ * A raw-text opener is only an opener where the document is actually in markup context.
+ *
+ * Identifying one from the bytes after `<` alone meant `<!-- <script> -->` registered as a
+ * real opener. It has no matching close, so the scan ran to end of input and never
+ * normalized the genuine `<script/>` after it; the parser then read the following paragraph
+ * as script content and the whole report extracted to nothing. The scanner now skips
+ * comments, CDATA sections and directives as whole regions, and skips ordinary tags whole
+ * so a `<script/>` inside one of their attribute values is not mistaken for a tag.
+ */
+describe('raw-text openers in non-markup context', () => {
+  it.each([
+    ['inside a comment', '<!-- <script> --><script/><p>IOC: evil.test</p>'],
+    ['style inside a comment', '<!-- <style> --><style/><p>IOC: evil.test</p>'],
+    ['inside a CDATA section', '<![CDATA[<script>]]><script/><p>IOC: evil.test</p>'],
+    ['inside an attribute value', '<p title="<script/>">IOC: evil.test</p>'],
+    ['no preceding context', '<script/><p>IOC: evil.test</p>'],
+  ])('still finds the real indicator with an opener %s', (_label, html) => {
+    expect(stripHtml(html)).toContain('IOC: evil.test');
+  });
+
+  it('still removes a genuine terminated script', () => {
+    const result = stripHtml('<script>tracker=1</script><p>IOC: evil.test</p>');
+
+    expect(result).toBe('IOC: evil.test');
+    expect(result).not.toContain('tracker');
+  });
+
+  // Skipping regions must not reopen the escape the raw-text skip exists to prevent.
+  it.each([
+    [
+      'a string literal',
+      '<script>const x="<script/>"; fetch("https://false-ioc.test")</script><p>safe</p>',
+    ],
+    [
+      'a bogus close then a literal',
+      '<script>const x="</scriptfoo><script/>"; fetch("https://false-ioc.test")</script><p>safe</p>',
+    ],
+  ])('keeps a script body contained through %s', (_label, html) => {
+    const result = stripHtml(html);
+
+    expect(result).toBe('safe');
+    expect(result).not.toContain('false-ioc.test');
+  });
+
+  // An unterminated tag means no `>` exists from that point on, so no later tag can be
+  // complete and the scan stops. Retrying from the next character rescanned the whole
+  // remaining input per position, which hung the suite outright at 512,000 openers.
+  it('stays linear when a tag never terminates', () => {
+    const started = process.hrtime.bigint();
+    stripHtml(`<p title="${'a'.repeat(1000000)}`);
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(400);
+  });
+});
+
+/**
+ * Without any enclosing element there is no context, so a residual closing tag is the only
+ * signal a decoded payload was entity-encoded markup. Void elements never close, so a body
+ * of only void elements, or one truncated before its close tag, has no such signal and stays
+ * literal — same as prose that merely mentions a tag.
+ */
+describe('bodies without a closing tag stay literal without one', () => {
+  it('re-parses a CDATA payload of only void elements', () => {
+    expect(stripHtml('<![CDATA[evil.com&lt;br/&gt;bad.net]]>')).toBe('evil.com bad.net');
+  });
+
+  it.each([
+    ['a bare void element', 'evil.com&lt;br/&gt;bad.net', 'evil.com<br/>bad.net'],
+    ['prose mentioning a tag', 'use &lt;br/&gt; carefully', 'use <br/> carefully'],
+    ['a snippet displayed in code', '<code>&lt;br/&gt;</code>', '<br/>'],
+  ])('leaves %s alone', (_label, html, expected) => {
+    expect(stripHtml(html)).toBe(expected);
+  });
+
+  // The walker reaches this path through `inlineTextOf`, which walks CDATA by calling back
+  // into it, so decoding before the markup check made the pair unboundedly recursive.
+  it('does not recurse on nested CDATA', () => {
+    const started = process.hrtime.bigint();
+    expect(() => stripHtml(`${'<![CDATA['.repeat(1000)}x]]>`)).not.toThrow();
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(2000);
+  });
+});
+
+describe('escaped markup amid feed-shaped structural nesting', () => {
+  // Everything the previous rounds established has to survive amid feed-shaped tag names,
+  // which this file no longer treats specially.
+  it.each([
+    [
+      'a text-typed atom summary',
+      '<feed><entry><title>T</title><summary type="text">Uses &lt;script&gt; c2.evil.test</summary></entry></feed>',
+      'T Uses <script> c2.evil.test',
+    ],
+    [
+      'a snippet displayed in code',
+      '<code>&lt;script&gt;fetch("https://c2.evil.test")&lt;/script&gt;</code>',
+      '<script>fetch("https://c2.evil.test")</script>',
+    ],
+    ['prose mentioning a tag', 'use &lt;br/&gt; carefully', 'use <br/> carefully'],
+    [
+      'a CDATA body',
+      '<description><![CDATA[<p>IOC: evil.test</p>]]></description>',
+      'IOC: evil.test',
+    ],
+  ])('still preserves %s', (_label, html, expected) => {
+    expect(stripHtml(html)).toBe(expected);
+  });
+
+  // Deeply or widely nested feed-shaped tag names must stay linear like any other markup.
+  it.each([
+    ['deeply nested wrappers', `${'<description>'.repeat(50000)}x`],
+    ['many sibling wrappers', '<description>&lt;p&gt;x&lt;/p&gt;</description>'.repeat(50000)],
+  ])('stays bounded on %s', (_label, input) => {
+    const started = process.hrtime.bigint();
+    expect(() => stripHtml(input)).not.toThrow();
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+
+    expect(elapsedMs).toBeLessThan(3000);
+  });
+});
+
+/**
+ * Comments and directives beside an escaped payload are packaging, not content, and must not
+ * change whether the surrounding text is treated as markup.
+ */
+describe('packaging nodes beside escaped markup', () => {
+  // An element child still means mixed content rather than an encoded payload alone.
+  it('does not expand a wrapper that also holds real markup', () => {
+    expect(stripHtml('<description><p>real</p>&lt;p&gt;enc&lt;/p&gt;</description>')).toBe(
+      'real <p>enc</p>'
+    );
+  });
+});
+
+/**
+ * A `type=` attribute carries no meaning to this file: any element wrapping escaped markup
+ * stays literal, regardless of what its own attributes claim to be.
+ */
+describe('a type attribute does not trigger re-parsing', () => {
+  const ENCODED = '&lt;script&gt;fetch("https://false-ioc.test")&lt;/script&gt;safe';
+
+  it.each([
+    ['a media type on summary', `<summary type="text/html">${ENCODED}</summary>`],
+    ['an xml media type', `<content type="application/xhtml+xml">${ENCODED}</content>`],
+    ['a non-html media type', `<content type="text/plain">${ENCODED}</content>`],
+    ['the xhtml shorthand', `<content type="xhtml">${ENCODED}</content>`],
+  ])('leaves content declared with %s literal', (_label, html) => {
+    expect(stripHtml(html)).toContain('<script>');
+  });
+});
+
+/**
+ * `<template>` is inert. The parser puts its children in a document fragment that no reader
+ * ever sees, so component templates carrying example or stale URLs were feeding body_text
+ * values a human never read, which extraction then promoted as indicators.
+ */
+describe('non-rendered subtrees', () => {
+  it.each([
+    ['a template at top level', '<template><p>c2.stale.test</p></template><p>safe</p>', 'safe'],
+    [
+      'a template nested in content',
+      '<div><template><a href="http://c2.stale.test/x">l</a></template>keep</div>',
+      'keep',
+    ],
+    [
+      'a template under an IOC heading',
+      '<h2>IOCs</h2><template><a href="http://c2.stale.test/x">l</a></template><p>real.test</p>',
+      'IOCs real.test',
+    ],
+  ])('drops %s', (_label, html, expected) => {
+    const result = stripHtml(html);
+
+    expect(result).toBe(expected);
+    expect(result).not.toContain('c2.stale.test');
+  });
+
+  it('drops a template subtree from structured output too', () => {
+    expect(
+      htmlToStructured(
+        '<h2>IOCs</h2><template><a href="http://c2.stale.test/x">l</a></template><p>real.test</p>'
+      )
+    ).toBe('## IOCs\nreal.test');
+  });
+
+  // The element still separates the text on either side, same as script and style.
+  it('still emits a boundary where the template was', () => {
+    expect(stripHtml('evil.com<template>x</template>bad.net')).toBe('evil.com bad.net');
+  });
+
+  // `noscript` content is fallback that a reader with scripting disabled does see, so it is
+  // deliberately not skipped.
+  it('keeps noscript content', () => {
+    expect(stripHtml('<noscript><p>fallback.test</p></noscript>after')).toBe('fallback.test after');
+  });
+});
+
+/**
+ * Feed-shaped container names (`item`, `entry`, `channel`, `feed`, `rss`) carry no special
+ * meaning to this file: they are walked like any unknown element, and escaped markup inside
+ * them stays literal.
+ */
+describe('feed-shaped container names are not encoded bodies', () => {
+  const LITERAL = 'Exploit uses &lt;script&gt; and c2.evil.test';
+  const DECODED = 'Exploit uses <script> and c2.evil.test';
+
+  it.each([['value'], ['item'], ['entry'], ['channel'], ['feed'], ['rss'], ['foo']])(
+    'keeps literal text inside <%s>',
+    (name) => {
+      const result = stripHtml(`<${name}>${LITERAL}</${name}>`);
+
+      expect(result).toBe(DECODED);
+      expect(result).toContain('c2.evil.test');
+    }
+  );
+
+  it('keeps literal text through nested structural containers', () => {
+    expect(stripHtml(`<rss><channel><item>${LITERAL}</item></channel></rss>`)).toBe(DECODED);
+  });
+});
+
+/**
+ * A text construct declaring literal content behaves the same whichever spelling encloses it.
+ * CDATA is parsed as markup unconditionally, so an unclosed tag inside it (e.g. a bare
+ * `<script>` with no matching close) is read as a real, skipped element rather than literal
+ * text — same as CDATA anywhere else in this file.
+ */
+describe('CDATA inside a text construct is parsed like any other CDATA', () => {
+  it('agrees with the entity spelling of the same content', () => {
+    expect(
+      stripHtml('<summary type="text">Exploit uses &lt;script&gt; and c2.evil.test</summary>')
+    ).toBe('Exploit uses <script> and c2.evil.test');
+  });
+
+  it.each([
+    [
+      'an html-typed summary',
+      '<summary type="html"><![CDATA[<p>evil.com</p>]]></summary>',
+      'evil.com',
+    ],
+    [
+      'a media-typed content',
+      '<content type="text/html"><![CDATA[<p>evil.com</p>]]></content>',
+      'evil.com',
+    ],
+    [
+      'an rss description',
+      '<description><![CDATA[<p>IOC: evil.test</p>]]></description>',
+      'IOC: evil.test',
+    ],
+  ])('still parses CDATA as markup for %s', (_label, html, expected) => {
+    expect(stripHtml(html)).toBe(expected);
+  });
+});
+
+/**
+ * Nested element children are walked as markup regardless of any enclosing attribute, since
+ * this file no longer treats a `type=` attribute as meaningful. A CDATA child is character
+ * data per XML rather than HTML, so it goes through the same universal CDATA-as-markup path
+ * as everywhere else, not a literal path reserved for one construct.
+ */
+describe('nested element children are walked as markup', () => {
+  const SCRIPT = "<script>fetch('https://false-ioc.test')</script>";
+  const XHTML = `<div><p>evil.com</p><p>bad.net</p>${SCRIPT}</div>`;
+
+  it('preserves block boundaries and drops script bodies', () => {
+    const result = stripHtml(`<summary type="xhtml">${XHTML}</summary>`);
+
+    expect(result).toBe('evil.com bad.net');
+    expect(result).not.toContain('false-ioc.test');
+  });
+
+  it('preserves structured boundaries', () => {
+    expect(
+      htmlToStructured('<summary type="xhtml"><div><p>evil.com</p><p>bad.net</p></div></summary>')
+    ).toBe('evil.com\nbad.net');
+  });
+
+  it('walks a media-typed content the same way', () => {
+    expect(stripHtml(`<content type="xhtml">${XHTML}</content>`)).toBe('evil.com bad.net');
+  });
+});
+
+/**
+ * A namespaced tag name (`media:description`, `dc:description`, or an arbitrary prefix) is an
+ * ordinary custom element to this file: escaped markup inside it stays literal, the same as
+ * any unprefixed custom element.
+ */
+describe('namespaced tag names are not encoded bodies', () => {
+  const LITERAL = 'Exploit uses &lt;script&gt; and c2.evil.test';
+  const DECODED = 'Exploit uses <script> and c2.evil.test';
+
+  it.each([
+    [
+      'media:description with an explicit plain type',
+      `<media:description type="plain">${LITERAL}</media:description>`,
+    ],
+    ['media:description with no type', `<media:description>${LITERAL}</media:description>`],
+    ['dc:description', `<dc:description>${LITERAL}</dc:description>`],
+    ['an arbitrary namespaced description', `<foo:description>${LITERAL}</foo:description>`],
+  ])('keeps %s literal', (_label, html) => {
+    const result = stripHtml(html);
+
+    expect(result).toBe(DECODED);
+    expect(result).toContain('c2.evil.test');
+  });
+});
+
+/**
+ * A close tag that never terminates leaves the element open to end of input, so the remainder
+ * is raw text. Resuming the scan inside that body let a `<script/>`-looking string in it be
+ * rewritten, which introduced the `>` needed to end the outer element and spilled the rest of
+ * the code into body_text as a false indicator.
+ */
+describe('unterminated raw-text close tags stay opaque', () => {
+  it.each([
+    ['a script body', '<script>a=1</script foo="<script/>'],
+    ['a style body', '<style>a{b:1}</style foo="<style/>'],
+  ])('does not resume scanning inside %s', (_label, html) => {
+    expect(stripHtml(html)).toBe('');
+  });
+
+  it('still handles a terminated junk-carrying close tag', () => {
+    expect(stripHtml('<script>a=1</script foo="x"><p>safe</p>')).toBe('safe');
+  });
+});
+
+/**
+ * `summary` is a standard HTML element as well as an Atom construct, and the predicate matched
+ * on name alone. An Atom text construct holds character data and nothing else, so an element
+ * child means this is the HTML element, and the literal branch emits raw text without applying
+ * subtree filtering: `<details><summary><script>…</script>Visible</summary></details>` put the
+ * script body and its URL into body_text.
+ */
+describe('HTML elements sharing an Atom construct name', () => {
+  it('walks an HTML summary normally and skips its script', () => {
+    const html =
+      '<details><summary><script>fetch("https://false-ioc.test")</script>Visible</summary></details>';
+    const result = stripHtml(html);
+
+    expect(result).toBe('Visible');
+    expect(result).not.toContain('false-ioc.test');
+  });
+
+  it('does the same in structured output', () => {
+    expect(
+      htmlToStructured(
+        '<details><summary><script>fetch("https://false-ioc.test")</script>Visible</summary></details>'
+      )
+    ).toBe('Visible');
+  });
+
+  it('skips a template inside an HTML summary too', () => {
+    expect(
+      stripHtml(
+        '<details><summary><template><p>c2.stale.test</p></template>Visible</summary></details>'
+      )
+    ).toBe('Visible');
+  });
+
+  it('still handles a text-typed summary', () => {
+    expect(
+      stripHtml('<summary type="text">Exploit uses &lt;script&gt; and c2.evil.test</summary>')
+    ).toBe('Exploit uses <script> and c2.evil.test');
+  });
+
+  // An xhtml construct has element children by design and is walked, which this change must
+  // not disturb.
+  it('still walks an xhtml construct', () => {
+    expect(
+      stripHtml(
+        '<summary type="xhtml"><div><p>evil.com</p><p>bad.net</p><script>x</script></div></summary>'
+      )
+    ).toBe('evil.com bad.net');
+  });
+});
+
+/**
+ * A `type=` attribute is not a signal this file acts on. CDATA is always attempted as markup,
+ * so a real, closeable subtree inside it (e.g. `<p>evil.com</p>`) is walked as markup
+ * regardless of the enclosing element's attributes, and nested element children (the `xhtml`
+ * shape) are always walked too.
+ */
+describe('CDATA and nested elements are walked the same regardless of type', () => {
+  it('still parses a text/html media type as markup', () => {
+    expect(stripHtml('<content type="text/html"><![CDATA[<p>evil.com</p>]]></content>')).toBe(
+      'evil.com'
+    );
+  });
+
+  it.each([
+    ['the xhtml shorthand', 'xhtml'],
+    ['an xhtml media type', 'application/xhtml+xml'],
+    ['a generic xml media type', 'application/xml'],
+  ])('walks %s as markup', (_label, type) => {
+    expect(
+      stripHtml(
+        `<content type="${type}"><div><p>evil.com</p><p>bad.net</p><script>x</script></div></content>`
+      )
+    ).toBe('evil.com bad.net');
+  });
+});
+
+describe('section lifting within a single container', () => {
+  it('still lifts every href within the same item', () => {
+    expect(
+      htmlToStructured(
+        '<rss><channel><item><h2>IOCs</h2><p><a href="https://c2.evil.test/x">ioc</a></p>' +
+          '<p><a href="https://b.test/y">two</a></p></item></channel></rss>'
+      )
+    ).toBe('## IOCs\nioc https://c2.evil.test/x\ntwo https://b.test/y');
+  });
+
+  it('is unaffected without a feed container', () => {
+    expect(htmlToStructured('<h2>IOCs</h2><p><a href="https://c2.evil.test/x">ioc</a></p>')).toBe(
+      '## IOCs\nioc https://c2.evil.test/x'
+    );
+  });
+});
+
+/**
+ * An element carrying the HTML `hidden` attribute is not rendered, so its text is not report
+ * content. It was being stored and promoted as an indicator, and because article scoring calls
+ * `stripHtml`, a candidate holding a large hidden subtree could outscore the real report.
+ */
+describe('hidden subtrees', () => {
+  it.each([
+    ['a bare hidden attribute', '<div hidden>c2.stale.test</div><p>safe</p>'],
+    ['hidden with a value', '<div hidden="hidden">c2.stale.test</div><p>safe</p>'],
+  ])('drops %s', (_label, html) => {
+    const result = stripHtml(html);
+
+    expect(result).toBe('safe');
+    expect(result).not.toContain('c2.stale.test');
+  });
+
+  it('drops a hidden subtree from structured output too', () => {
+    expect(htmlToStructured('<div hidden>c2.stale.test</div><p>safe</p>')).toBe('safe');
+  });
+
+  it('keeps a visible sibling of the same shape', () => {
+    expect(stripHtml('<div>keep.test</div><p>safe</p>')).toBe('keep.test safe');
+  });
+});
+
+/**
+ * In HTML an unquoted attribute value may contain `/`, so a trailing slash there belongs to the
+ * value and is not a self-closing flag. Reading `<script src=x/>` as self-closing rewrote it to
+ * an empty script pair, which exposed the real script body as report text with its URL in it.
+ */
+describe('self-closing detection and unquoted attribute values', () => {
+  it.each([
+    [
+      'a script with an unquoted value',
+      '<script src=x/>fetch("https://false-ioc.test")</script><p>safe</p>',
+    ],
+    [
+      'a style with an unquoted value',
+      '<style src=x/>a{b:url(https://false-ioc.test)}</style><p>safe</p>',
+    ],
+  ])('does not treat the value slash in %s as self-closing', (_label, html) => {
+    const result = stripHtml(html);
+
+    expect(result).toBe('safe');
+    expect(result).not.toContain('false-ioc.test');
+  });
+
+  it.each([
+    ['a quoted value', '<article><script src="x.js"/><p>IOC: evil.test</p></article>'],
+    ['no attributes', '<script/><p>IOC: evil.test</p>'],
+    ['whitespace before the slash', '<script src=x /><p>IOC: evil.test</p>'],
+  ])('still normalizes a genuine self-closed script with %s', (_label, html) => {
+    expect(stripHtml(html)).toBe('IOC: evil.test');
+  });
+
+  it('still handles a quoted > in the open tag', () => {
+    expect(stripHtml('<script src="a>b.js"/>kept')).toBe('kept');
+  });
+});
+
+/**
+ * A namespace prefix and its `xmlns:` binding carry no meaning to this file: `content:encoded`
+ * is an ordinary namespaced tag name, and escaped markup inside it stays literal regardless of
+ * what the binding claims.
+ */
+describe('a namespace binding does not trigger re-parsing', () => {
+  it('leaves content:encoded literal regardless of its namespace binding', () => {
+    const result = stripHtml(
+      '<content:encoded xmlns:content="urn:literal">Exploit uses &lt;script&gt; and c2.evil.test</content:encoded>'
+    );
+
+    expect(result).toBe('Exploit uses <script> and c2.evil.test');
+    expect(result).toContain('c2.evil.test');
+  });
+});
+
+/**
+ * Browsers do not render `<iframe>` contents, so embedded fallback or tracking text is not report
+ * text. It was reaching body_text and, because article scoring shares this rule, an iframe-heavy
+ * teaser could also outweigh the visible report.
+ */
+describe('iframe contents are not report text', () => {
+  it('drops an iframe body from plain text', () => {
+    const result = stripHtml('<iframe>https://stale.example</iframe><p>safe</p>');
+
+    expect(result).toBe('safe');
+    expect(result).not.toContain('stale.example');
+  });
+
+  it('drops an iframe body from structured output', () => {
+    expect(htmlToStructured('<iframe>https://stale.example</iframe><p>safe</p>')).toBe('safe');
+  });
+
+  // `noscript` is still kept, since a reader with scripting disabled does see it.
+  it('keeps noscript content', () => {
+    expect(stripHtml('<noscript><p>fallback.test</p></noscript>after')).toBe('fallback.test after');
+  });
+});

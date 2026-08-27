@@ -116,9 +116,14 @@ describe('canonicalizeUrl', () => {
     expect(canonicalizeUrl('https://example.com:8443/api')).toBe('https://example.com:8443/api');
   });
 
-  it('does not include the default 443 port in the key', () => {
-    // URL parser strips the default port so this should produce no port token
+  it('does not include port 443 after normalizing the scheme', () => {
+    // The https case proves nothing on its own: WHATWG `URL` has already dropped `:443` as
+    // the default port for that scheme, so it passes with the explicit handling deleted. The
+    // http case is the regression, because `URL` keeps `:443` there and only the output
+    // scheme makes it default. Without both, the two spellings can drift back to different
+    // dedup keys unnoticed.
     expect(canonicalizeUrl('https://example.com:443/path')).toBe('https://example.com/path');
+    expect(canonicalizeUrl('http://example.com:443/path')).toBe('https://example.com/path');
   });
 
   // --- Malformed input ----------------------------------------------------
@@ -214,5 +219,26 @@ describe('canonicalizeUrl — all utm_ fields', () => {
 
   it('does not strip an unrelated param that merely starts with ut', () => {
     expect(canonicalizeUrl('https://example.com/r?utility=1')).toContain('utility=1');
+  });
+});
+
+/**
+ * Tracking parameters arrive in whatever case the referring site wrote them, and leaving
+ * one in stops two citations of the same article from reconciling. The first pass at this
+ * lowercased the key for the `utm_` prefix and the `ref` name but not for the named set,
+ * so mixed-case `FBCLID`, `GCLID` and `MC_CID` all survived.
+ */
+describe('tracking parameters are matched case-insensitively', () => {
+  it.each([['FBCLID'], ['fbclid'], ['GCLID'], ['MC_CID'], ['UTM_source'], ['utm_source'], ['Ref']])(
+    'strips %s',
+    (key) => {
+      expect(canonicalizeUrl(`https://example.com/p?${key}=twitter`)).toBe('https://example.com/p');
+    }
+  );
+
+  it('keeps a parameter that is not a tracker', () => {
+    expect(canonicalizeUrl('https://example.com/p?Real=keepme')).toBe(
+      'https://example.com/p?Real=keepme'
+    );
   });
 });
