@@ -131,6 +131,15 @@ export {
   HuntCoordinatorRequestBody,
   HuntCoordinatorResponse,
   HuntCoordinatorStatus,
+  AnchorIoc,
+  AnchorItem,
+  AnchorSet,
+  CorrelateRequestBody,
+  CorrelateResponse,
+  CorrelationEngineStatus,
+  DiamondScore,
+  HuntCorrelationAttachmentData,
+  HuntCorrelationAttachmentThresholds,
 } from './impl/schemas';
 
 export {
