@@ -14,8 +14,12 @@ export const configSchema = schema.object({
    * the global managed workflows, inference features, the default-space agent, and the Kibana
    * feature privileges. Turning it off and restarting is what triggers orphan cleanup. The
    * user-facing per-space gate is the `securitySolution:enableAlertZero` advanced setting.
+   *
+   * Demo default: this branch (`hunt-watch-demo-integration`) stages a combined demo build for a
+   * deployment target where `kibana.dev.yml` isn't reachable, so the flag defaults on here
+   * instead. Revert to `false` before this branch's changes are folded into a real PR.
    */
-  enabled: schema.boolean({ defaultValue: false }),
+  enabled: schema.boolean({ defaultValue: true }),
 });
 
 export type AlertZeroConfig = TypeOf<typeof configSchema>;

@@ -383,6 +383,21 @@ export const allowedExperimentalValues = Object.freeze({
    * Enables the SIEM Rule Migrations Agent Builder tools.
    */
   siemRuleMigrationsAgentBuilderEnabled: false,
+
+  /**
+   * Threat-intel supply pipeline (indices, ingest adapters, create
+   * report, IOC extraction, LLM enrichment, Diamond, promote task). Normally
+   * default off: direct index access is not yet cross-space hardened, so this must remain
+   * disabled until that isolation is implemented or the administrator trust model
+   * is explicitly accepted. Enable with:
+   *   xpack.securitySolution.enableExperimental: ['threatIntelSupplyEnabled']
+   *
+   * Demo default: this branch (`hunt-watch-demo-integration`) stages a combined demo build for
+   * a deployment target where `kibana.dev.yml` isn't reachable, so the flag defaults on
+   * here instead of via config. Revert to `false` before this branch's changes are folded
+   * into a real PR; the cross-space hardening caveat above still applies.
+   */
+  threatIntelSupplyEnabled: true,
 });
 
 type ExperimentalConfigKeys = Array<keyof ExperimentalFeatures>;
