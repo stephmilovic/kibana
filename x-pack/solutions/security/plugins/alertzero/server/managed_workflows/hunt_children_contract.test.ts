@@ -8,6 +8,7 @@
 import { parse } from 'yaml';
 import {
   getManagedWorkflowDefinition,
+  ALERTZERO_CORRELATION_WORKFLOW_ID,
   ALERTZERO_HUNT_WORKFLOW_ID,
 } from '@kbn/workflows/managed';
 import { API_VERSIONS } from '@kbn/alertzero-common';
@@ -46,29 +47,31 @@ const stepNamed = (workflow: ParsedWorkflow, name: string): NestedStep => {
 };
 
 /**
- * The hunt child calls the coordinator over HTTP and writes the evidence the
- * candidate selection gate reads, so its contract with the routes and with
+ * The two children call the hunt routes over HTTP and write the evidence the
+ * candidate selection gate reads, so their contract with the routes and with
  * build_candidate_query.ts is pinned here rather than discovered at demo time.
- * Correlation lives on 3B under R.7.
  */
-describe(ALERTZERO_HUNT_WORKFLOW_ID, () => {
-  let workflow: ParsedWorkflow;
+describe.each([ALERTZERO_HUNT_WORKFLOW_ID, ALERTZERO_CORRELATION_WORKFLOW_ID])(
+  '%s',
+  (workflowId) => {
+    let workflow: ParsedWorkflow;
 
-  beforeEach(() => {
-    workflow = parseChild(ALERTZERO_HUNT_WORKFLOW_ID);
-  });
+    beforeEach(() => {
+      workflow = parseChild(workflowId);
+    });
 
-  it('is untagged, so the Worker owns the watch tagging', () => {
-    expect(workflow.tags ?? []).toEqual([]);
-  });
+    it('is untagged, so the Worker owns the watch tagging', () => {
+      expect(workflow.tags ?? []).toEqual([]);
+    });
 
-  it('calls the hunt routes with the version they register', () => {
-    const versions = requestSteps(workflow).map(
-      (step) => (step.with?.headers as Record<string, string>)['elastic-api-version']
-    );
-    expect(versions).toEqual(requestSteps(workflow).map(() => API_VERSIONS.internal.v1));
-  });
-});
+    it('calls the hunt routes with the version they register', () => {
+      const versions = requestSteps(workflow).map(
+        (step) => (step.with?.headers as Record<string, string>)['elastic-api-version']
+      );
+      expect(versions).toEqual(requestSteps(workflow).map(() => API_VERSIONS.internal.v1));
+    });
+  }
+);
 
 describe('system-security-hunt-execute', () => {
   let workflow: ParsedWorkflow;
