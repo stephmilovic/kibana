@@ -43,12 +43,6 @@ export interface HuntBehaviorParams {
 }
 
 /** A candidate behavior that passed ATT&CK catalog validation. No `finding_id` — that is Hub surface, dropped on lift. */
-export interface BehaviorHitRef {
-  event_id: string;
-  source_index: string;
-  timestamp?: string;
-}
-
 export interface ValidatedBehavior {
   technique_id: string;
   evidence_quote: string;
@@ -67,8 +61,8 @@ export interface ValidatedBehavior {
   affected_users?: string[];
   affected_hosts_truncated?: boolean;
   affected_users_truncated?: boolean;
-  /** Required-index execute rows for SSE `events[]` / `alerts[]`. */
-  hit_refs?: BehaviorHitRef[];
+  /** Required-index execute rows; same Discover-ref shape as Tier 1 `hits[]`. */
+  hits?: Array<{ id: string; index: string; timestamp?: string }>;
 }
 
 export interface HuntBehaviorResult {
