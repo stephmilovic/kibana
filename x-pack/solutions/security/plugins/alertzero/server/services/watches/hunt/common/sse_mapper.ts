@@ -24,7 +24,7 @@ import {
   type SignificantSecurityEventAttachmentData,
 } from '../../../../../common/significant_security_event_schema';
 import type { SeverityLevel } from '../../../../../common/attachment_enums';
-import type { HuntCoordinatorResult } from '../hunt_coordinator';
+import type { HuntCoordinatorCoreResult } from '../hunt_coordinator';
 
 /**
  * Full SSE attachment payload produced by this mapper. Derived from the
@@ -40,7 +40,7 @@ type SseAlertRef = NonNullable<SseAttachmentData['alerts']>[number];
 type SseHuntResult = NonNullable<SseAttachmentData['hunt_result']>;
 type SseHitSource = SseHuntResult['hit_sources'][number];
 type SseBehavior = NonNullable<SseHuntResult['tier2']>['behaviors'][number];
-type CoordinatorBehavior = NonNullable<HuntCoordinatorResult['tier2']>['behaviors'][number];
+type CoordinatorBehavior = NonNullable<HuntCoordinatorCoreResult['tier2']>['behaviors'][number];
 
 /** One SSE attachment, ready to be written with `ai.attachment.add`. */
 export interface SseEntry {
@@ -135,7 +135,7 @@ export interface SseMapperOptions {
  * either SSE.
  */
 const buildSecurityKnowledgeIndicators = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   onlyTechniqueId?: string
 ): SseSecurityKnowledgeIndicator[] => {
   const { tier1, tier2 } = result;
@@ -188,7 +188,7 @@ const pushUniqueEntity = (
  * when `onlyTechniqueId` is set). Cap 50 with a truncation marker on the entry.
  */
 const buildEntities = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   onlyTechniqueId?: string
 ): { entities: SseEntityRef[]; truncated: boolean; originalCount: number } => {
   const entities: SseEntityRef[] = [];
@@ -254,7 +254,7 @@ const hitTimestamp = (hit: { timestamp?: string }, forceNow: Date): string | und
   toIsoDatetime(hit.timestamp, forceNow);
 
 const toEventMatched = (
-  matched: HuntCoordinatorResult['tier1']['hits'][number]['matched']
+  matched: HuntCoordinatorCoreResult['tier1']['hits'][number]['matched']
 ): SseEventRef['matched'] | undefined => {
   if (!matched) return undefined;
   // Schema requires `field` whenever `matched` is present.
@@ -276,7 +276,7 @@ const toEventMatched = (
  * - exclude hits attributed to a different technique
  */
 const splitHits = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   forceNow: Date,
   onlyTechniqueId?: string
 ): { events: SseEventRef[]; alerts: SseAlertRef[] } => {
@@ -320,7 +320,7 @@ const mergeTierHitRefs = ({
 }: {
   events: SseEventRef[];
   alerts: SseAlertRef[];
-  result: HuntCoordinatorResult;
+  result: HuntCoordinatorCoreResult;
   forceNow: Date;
   onlyTechniqueId?: string;
 }): { events: SseEventRef[]; alerts: SseAlertRef[]; tier1RefCount: number } => {
@@ -404,7 +404,7 @@ const resolveHitSources = ({
   onlyTechniqueId,
   tier1RefCount,
 }: {
-  result: HuntCoordinatorResult;
+  result: HuntCoordinatorCoreResult;
   onlyTechniqueId?: string;
   tier1RefCount: number;
 }): { has_confirmed_hit: boolean; hit_sources: SseHitSource[] } => {
@@ -435,7 +435,7 @@ const resolveHitSources = ({
 };
 
 const buildHuntResult = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   {
     onlyTechniqueId,
     tier1RefCount,
@@ -600,7 +600,7 @@ const buildEntry = ({
   spaceId,
   techniqueId,
 }: {
-  result: HuntCoordinatorResult;
+  result: HuntCoordinatorCoreResult;
   reportId: string;
   spaceId: string;
   techniqueId?: string;
@@ -662,7 +662,7 @@ const buildEntry = ({
  * are excluded; IOC-only / unscoped Tier 1 hits stay shared.
  */
 export const buildSseData = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   reportId: string,
   options: SseMapperOptions
 ): SseEntry[] => {

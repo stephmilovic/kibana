@@ -10,7 +10,7 @@ import type { ScopedModel } from '@kbn/agent-builder-server';
 import { loggingSystemMock } from '@kbn/core/server/mocks';
 import { significantSecurityEventAttachmentDataSchema } from '../../../../../common/significant_security_event_schema';
 import { huntCoordinator } from '../hunt_coordinator';
-import type { HuntCoordinatorResult } from '../hunt_coordinator';
+import type { HuntCoordinatorCoreResult } from '../hunt_coordinator';
 import { buildSseData, buildSseAttachmentId } from './sse_mapper';
 
 const huntResultOf = (entry: ReturnType<typeof buildSseData>[number]) => {
@@ -504,7 +504,7 @@ describe('buildSseData output parses against the SSE attachment schema', () => {
  * attachment the schema accepts, or `ai.attachment.add` fails at demo time.
  */
 describe('buildSseData holds coordinator output to the SSE schema bounds', () => {
-  const tier1Result = (over: Partial<HuntCoordinatorResult['tier1']>): HuntCoordinatorResult => ({
+  const tier1Result = (over: Partial<HuntCoordinatorCoreResult['tier1']>): HuntCoordinatorCoreResult => ({
     status: 'tier1_only',
     run_id: 'run-1',
     technologies: ['aws_iam'],
@@ -530,7 +530,7 @@ describe('buildSseData holds coordinator output to the SSE schema bounds', () =>
     },
   });
 
-  const schemaIssues = (result: HuntCoordinatorResult): string[] => {
+  const schemaIssues = (result: HuntCoordinatorCoreResult): string[] => {
     const [entry] = buildSseData(result, 'tr-1', { spaceId: 'default' });
     const parsed = significantSecurityEventAttachmentDataSchema.safeParse(entry.data);
     return parsed.success
@@ -584,7 +584,7 @@ describe('buildSseData holds coordinator output to the SSE schema bounds', () =>
       type: 'ip' as const,
       value: `10.0.0.${i}`,
     }));
-    const result: HuntCoordinatorResult = {
+    const result: HuntCoordinatorCoreResult = {
       ...tier1Result({ resolved_iocs: resolvedIocs }),
       tier2: {
         tier: 2,
