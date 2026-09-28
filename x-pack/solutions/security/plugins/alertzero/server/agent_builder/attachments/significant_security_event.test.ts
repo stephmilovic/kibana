@@ -166,7 +166,10 @@ describe('createSignificantSecurityEventAttachmentType', () => {
           field: 'host.name' as const,
           value: `host-${index}-${'x'.repeat(2000)}`,
         })),
-        evidence_for: Array.from({ length: 50 }, (_, index) => `evidence ${index} ${'y'.repeat(1900)}`),
+        evidence_for: Array.from(
+          { length: 50 },
+          (_, index) => `evidence ${index} ${'y'.repeat(1900)}`
+        ),
       });
 
       expect(value.length).toBeLessThanOrEqual(attachmentType.maxContentLength ?? Infinity);
