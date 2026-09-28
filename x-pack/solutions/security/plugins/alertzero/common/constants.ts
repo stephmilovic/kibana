@@ -43,6 +43,11 @@ export const ALERTZERO_MANAGED_WORKFLOW_OWNER_ID = 'alertzero' as const;
  */
 export const ALERTZERO_ATTACHMENT_TYPES = {
   threat: 'security.threat',
+  // Minimal registration slice pulled forward from PR 1c (SSE attachment type) so PR 4's
+  // hit-path acceptance rows can be smoke-tested on this branch without waiting for 1c's
+  // own PR: only the schema + server registration, not 1c's renderer, entity chips, or
+  // navigation builders. Drops out once real 1c merges (see hunt-plans plan 04/01).
+  sse: 'security.significant_security_event',
 } as const;
 
 // --- Hunt services ---
