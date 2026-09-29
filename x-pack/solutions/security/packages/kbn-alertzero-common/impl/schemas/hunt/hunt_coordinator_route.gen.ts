@@ -112,8 +112,18 @@ export const HuntCoordinatorResponse = lazySchema(() =>
             reference: z.string(),
             tactic_ids: z.array(z.string()),
             parent_technique_id: z.string().optional(),
-            proposed_esql_rule: z.string(),
-            rule_name: z.string(),
+            /**
+             * The query Tier 2 generated and validated (and, when grounded, executed) to hunt this technique.
+             */
+            validated_esql: z
+              .string()
+              .describe(
+                'The query Tier 2 generated and validated (and, when grounded, executed) to hunt this technique.'
+              ),
+            /**
+             * Display title for this hunted finding.
+             */
+            title: z.string().describe('Display title for this hunted finding.'),
             severity: z.enum(['critical', 'high', 'medium', 'low']),
             risk_score: z.number(),
             execution: z
@@ -243,6 +253,24 @@ export const HuntCoordinatorResponse = lazySchema(() =>
       .boolean()
       .describe(
         'Whether the report should stay eligible for a later run. Derived from `completeness`: false only for `incomplete_retryable`, where repeating the run could cover what this one missed. True for `incomplete_final` as well as `complete`, because a deterministic gap returns identically every run, so retrying only re-spends the budget. A caller that writes "clean" off this flag alone will record a clean environment for a run that could not search it — use `completeness` for that.'
+      ),
+    /**
+     * One clause for the run conclusion message: the outcome (confirmed hit or not) plus what each tier did.
+     */
+    headline: z
+      .string()
+      .optional()
+      .describe(
+        'One clause for the run conclusion message: the outcome (confirmed hit or not) plus what each tier did.'
+      ),
+    /**
+     * The full hunt results narrative the hunt child writes to the Investigation: what was hunted, where and when, what each tier found, and why a tier did not run. Deterministic markdown derived from the structured fields, self-sufficient because the SSE attachment may not render everywhere.
+     */
+    narrative: z
+      .string()
+      .optional()
+      .describe(
+        'The full hunt results narrative the hunt child writes to the Investigation: what was hunted, where and when, what each tier found, and why a tier did not run. Deterministic markdown derived from the structured fields, self-sufficient because the SSE attachment may not render everywhere.'
       ),
     /**
      * Populated when `has_confirmed_hit` is true (Tier 1 environment hits or a Tier 2 executed required-index hit) and the request named a `report_id`: one entry per technique this run corroborated, meaning its ES|QL executed and returned required-index rows or a Tier 1 hit was attributed to it. A technique that was only proposed gets no entry of its own; when no technique was corroborated, a single report-scoped entry carries all of them under `hunt_result.tier2.behaviors`. The caller fans out over this array with ai.attachment.add, one call per entry; no templated fields.

@@ -24,7 +24,7 @@ import {
   type SignificantSecurityEventAttachmentData,
 } from '../../../../../common/significant_security_event_schema';
 import type { SeverityLevel } from '../../../../../common/attachment_enums';
-import type { HuntCoordinatorResult } from '../hunt_coordinator';
+import type { HuntCoordinatorCoreResult } from '../hunt_coordinator';
 
 /**
  * Full SSE attachment payload produced by this mapper. Derived from the
@@ -40,7 +40,7 @@ type SseAlertRef = NonNullable<SseAttachmentData['alerts']>[number];
 type SseHuntResult = NonNullable<SseAttachmentData['hunt_result']>;
 type SseHitSource = SseHuntResult['hit_sources'][number];
 type SseBehavior = NonNullable<SseHuntResult['tier2']>['behaviors'][number];
-type CoordinatorBehavior = NonNullable<HuntCoordinatorResult['tier2']>['behaviors'][number];
+type CoordinatorBehavior = NonNullable<HuntCoordinatorCoreResult['tier2']>['behaviors'][number];
 
 /** One SSE attachment, ready to be written with `ai.attachment.add`. */
 export interface SseEntry {
@@ -166,7 +166,7 @@ export interface SseMapperOptions {
  * either SSE.
  */
 const buildSecurityKnowledgeIndicators = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   onlyTechniqueId?: string
 ): SseSecurityKnowledgeIndicator[] => {
   const { tier1, tier2 } = result;
@@ -251,11 +251,11 @@ const takeAlternating = <T>(
  * the scope patterns. An index absent from the breakdown is treated as not required: the
  * conservative reading, since promoting on it would be a claim nothing in the result supports.
  */
-const isRequiredIndex = (result: HuntCoordinatorResult, index: string): boolean =>
+const isRequiredIndex = (result: HuntCoordinatorCoreResult, index: string): boolean =>
   result.tier1.per_index.some((entry) => entry.index === index && entry.required);
 
 const scopedBehaviors = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   onlyTechniqueId?: string
 ): CoordinatorBehavior[] =>
   (result.tier2?.behaviors ?? []).filter(
@@ -267,7 +267,7 @@ const scopedBehaviors = (
  * when `onlyTechniqueId` is set). Cap 50 with a truncation marker on the entry.
  */
 const buildEntities = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   onlyTechniqueId?: string
 ): { entities: SseEntityRef[]; truncated: boolean; originalCount: number } => {
   const { hosts, users, services } = result.tier1.affected_assets;
@@ -323,7 +323,7 @@ const hitTimestamp = (hit: { timestamp?: string }): string | undefined =>
   toIsoInstant(hit.timestamp);
 
 const toEventMatched = (
-  matched: HuntCoordinatorResult['tier1']['hits'][number]['matched']
+  matched: HuntCoordinatorCoreResult['tier1']['hits'][number]['matched']
 ): SseEventRef['matched'] | undefined => {
   if (!matched) return undefined;
   // Schema requires `field` whenever `matched` is present.
@@ -345,7 +345,7 @@ const toEventMatched = (
  * - exclude hits attributed to a different technique
  */
 const splitHits = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   onlyTechniqueId?: string
 ): { events: SseEventRef[]; alerts: SseAlertRef[] } => {
   const events: SseEventRef[] = [];
@@ -421,7 +421,7 @@ const mergeTierHitRefs = ({
   result,
   onlyTechniqueId,
 }: {
-  result: HuntCoordinatorResult;
+  result: HuntCoordinatorCoreResult;
   onlyTechniqueId?: string;
 }): { events: SseEventRef[]; alerts: SseAlertRef[]; tier1RefCount: number } => {
   const { events: tier1Events, alerts: tier1Alerts } = splitHits(result, onlyTechniqueId);
@@ -463,10 +463,8 @@ const mapBehavior = (behavior: CoordinatorBehavior): SseBehavior => ({
   ...(behavior.technique_name ? { technique_name: behavior.technique_name } : {}),
   tactic_ids: behavior.tactic_ids,
   confidence: behavior.confidence,
-  rule_name: behavior.rule_name,
-  ...(behavior.proposed_esql_rule
-    ? { proposed_esql_rule: behavior.proposed_esql_rule.slice(0, 32_000) }
-    : {}),
+  title: behavior.title,
+  ...(behavior.validated_esql ? { validated_esql: behavior.validated_esql.slice(0, 32_000) } : {}),
   ...(behavior.execution
     ? {
         execution: {
@@ -497,7 +495,7 @@ const resolveHitSources = ({
   onlyTechniqueId,
   tier1RefCount,
 }: {
-  result: HuntCoordinatorResult;
+  result: HuntCoordinatorCoreResult;
   onlyTechniqueId?: string;
   tier1RefCount: number;
 }): { has_confirmed_hit: boolean; hit_sources: SseHitSource[] } => {
@@ -527,7 +525,7 @@ const resolveHitSources = ({
 };
 
 const buildHuntResult = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   {
     onlyTechniqueId,
     tier1RefCount,
@@ -625,8 +623,8 @@ const buildChrome = ({
   | 'evidence_against'
   | 'evaluation_record_ref'
 > => {
-  const title = behavior?.rule_name
-    ? behavior.rule_name.slice(0, 512)
+  const title = behavior?.title
+    ? behavior.title.slice(0, 512)
     : huntResult.has_confirmed_hit
     ? `Hunt confirmed for ${reportId}`.slice(0, 512)
     : `Hunt complete for ${reportId}`.slice(0, 512);
@@ -638,7 +636,7 @@ const buildChrome = ({
 
   const hypothesisTested = (
     behavior?.evidence_quote ||
-    behavior?.rule_name ||
+    behavior?.title ||
     `Hunt Watch evaluated report ${reportId} against the environment.`
   ).slice(0, 4000);
 
@@ -660,9 +658,6 @@ const buildChrome = ({
     evidenceFor.push(
       `Tier 2 executed ${behavior.technique_id} with ${behavior.execution.row_count} required-index row(s).`
     );
-  }
-  if (behavior?.proposed_esql_rule) {
-    evidenceFor.push(`Proposed lasting rule: ${behavior.rule_name}.`);
   }
   if (evidenceFor.length === 0 && huntResult.has_confirmed_hit) {
     evidenceFor.push('Environment hit confirmed; see hunt_result for structured detail.');
@@ -735,7 +730,7 @@ const buildChrome = ({
  * single one out — counting it would publish an open, rule-named finding for
  * every behavior the model proposed as soon as Tier 1 found anything at all.
  */
-const isCorroborated = (result: HuntCoordinatorResult, techniqueId: string): boolean => {
+const isCorroborated = (result: HuntCoordinatorCoreResult, techniqueId: string): boolean => {
   const behaviors = result.tier2?.behaviors ?? [];
   if (
     behaviors.some(
@@ -766,7 +761,7 @@ const buildEntry = ({
   techniqueId,
   forceNow,
 }: {
-  result: HuntCoordinatorResult;
+  result: HuntCoordinatorCoreResult;
   reportId: string;
   spaceId: string;
   techniqueId?: string;
@@ -838,7 +833,7 @@ const buildEntry = ({
  * are excluded; IOC-only / unscoped Tier 1 hits stay shared.
  */
 export const buildSseData = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   reportId: string,
   options: SseMapperOptions
 ): SseEntry[] => {

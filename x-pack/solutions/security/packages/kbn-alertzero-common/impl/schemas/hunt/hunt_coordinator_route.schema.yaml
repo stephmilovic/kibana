@@ -165,8 +165,8 @@ paths:
                             - technique_name
                             - reference
                             - tactic_ids
-                            - proposed_esql_rule
-                            - rule_name
+                            - validated_esql
+                            - title
                             - severity
                             - risk_score
                           properties:
@@ -188,10 +188,14 @@ paths:
                                 type: string
                             parent_technique_id:
                               type: string
-                            proposed_esql_rule:
+                            validated_esql:
                               type: string
-                            rule_name:
+                              description: >-
+                                The query Tier 2 generated and validated (and, when grounded,
+                                executed) to hunt this technique.
+                            title:
                               type: string
+                              description: Display title for this hunted finding.
                             severity:
                               type: string
                               enum: [critical, high, medium, low]
@@ -337,6 +341,19 @@ paths:
                       that writes "clean" off this flag alone will record a clean
                       environment for a run that could not search it — use
                       `completeness` for that.
+                  headline:
+                    type: string
+                    description: >-
+                      One clause for the run conclusion message: the outcome
+                      (confirmed hit or not) plus what each tier did.
+                  narrative:
+                    type: string
+                    description: >-
+                      The full hunt results narrative the hunt child writes to
+                      the Investigation: what was hunted, where and when, what
+                      each tier found, and why a tier did not run. Deterministic
+                      markdown derived from the structured fields, self-sufficient
+                      because the SSE attachment may not render everywhere.
                   sse:
                     type: array
                     description: >-

@@ -14,7 +14,7 @@ import type {
   HuntIncompleteReason,
 } from '@kbn/alertzero-common';
 
-/** Severity level for a proposed behavioral rule. */
+/** Severity level for a hunted behavior. */
 export type SeverityLevel = 'critical' | 'high' | 'medium' | 'low';
 
 export interface BehaviorExecution {
@@ -53,7 +53,7 @@ export interface HuntBehaviorParams {
   required_indices?: string[];
 }
 
-/** A candidate behavior that passed ATT&CK catalog validation. No `finding_id` — that is Hub surface, dropped on lift. */
+/** A candidate behavior that passed ATT&CK catalog validation. */
 export interface ValidatedBehavior {
   technique_id: string;
   evidence_quote: string;
@@ -63,8 +63,10 @@ export interface ValidatedBehavior {
   reference: string;
   tactic_ids: string[];
   parent_technique_id?: string;
-  proposed_esql_rule: string;
-  rule_name: string;
+  /** The query Tier 2 generated and validated (and, when grounded, executed) to hunt this technique. */
+  validated_esql: string;
+  /** Display title for this finding, e.g. `Hunt: Cloud Accounts (T1078.004) [abcd1234]`. */
+  title: string;
   severity: SeverityLevel;
   risk_score: number;
   execution?: BehaviorExecution;

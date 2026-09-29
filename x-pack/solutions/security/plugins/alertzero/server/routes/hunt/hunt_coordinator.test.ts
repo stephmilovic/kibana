@@ -39,6 +39,8 @@ const coordinatorResult: HuntCoordinatorResult = {
   has_confirmed_hit: false,
   completeness: 'complete',
   completed_successfully: true,
+  headline: 'no confirmed hits: Tier 1 found no matches; Tier 2 skipped',
+  narrative: 'Hunt Watch found no confirmed hits for threat report report-1 in aws_iam telemetry.',
 };
 
 const makeDeps = ({ spaceId = 'default' }: { spaceId?: string } = {}) => {
@@ -212,8 +214,8 @@ describe('registerHuntCoordinatorRoute', () => {
             technique_name: 'Valid Accounts: Cloud Accounts',
             reference: 'https://attack.mitre.org/techniques/T1078/004/',
             tactic_ids: ['TA0001'],
-            proposed_esql_rule: 'FROM logs-aws.cloudtrail-default | WHERE true',
-            rule_name: 'AssumeRole into high-risk policy boundary',
+            validated_esql: 'FROM logs-aws.cloudtrail-default | WHERE true',
+            title: 'AssumeRole into high-risk policy boundary',
             severity: 'high',
             risk_score: 73,
             execution: { executed: true, row_count: 2, hit: true },

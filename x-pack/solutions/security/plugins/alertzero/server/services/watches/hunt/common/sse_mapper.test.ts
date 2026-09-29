@@ -11,7 +11,7 @@ import dateMath from '@kbn/datemath';
 import { loggingSystemMock } from '@kbn/core/server/mocks';
 import { significantSecurityEventAttachmentDataSchema } from '../../../../../common/significant_security_event_schema';
 import { huntCoordinator } from '../hunt_coordinator';
-import type { HuntCoordinatorResult } from '../hunt_coordinator';
+import type { HuntCoordinatorCoreResult } from '../hunt_coordinator';
 import { buildSseData, buildSseAttachmentId } from './sse_mapper';
 
 const huntResultOf = (entry: ReturnType<typeof buildSseData>[number]) => {
@@ -93,8 +93,8 @@ const HIT_TIER2_RESULT_TWO_BEHAVIORS = {
       technique_name: 'Valid Accounts: Cloud Accounts',
       reference: 'https://attack.mitre.org/techniques/T1078/004/',
       tactic_ids: ['TA0001', 'TA0004'],
-      proposed_esql_rule: 'FROM logs-aws.cloudtrail-default | WHERE ...',
-      rule_name: 'AssumeRole into high-risk policy boundary',
+      validated_esql: 'FROM logs-aws.cloudtrail-default | WHERE ...',
+      title: 'AssumeRole into high-risk policy boundary',
       severity: 'high' as const,
       risk_score: 73,
       execution: { executed: true, row_count: 2, hit: true },
@@ -116,8 +116,8 @@ const HIT_TIER2_RESULT_TWO_BEHAVIORS = {
       technique_name: 'Unsecured Credentials: Credentials In Files',
       reference: 'https://attack.mitre.org/techniques/T1552/001/',
       tactic_ids: ['TA0006'],
-      proposed_esql_rule: 'FROM logs-endpoint.alerts-default | WHERE ...',
-      rule_name: 'Credential file read on CI runner',
+      validated_esql: 'FROM logs-endpoint.alerts-default | WHERE ...',
+      title: 'Credential file read on CI runner',
       severity: 'medium' as const,
       risk_score: 51,
       execution: { executed: true, row_count: 1, hit: true },
@@ -162,10 +162,12 @@ const runCoordinator = (
 ): ReturnType<typeof huntCoordinator> =>
   huntCoordinator({ esClient, reportsEsClient: esClient }, mockModel, logger, params);
 
-type TestBehavior = NonNullable<HuntCoordinatorResult['tier2']>['behaviors'][number];
+type TestBehavior = NonNullable<HuntCoordinatorCoreResult['tier2']>['behaviors'][number];
 
 /** A coordinator result the coordinator itself considers valid, Tier 1 only. */
-const tier1Result = (over: Partial<HuntCoordinatorResult['tier1']>): HuntCoordinatorResult => ({
+const tier1Result = (
+  over: Partial<HuntCoordinatorCoreResult['tier1']>
+): HuntCoordinatorCoreResult => ({
   status: 'tier1_only',
   run_id: 'run-1',
   technologies: ['aws_iam'],
@@ -199,8 +201,8 @@ const behaviorFixture = (over: Partial<TestBehavior> = {}): TestBehavior => ({
   technique_name: 'Valid Accounts: Cloud Accounts',
   reference: 'https://attack.mitre.org/techniques/T1078/004/',
   tactic_ids: ['TA0001'],
-  proposed_esql_rule: 'FROM logs-aws.cloudtrail-default | WHERE true',
-  rule_name: 'AssumeRole into high-risk policy boundary',
+  validated_esql: 'FROM logs-aws.cloudtrail-default | WHERE true',
+  title: 'AssumeRole into high-risk policy boundary',
   severity: 'high',
   risk_score: 73,
   execution: { executed: true, row_count: 1, hit: true },
@@ -208,9 +210,9 @@ const behaviorFixture = (over: Partial<TestBehavior> = {}): TestBehavior => ({
 });
 
 const withBehaviors = (
-  result: HuntCoordinatorResult,
+  result: HuntCoordinatorCoreResult,
   behaviors: TestBehavior[]
-): HuntCoordinatorResult => ({
+): HuntCoordinatorCoreResult => ({
   ...result,
   status: 'tier1_and_tier2',
   tier2: {
@@ -223,7 +225,7 @@ const withBehaviors = (
   },
 });
 
-const schemaIssues = (result: HuntCoordinatorResult): string[] => {
+const schemaIssues = (result: HuntCoordinatorCoreResult): string[] => {
   const [entry] = buildSseData(result, 'tr-1', { spaceId: 'default' });
   const parsed = significantSecurityEventAttachmentDataSchema.safeParse(entry.data);
   return parsed.success
@@ -322,7 +324,7 @@ describe('buildSseData', () => {
     expect(huntResultOf(entry).tier2).toBeDefined();
     expect(huntResultOf(entry).tier2?.status).toBe('behaviors_proposed');
     expect(huntResultOf(entry).tier2?.behaviors[0].technique_id).toBe('T1078.004');
-    expect(huntResultOf(entry).tier2?.behaviors[0].proposed_esql_rule).toContain(
+    expect(huntResultOf(entry).tier2?.behaviors[0].validated_esql).toContain(
       'FROM logs-aws.cloudtrail-default'
     );
     expect(huntResultOf(entry).tier2?.behaviors[0].execution).toEqual({
@@ -451,8 +453,8 @@ describe('buildSseData', () => {
           technique_name: 'Valid Accounts: Cloud Accounts',
           reference: 'https://attack.mitre.org/techniques/T1078/004/',
           tactic_ids: ['TA0001'],
-          proposed_esql_rule: 'FROM logs-aws.cloudtrail-default | WHERE true',
-          rule_name: 'AssumeRole into high-risk policy boundary',
+          validated_esql: 'FROM logs-aws.cloudtrail-default | WHERE true',
+          title: 'AssumeRole into high-risk policy boundary',
           severity: 'high' as const,
           risk_score: 73,
           execution: { executed: true, row_count: 3, hit: true },
@@ -538,7 +540,7 @@ describe('buildSseData', () => {
  * the strength of one unrelated technique clearing the hit bar.
  */
 describe('buildSseData publishes an entry only for a corroborated technique', () => {
-  type RawTier1 = Omit<HuntCoordinatorResult['tier1'], 'tier'>;
+  type RawTier1 = Omit<HuntCoordinatorCoreResult['tier1'], 'tier'>;
 
   const proposedBehavior = ({
     techniqueId,
@@ -554,14 +556,14 @@ describe('buildSseData publishes an entry only for a corroborated technique', ()
       technique_name: `Technique ${techniqueId}`,
       reference: `https://attack.mitre.org/techniques/${techniqueId}/`,
       evidence_quote: `report quote for ${techniqueId}`,
-      rule_name: ruleName,
+      title: ruleName,
       execution: { executed: true, row_count: hit ? 2 : 0, hit },
     });
 
   const run = async (
     tier1: RawTier1,
     behaviors: TestBehavior[]
-  ): Promise<HuntCoordinatorResult> => {
+  ): Promise<HuntCoordinatorCoreResult> => {
     const { huntForThreat } = jest.requireMock('../tier1/hunt_for_threat');
     const { huntBehavior } = jest.requireMock('../tier2/hunt_behavior');
     huntForThreat.mockResolvedValue(tier1);
@@ -582,7 +584,7 @@ describe('buildSseData publishes an entry only for a corroborated technique', ()
     });
   };
 
-  const entriesFor = (result: HuntCoordinatorResult) =>
+  const entriesFor = (result: HuntCoordinatorCoreResult) =>
     buildSseData(result, 'tr-corroboration', { spaceId: 'default' });
 
   const idFor = (techniqueId?: string) =>
@@ -797,7 +799,7 @@ describe('buildSseData publishes an entry only for a corroborated technique', ()
     // would overwrite the first.
     expect(entries).toHaveLength(1);
     expect(entries[0].attachment_id).toEqual(idFor('T1078.004'));
-    expect(huntResultOf(entries[0]).tier2?.behaviors.map((b) => b.rule_name)).toEqual([
+    expect(huntResultOf(entries[0]).tier2?.behaviors.map((b) => b.title)).toEqual([
       'AssumeRole into high-risk policy boundary',
       'AssumeRole from an unused identity',
     ]);
@@ -924,7 +926,7 @@ describe('buildSseData holds coordinator output to the SSE schema bounds', () =>
       type: 'ip' as const,
       value: `10.0.0.${i}`,
     }));
-    const result: HuntCoordinatorResult = {
+    const result: HuntCoordinatorCoreResult = {
       ...tier1Result({ resolved_iocs: resolvedIocs }),
       tier2: {
         tier: 2,
@@ -938,8 +940,8 @@ describe('buildSseData holds coordinator output to the SSE schema bounds', () =>
             technique_name: 'Valid Accounts: Cloud Accounts',
             reference: 'https://attack.mitre.org/techniques/T1078/004/',
             tactic_ids: ['TA0001'],
-            proposed_esql_rule: 'FROM logs-aws.cloudtrail-default | WHERE true',
-            rule_name: 'AssumeRole into high-risk policy boundary',
+            validated_esql: 'FROM logs-aws.cloudtrail-default | WHERE true',
+            title: 'AssumeRole into high-risk policy boundary',
             severity: 'high',
             risk_score: 73,
             execution: { executed: true, row_count: 1, hit: true },
@@ -970,7 +972,7 @@ describe('buildSseData holds coordinator output to the SSE schema bounds', () =>
     const behaviors = Array.from({ length: 21 }, (_, i) =>
       behaviorFixture({
         technique_id: `T90${String(i).padStart(2, '0')}`,
-        rule_name: `Proposed rule ${i}`,
+        title: `Proposed rule ${i}`,
         execution: { executed: true, row_count: 0, hit: false },
       })
     );

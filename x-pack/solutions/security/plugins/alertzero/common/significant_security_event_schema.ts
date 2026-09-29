@@ -178,9 +178,10 @@ const huntResultTier2BehaviorSchema = z.object({
   technique_name: z.string().min(1).max(256).optional(),
   tactic_ids: z.array(z.string().min(1).max(32)).max(20),
   confidence: z.number().min(0).max(1),
-  rule_name: z.string().min(1).max(256),
-  /** Lasting-rule candidate; present on every proposed behavior (not only env hits). */
-  proposed_esql_rule: z.string().min(1).max(32_000).optional(),
+  /** Display title for this hunted finding. */
+  title: z.string().min(1).max(256),
+  /** The query Tier 2 generated and validated (and, when grounded, executed) to hunt this technique. */
+  validated_esql: z.string().min(1).max(32_000).optional(),
   execution: huntResultBehaviorExecutionSchema.optional(),
   affected_hosts: z.array(z.string().min(1).max(512)).max(20).optional(),
   affected_users: z.array(z.string().min(1).max(512)).max(20).optional(),
