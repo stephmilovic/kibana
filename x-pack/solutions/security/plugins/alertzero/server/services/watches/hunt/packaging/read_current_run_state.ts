@@ -87,6 +87,14 @@ export const readCurrentRunState = async ({
     ),
   ];
 
+  const corroboratedTechniques = [
+    ...new Set(
+      currentRun
+        .map((sse) => sse.corroborated_technique_id)
+        .filter((techniqueId): techniqueId is string => techniqueId !== undefined)
+    ),
+  ];
+
   const hostNames = [
     ...new Set(
       currentRun.flatMap((sse) =>
@@ -137,6 +145,7 @@ export const readCurrentRunState = async ({
     titles,
     evidenceLines,
     techniques,
+    corroboratedTechniques,
     hasNonHostEntity,
     hasIocIndicator,
     allEventsWithinBaseline,
