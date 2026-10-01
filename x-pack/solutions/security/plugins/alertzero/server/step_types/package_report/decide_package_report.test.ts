@@ -76,7 +76,8 @@ const baseHitState = (overrides: Partial<CurrentRunState> = {}): CurrentRunState
   hosts: [{ name: 'host-a', enrolled: true, agentId: 'agent-a' }],
   processSelectors: [],
   // Fully-covered defaults: no recommendation trigger fires unless a test overrides one.
-  hasNonHostEntity: false,
+  users: [],
+  services: [],
   hasIocIndicator: false,
   allEventsActionable: true,
   hasProcessBearingEvent: false,
@@ -235,7 +236,7 @@ describe('decidePackageReport', () => {
     expect(recommendation?.comment).toContain('could not be resolved to a live process');
   });
 
-  it('mints executable plus a recommendation when evidence is not host-scoped (trigger: not host-scoped)', () => {
+  it('mints executable plus a recommendation when evidence is outside actionable indices (trigger: not host-scoped)', () => {
     const result = decidePackageReport({
       conversationId,
       state: baseHitState({ allEventsActionable: false }),
@@ -243,7 +244,58 @@ describe('decidePackageReport', () => {
     });
     expect(result.proposals).toHaveLength(2);
     const recommendation = result.proposals.find((p) => p.title === 'Analyst recommendation');
-    expect(recommendation?.comment).toContain('not host-scoped');
+    expect(recommendation?.comment).toContain(
+      'Part of the evidence is outside the indices where a host action could land.'
+    );
+    expect(recommendation?.comment).not.toContain('implicated');
+  });
+
+  it('names a single implicated user in the recommendation (trigger: identity)', () => {
+    const result = decidePackageReport({
+      conversationId,
+      state: baseHitState({ users: ['dev-user'] }),
+      catalog: { ok: true, actions: [isolateHost] },
+    });
+    expect(result.proposals).toHaveLength(2);
+    const recommendation = result.proposals.find((p) => p.title === 'Analyst recommendation');
+    expect(recommendation?.comment).toContain(
+      'Identity dev-user (user) is implicated; a host action does not reach it.'
+    );
+    expect(recommendation?.comment).not.toContain('outside the indices');
+  });
+
+  it('names users and services together in the recommendation (trigger: identity)', () => {
+    const result = decidePackageReport({
+      conversationId,
+      state: baseHitState({ users: ['dev-user'], services: ['escalated-role'] }),
+      catalog: { ok: true, actions: [isolateHost] },
+    });
+    const recommendation = result.proposals.find((p) => p.title === 'Analyst recommendation');
+    expect(recommendation?.comment).toContain(
+      'Identities dev-user (user) and escalated-role (service) are implicated; a host action does not reach them.'
+    );
+  });
+
+  it('names users and services in the closure summary after hosts', () => {
+    const result = decidePackageReport({
+      conversationId,
+      state: baseHitState({ users: ['dev-user'], services: ['escalated-role'] }),
+      catalog: { ok: true, actions: [isolateHost] },
+    });
+    expect(result.closureSummary).toContain(
+      'Confirmed hit. Hosts: host-a. Users: dev-user. Services: escalated-role.'
+    );
+  });
+
+  it('omits the Users and Services parts of the closure summary when there are none', () => {
+    const result = decidePackageReport({
+      conversationId,
+      state: baseHitState(),
+      catalog: { ok: true, actions: [isolateHost] },
+    });
+    expect(result.closureSummary).toContain('Confirmed hit. Hosts: host-a. Evidence:');
+    expect(result.closureSummary).not.toContain('Users:');
+    expect(result.closureSummary).not.toContain('Services:');
   });
 
   it('mints no recommendation when every host is enrolled, covered, and host-scoped', () => {
@@ -327,6 +379,23 @@ describe('decidePackageReport', () => {
     expect(result.proposals).toHaveLength(1);
     expect(result.proposals[0].hostName).toBe('host-a');
     expect(result.proposals[0].actionInput?.parameters).toEqual({ pid: 100 });
+  });
+
+  it('mints byte-identical host and process subject keys (frozen: a change renames every existing proposal)', () => {
+    const result = decidePackageReport({
+      conversationId,
+      state: baseHitState({
+        processSelectors: [
+          { pid: 4242, processKey: 'pid:4242', hostName: 'host-a', processName: 'proc.exe' },
+        ],
+      }),
+      catalog: { ok: true, actions: [isolateHost, killProcess] },
+    });
+    const byWorkflow = new Map(result.proposals.map((p) => [p.actionWorkflowId, p.subjectKey]));
+    // uuidv5(`conv-1|agent-a|system-security-action-isolate-host`) under the fixed namespace.
+    expect(byWorkflow.get(isolateHost.workflowId)).toBe('a1ec6d8b-714e-50a2-8715-d6b9cc4402a1');
+    // uuidv5(`conv-1|agent-a|system-security-action-kill-process|pid:4242`).
+    expect(byWorkflow.get(killProcess.workflowId)).toBe('7bd814ca-d71b-548f-92d2-a22376be89f0');
   });
 
   it('builds stable subject keys for the same host × action × process', () => {

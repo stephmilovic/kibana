@@ -151,19 +151,35 @@ const buildClosureSummary = (state: CurrentRunState): string => {
     state.hosts.length > 0
       ? ` Hosts: ${state.hosts.map((h) => h.name).join(', ')}.`
       : ' No eligible hosts.';
-  return `${title}. Confirmed hit.${hostPart}${evidence}`;
+  const userPart = state.users.length > 0 ? ` Users: ${state.users.join(', ')}.` : '';
+  const servicePart = state.services.length > 0 ? ` Services: ${state.services.join(', ')}.` : '';
+  return `${title}. Confirmed hit.${hostPart}${userPart}${servicePart}${evidence}`;
 };
+
+/** e.g. `dev-user (user) and escalated-role (service)`; users first, then services. */
+const describeIdentities = ({
+  users,
+  services,
+}: {
+  users: string[];
+  services: string[];
+}): string =>
+  [...users.map((u) => `${u} (user)`), ...services.map((s) => `${s} (service)`)].join(' and ');
 
 /** Why the recommendation fired, one line per reason that actually held. */
 const buildRecommendationReasonLines = ({
   hasExecutable,
   unenrolledHosts,
-  notHostScoped,
+  users,
+  services,
+  evidenceOutsideActionable,
   processUncovered,
 }: {
   hasExecutable: boolean;
   unenrolledHosts: CurrentRunHost[];
-  notHostScoped: boolean;
+  users: string[];
+  services: string[];
+  evidenceOutsideActionable: boolean;
   processUncovered: boolean;
 }): string[] => {
   const lines: string[] = [];
@@ -179,10 +195,19 @@ const buildRecommendationReasonLines = ({
       } not enrolled, so no Defend action reaches ${unenrolledHosts.length === 1 ? 'it' : 'them'}.`
     );
   }
-  if (notHostScoped) {
+  const identityCount = users.length + services.length;
+  if (identityCount > 0) {
     lines.push(
-      'Part of the evidence for this finding is not host-scoped, so a host action would not close it.'
+      `${identityCount === 1 ? 'Identity' : 'Identities'} ${describeIdentities({
+        users,
+        services,
+      })} ${identityCount === 1 ? 'is' : 'are'} implicated; a host action does not reach ${
+        identityCount === 1 ? 'it' : 'them'
+      }.`
     );
+  }
+  if (evidenceOutsideActionable) {
+    lines.push('Part of the evidence is outside the indices where a host action could land.');
   }
   if (processUncovered) {
     lines.push('A process was implicated but could not be resolved to a live process to act on.');
@@ -314,8 +339,9 @@ export const decidePackageReport = ({
   }
 
   const hasExecutable = proposals.length > 0;
-  const notHostScoped =
-    state.hasNonHostEntity || state.hasIocIndicator || !state.allEventsActionable;
+  const hasIdentity = state.users.length > 0 || state.services.length > 0;
+  const evidenceOutsideActionable = state.hasIocIndicator || !state.allEventsActionable;
+  const notHostScoped = hasIdentity || evidenceOutsideActionable;
   // Only worth flagging once something else did mint for a host with process evidence;
   // "nothing minted at all" is already covered by `!hasExecutable` above.
   const processUncovered =
@@ -330,7 +356,9 @@ export const decidePackageReport = ({
     const reasonLines = buildRecommendationReasonLines({
       hasExecutable,
       unenrolledHosts: unenrolled,
-      notHostScoped,
+      users: state.users,
+      services: state.services,
+      evidenceOutsideActionable,
       processUncovered,
     });
     proposals.push(buildRecommendationProposal({ conversationId, state, reasonLines }));
