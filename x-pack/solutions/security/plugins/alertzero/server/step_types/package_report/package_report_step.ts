@@ -238,7 +238,7 @@ export const getPackageReportStepDefinition = ({
 
         const listRespondActions: RunPackageReportDeps['listRespondActions'] = async (sid) => {
           try {
-            const listed = await getActionsService().list(sid, request, ['respond']);
+            const listed = await getActionsService().list(sid, request, ['respond', 'investigate']);
             return { ok: true, actions: listed.actions };
           } catch {
             return { ok: false, reason: 'catalog_error' };

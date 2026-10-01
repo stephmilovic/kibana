@@ -6,6 +6,7 @@
  */
 
 import type { ActionCatalogEntry } from '@kbn/alertzero-common';
+import type { SeverityLevel } from '../../../common/attachment_enums';
 import type { PackageReportMintPayload } from '../../../common/step_types/package_report';
 
 /** One host observed on the current-run SSE, with enrollment resolution applied. */
@@ -14,6 +15,8 @@ export interface CurrentRunHost {
   /** Elastic Defend agent id when enrolled; absent when unenrolled or unknown. */
   agentId?: string;
   enrolled: boolean;
+  /** `Endpoint.capabilities` from the endpoint metadata document; `[]` when unknown. */
+  capabilities: string[];
 }
 
 /** Process selector fillable into kill/suspend `parameters`. */
@@ -38,6 +41,8 @@ export interface ProcessSelector {
    * every technique confirmed anywhere on the host.
    */
   techniqueId?: string;
+  /** True when a Tier 1 ref that rehydrated to this process carried `matched.ioc`. */
+  iocMatched: boolean;
 }
 
 /** One confirmed Tier 2 behavior, deduped by `technique_id` across current-run SSEs. */
@@ -68,6 +73,12 @@ export interface CurrentRunState {
   reportId: string;
   /** True when at least one current-run SSE has `hunt_result.has_confirmed_hit`. */
   hasConfirmedHit: boolean;
+  /** Max SSE `severity` across current-run SSEs. */
+  severity: SeverityLevel;
+  /** Max SSE `confidence` across current-run SSEs. */
+  confidence: number;
+  /** Min `from` / max `to` of `hunt_result.time_range` across current-run SSEs; absent when none carried one. */
+  huntWindow?: { from: string; to: string };
   /** SSE titles for the closure summary. */
   titles: string[];
   /** Short evidence lines for the closure summary. */
