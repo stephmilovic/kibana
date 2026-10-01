@@ -37,7 +37,7 @@ const describeProcessForTitle = (selector: ProcessSelector): string =>
     : selector.processName;
 
 /** Markdown process label for the comment body, e.g. `` `powershell.exe` (PID 4212) ``. */
-const describeProcess = (selector: ProcessSelector): string => {
+export const describeProcess = (selector: ProcessSelector): string => {
   if (selector.pid !== undefined) {
     return `\`${selector.processName}\` (PID ${selector.pid})`;
   }
@@ -138,6 +138,9 @@ const buildActionRationale = ({
     if (name.startsWith('suspend')) {
       return 'Suspending it pauses execution without terminating the process, preserving state for investigation';
     }
+    if (name.startsWith('dump memory')) {
+      return 'Dumping its memory captures volatile evidence for offline analysis without changing the process';
+    }
     return 'This action responds to the process directly';
   }
   if (isHostAction(entry.name.trim())) {
@@ -215,17 +218,20 @@ export const buildProposalComment = ({
   host,
   state,
   processSelector,
+  ruleLine,
 }: {
   entry: ActionCatalogEntry;
   host: CurrentRunHost;
   state: CurrentRunState;
   processSelector?: ProcessSelector;
+  /** The selection rule that chose this action; rendered as the first Why bullet when present. */
+  ruleLine?: string;
 }): string => {
   const actionLine = buildActionLine({ entry, host, processSelector });
   const evidenceLines = processSelector
     ? [processTechniqueText(state, processSelector), processLastSeenText(processSelector)]
     : [huntConfirmedText(state, host), evidenceSummaryText(state)];
-  const whyLines = [...evidenceLines, buildActionRationale({ entry, processSelector })]
+  const whyLines = [ruleLine, ...evidenceLines, buildActionRationale({ entry, processSelector })]
     .filter((line): line is string => line !== undefined)
     .map(addPeriod);
 
@@ -241,10 +247,13 @@ export const buildRecommendationComment = ({
   reasonLines,
   manualRemediation,
   state,
+  heldBackLines = [],
 }: {
   reasonLines: string[];
   manualRemediation: string[];
   state: CurrentRunState;
+  /** Actions the selection table declined to propose, each with its reason. */
+  heldBackLines?: string[];
 }): string => {
   const sections = [
     '**Action:** Analyst follow-up. No automated action is proposed.',
@@ -252,6 +261,9 @@ export const buildRecommendationComment = ({
     '**Why**',
     ...reasonLines.map((line) => `- ${line}`),
   ];
+  if (heldBackLines.length > 0) {
+    sections.push('', '**Held back**', ...heldBackLines.map((line) => `- ${addPeriod(line)}`));
+  }
   if (manualRemediation.length > 0) {
     sections.push('', '**Recommended steps**', ...manualRemediation.map((line) => `- ${line}`));
   }
