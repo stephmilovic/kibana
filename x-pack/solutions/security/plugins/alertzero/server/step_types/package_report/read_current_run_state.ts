@@ -6,6 +6,7 @@
  */
 
 import type { VersionedAttachment } from '@kbn/agent-builder-common';
+import { SEVERITY_LEVELS, type SeverityLevel } from '../../../common/attachment_enums';
 import type { significantSecurityEventAttachmentDataSchema } from '../../../common/significant_security_event_schema';
 import { significantSecurityEventAttachmentReadSchema } from '../../../common/significant_security_event_schema';
 import { buildMatchesRequired } from '../../services/watches/hunt/common/matches_required';
@@ -24,7 +25,9 @@ const currentVersionData = (attachment: VersionedAttachment): unknown => {
   return version?.data;
 };
 
-export type HostEnrollment = { enrolled: true; agentId: string } | { enrolled: false };
+export type HostEnrollment =
+  | { enrolled: true; agentId: string; capabilities: string[] }
+  | { enrolled: false };
 
 export type ResolveHostEnrollment = (hostName: string) => Promise<HostEnrollment>;
 
@@ -66,13 +69,44 @@ const extractEvidenceSummary = (
   };
 };
 
+/** Max by position in `SEVERITY_LEVELS`; `low` when there is nothing to compare. */
+const maxSeverity = (severities: SeverityLevel[]): SeverityLevel =>
+  severities.reduce<SeverityLevel>(
+    (max, severity) =>
+      SEVERITY_LEVELS.indexOf(severity) > SEVERITY_LEVELS.indexOf(max) ? severity : max,
+    'low'
+  );
+
+/** Min `from` / max `to` across every SSE that carried a `hunt_result.time_range`. */
+const extractHuntWindow = (
+  currentRun: Array<ReturnType<typeof significantSecurityEventAttachmentDataSchema.parse>>
+): CurrentRunState['huntWindow'] => {
+  let window: { from: string; to: string } | undefined;
+  for (const sse of currentRun) {
+    const range = sse.hunt_result?.time_range;
+    if (!range) {
+      continue;
+    }
+    window = window
+      ? {
+          from: Date.parse(range.from) < Date.parse(window.from) ? range.from : window.from,
+          to: Date.parse(range.to) > Date.parse(window.to) ? range.to : window.to,
+        }
+      : { from: range.from, to: range.to };
+  }
+  return window;
+};
+
 export type RehydrateProcessSelectors = (args: {
   alerts: Array<{ alert_id: string; index: string }>;
   events: Array<{
     event_id: string;
     source_index: string;
-    /** Present when the SSE attributed this event to a technique; preferred over a plain sample ref during dedupe. */
-    matched?: { technique_id?: string };
+    /**
+     * Present when the SSE attributed this event to a technique (preferred over a plain sample
+     * ref during dedupe) or to the Tier 1 IOC that confirmed it (`ioc: true`, presence only).
+     */
+    matched?: { technique_id?: string; ioc?: true };
   }>;
 }) => Promise<ProcessSelector[]>;
 
@@ -147,9 +181,14 @@ export const readCurrentRunState = async ({
   for (const name of hostNames) {
     const enrollment = await resolveHostEnrollment(name);
     if (enrollment.enrolled) {
-      hosts.push({ name, enrolled: true, agentId: enrollment.agentId });
+      hosts.push({
+        name,
+        enrolled: true,
+        agentId: enrollment.agentId,
+        capabilities: enrollment.capabilities,
+      });
     } else {
-      hosts.push({ name, enrolled: false });
+      hosts.push({ name, enrolled: false, capabilities: [] });
     }
   }
 
@@ -157,11 +196,17 @@ export const readCurrentRunState = async ({
   const eventRefs = currentRun.flatMap((sse) => sse.events ?? []);
   const processSelectors = await rehydrateProcessSelectors({
     alerts: alertRefs.map((a) => ({ alert_id: a.alert_id, index: a.index })),
-    events: eventRefs.map((e) => ({
-      event_id: e.event_id,
-      source_index: e.source_index,
-      ...(e.matched?.technique_id ? { matched: { technique_id: e.matched.technique_id } } : {}),
-    })),
+    events: eventRefs.map((e) => {
+      const matched = {
+        ...(e.matched?.technique_id ? { technique_id: e.matched.technique_id } : {}),
+        ...(e.matched?.ioc ? { ioc: true as const } : {}),
+      };
+      return {
+        event_id: e.event_id,
+        source_index: e.source_index,
+        ...(Object.keys(matched).length > 0 ? { matched } : {}),
+      };
+    }),
   });
 
   const hasNonHostEntity = currentRun.some((sse) =>
@@ -188,6 +233,9 @@ export const readCurrentRunState = async ({
     runId,
     reportId,
     hasConfirmedHit,
+    severity: maxSeverity(currentRun.map((sse) => sse.severity)),
+    confidence: Math.max(...currentRun.map((sse) => sse.confidence)),
+    huntWindow: extractHuntWindow(currentRun),
     titles,
     evidenceLines,
     techniques,
