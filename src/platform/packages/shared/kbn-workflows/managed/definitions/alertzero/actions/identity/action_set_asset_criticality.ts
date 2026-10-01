@@ -7,20 +7,21 @@
  * License v3.0 only", or the "Server Side Public License, v 1".
  */
 
-import ACTION_ISOLATE_HOST_YAML from './action_isolate_host.yaml';
+import ACTION_SET_ASSET_CRITICALITY_YAML from './action_set_asset_criticality.yaml';
 import type { ManagedWorkflowDefinition } from '../../../../types';
 import {
   ALERTZERO_MANAGED_WORKFLOW_PLUGIN_ID,
   ALERTZERO_RULE_WORKFLOW_MANAGEMENT,
 } from '../../constants';
 
-export const ALERTZERO_ACTION_ISOLATE_HOST_WORKFLOW_ID = 'system-alertzero-action-isolate-host';
+export const ALERTZERO_ACTION_SET_ASSET_CRITICALITY_WORKFLOW_ID =
+  'system-alertzero-action-set-asset-criticality';
 
-export const ALERTZERO_ACTION_ISOLATE_HOST_WORKFLOW = {
+export const ALERTZERO_ACTION_SET_ASSET_CRITICALITY_WORKFLOW = {
   billable: false,
-  id: ALERTZERO_ACTION_ISOLATE_HOST_WORKFLOW_ID,
+  id: ALERTZERO_ACTION_SET_ASSET_CRITICALITY_WORKFLOW_ID,
   management: ALERTZERO_RULE_WORKFLOW_MANAGEMENT,
   pluginId: ALERTZERO_MANAGED_WORKFLOW_PLUGIN_ID,
-  version: 4,
-  yaml: ACTION_ISOLATE_HOST_YAML,
+  version: 1,
+  yaml: ACTION_SET_ASSET_CRITICALITY_YAML,
 } as const satisfies ManagedWorkflowDefinition;

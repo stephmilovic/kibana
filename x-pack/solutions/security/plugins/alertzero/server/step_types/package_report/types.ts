@@ -5,7 +5,8 @@
  * 2.0.
  */
 
-import type { ActionCatalogEntry } from '@kbn/alertzero-common';
+import type { ActionCatalogEntry, ActionSubjectKind } from '@kbn/alertzero-common';
+import type { SeverityLevel } from '../../../common/attachment_enums';
 import type { PackageReportMintPayload } from '../../../common/step_types/package_report';
 
 /** One host observed on the current-run SSE, with enrollment resolution applied. */
@@ -39,6 +40,25 @@ export interface ProcessSelector {
    */
   techniqueId?: string;
 }
+
+export type SubjectKind = ActionSubjectKind;
+
+/**
+ * One thing packaging could act on. Hosts and processes are reachable when the host is
+ * enrolled with an agent id; users and services are always reachable (the identity action
+ * is a Kibana API). `value` is the human-readable name the proposal is about.
+ */
+export type Subject =
+  | { kind: 'host'; value: string; reachable: boolean; host: CurrentRunHost }
+  | {
+      kind: 'process';
+      value: string;
+      reachable: boolean;
+      host: CurrentRunHost;
+      processSelector: ProcessSelector;
+    }
+  | { kind: 'user'; value: string; reachable: true }
+  | { kind: 'service'; value: string; reachable: true };
 
 /** One confirmed Tier 2 behavior, deduped by `technique_id` across current-run SSEs. */
 export interface HuntEvidenceTechnique {
@@ -80,8 +100,15 @@ export interface CurrentRunState {
    * Empty means kill/suspend cannot be filled.
    */
   processSelectors: ProcessSelector[];
-  /** True when any current-run SSE entity is `user.name` or `service.name`, not a host. */
-  hasNonHostEntity: boolean;
+  /**
+   * Deduped `user.name` entity values across current-run SSEs, in SSE order. Tier 1's
+   * CloudTrail identity-type vote decides whether an identity lands here or in `services`.
+   */
+  users: string[];
+  /** Deduped `service.name` entity values across current-run SSEs (assumed roles, service accounts). */
+  services: string[];
+  /** Max SSE `severity` across current-run SSEs, by `SEVERITY_LEVELS` order. */
+  severity?: SeverityLevel;
   /** True when any current-run SSE security knowledge indicator is IOC-typed. */
   hasIocIndicator: boolean;
   /** False when a current-run SSE event ref's `source_index` falls outside the run's `actionable_indices`. */
