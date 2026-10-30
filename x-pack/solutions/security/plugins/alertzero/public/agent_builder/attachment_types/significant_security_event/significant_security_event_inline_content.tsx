@@ -684,7 +684,6 @@ const BehaviorValidation: React.FC<{
       name: i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.huntResultTechnique', {
         defaultMessage: 'Technique',
       }),
-      width: '10em',
       render: (techniqueId: string) => (
         <EuiBadge
           color="hollow"
@@ -715,7 +714,6 @@ const BehaviorValidation: React.FC<{
       name: i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.huntResultTactics', {
         defaultMessage: 'Tactics',
       }),
-      width: '11em',
       render: (tacticIds: string[]) => <HollowBadgeList items={tacticIds} />,
     },
     {
@@ -726,7 +724,6 @@ const BehaviorValidation: React.FC<{
           defaultMessage: 'Result',
         }
       ),
-      width: '10em',
       render: (execution: Tier2TableRow['execution']) => (
         <BehaviorExecutionCell execution={execution} />
       ),
@@ -736,7 +733,6 @@ const BehaviorValidation: React.FC<{
       name: i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.huntResultConfidence', {
         defaultMessage: 'Confidence',
       }),
-      width: '9em',
       render: (confidence: number) => (
         <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
           <EuiFlexItem grow={false} css={{ minWidth: '3em' }}>
@@ -761,7 +757,6 @@ const BehaviorValidation: React.FC<{
       name: i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.behaviorActions', {
         defaultMessage: 'Actions',
       }),
-      width: '12em',
       render: (row: Tier2TableRow) => (
         <ContinueInDiscoverAction row={row} timeRange={timeRange} navigation={navigation} />
       ),
@@ -780,7 +775,8 @@ const BehaviorValidation: React.FC<{
         </>
       ) : null}
       <EuiInMemoryTable<Tier2TableRow>
-        tableLayout="fixed"
+        compressed
+        tableLayout="auto"
         responsiveBreakpoint={false}
         rowHeader="technique_id"
         tableCaption={i18n.translate(
