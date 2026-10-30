@@ -162,7 +162,7 @@ describe('createSignificantSecurityEventAttachmentDefinition', () => {
       ],
     });
     expect(eventButtons).toHaveLength(1);
-    expect(eventButtons?.[0].label).toBe('Open events in Discover');
+    expect(eventButtons?.[0].label).toBe('Open cited events');
     expect(decodeURIComponent(eventButtons?.[0].href ?? '')).toContain(
       'FROM ".ds-logs-endpoint.events.process-default-2026.09.22-000001", ' +
         '".ds-logs-endpoint.events.network-default-2026.09.22-000001" ' +
@@ -179,6 +179,14 @@ describe('createSignificantSecurityEventAttachmentDefinition', () => {
     expect(decodeURIComponent(alertButtons?.[0].href ?? '')).toContain(
       'kibana.alert.uuid IN ("alert-1")'
     );
+
+    const bothButtons = getButtons({
+      ...baseData,
+      events: [{ event_id: 'evt-1', source_index: '.ds-logs-default-2026.09.22-000001' }],
+      alerts: [{ alert_id: 'alert-1', index: '.alerts-security.alerts-default' }],
+    });
+    expect(bothButtons).toHaveLength(1);
+    expect(bothButtons?.[0].label).toBe('Open cited events');
 
     expect(getButtons(baseData)).toEqual([]);
     expect(

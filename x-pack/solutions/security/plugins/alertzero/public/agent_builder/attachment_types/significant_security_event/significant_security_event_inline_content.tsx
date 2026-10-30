@@ -11,7 +11,6 @@ import { css } from '@emotion/react';
 import {
   EuiAccordion,
   EuiBadge,
-  EuiBasicTable,
   EuiButtonEmpty,
   EuiFlexGroup,
   EuiFlexItem,
@@ -23,6 +22,7 @@ import {
   EuiSpacer,
   EuiText,
   EuiTitle,
+  EuiToolTip,
   euiPaletteColorBlind,
   useEuiTheme,
   type EuiBasicTableColumn,
@@ -45,27 +45,25 @@ import {
   StatRow,
   HollowBadgeList,
   BadgeRow,
-  InlineLabel,
   MetaCard,
   TableFrame,
   AttachmentEmptyState,
   buildMitreTechniqueUrl,
 } from '../shared/primitives';
 import { LabeledBadgeTable, type LabeledBadgeTableRow } from '../shared/labeled_badge_table';
-import { formatPercent, SEVERITY_LEVELS, severityBadgeColor } from '../shared/severity';
+import { formatPercent, severityBadgeColor } from '../shared/severity';
 import {
   buildSignificantSecurityEventActionButtons,
   parseSignificantSecurityEventData,
 } from './view_model';
 import type {
   HuntResult,
+  HuntResultBehavior,
   HuntResultBehaviorExecution,
-  MapsToProposal,
   SignificantSecurityAlertRef,
   SignificantSecurityEventAttachment,
   SignificantSecurityEventRef,
   SecurityKnowledgeIndicator,
-  TimelineEntry,
 } from './view_model';
 
 export interface SignificantSecurityEventInlineContentProps
@@ -524,7 +522,7 @@ const EvidenceColumn: React.FC<{
 const HypothesisSection: React.FC<{ hypothesis: string }> = ({ hypothesis }) => (
   <Section
     title={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.hypothesis', {
-      defaultMessage: 'Hypothesis tested',
+      defaultMessage: 'Why this matters',
     })}
   >
     <EuiText size="s" data-test-subj="alertzeroSignificantSecurityEventHypothesis">
@@ -533,102 +531,15 @@ const HypothesisSection: React.FC<{ hypothesis: string }> = ({ hypothesis }) => 
   </Section>
 );
 
-const TimelineSection: React.FC<{ timeline: TimelineEntry[] }> = ({ timeline }) => {
-  const { euiTheme } = useEuiTheme();
-  if (timeline.length === 0) {
-    return null;
-  }
-
-  // Producer order is authoritative ("an ordered sequence"); do not re-sort lexically.
-  const sorted = timeline;
-
-  return (
-    <Section
-      title={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.timeline', {
-        defaultMessage: 'Timeline',
-      })}
-      aside={
-        <EuiText size="xs" color="subdued">
-          {i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.timelineCount', {
-            defaultMessage: '{count, plural, one {# step} other {# steps}}',
-            values: { count: timeline.length },
-          })}
-        </EuiText>
-      }
-    >
-      <div
-        data-test-subj="alertzeroSignificantSecurityEventTimeline"
-        css={css`
-          display: grid;
-          grid-template-columns: max-content ${euiTheme.size.m} 1fr;
-          column-gap: ${euiTheme.size.s};
-          row-gap: 0;
-        `}
-      >
-        {sorted.map((entry, index) => {
-          const isLast = index === sorted.length - 1;
-          return (
-            <React.Fragment key={`${entry.at}-${index}`}>
-              <EuiText
-                size="xs"
-                color="subdued"
-                css={css`
-                  font-variant-numeric: tabular-nums;
-                  white-space: nowrap;
-                  line-height: ${euiTheme.size.l};
-                `}
-              >
-                <DateTime value={entry.at} />
-              </EuiText>
-              <div
-                aria-hidden
-                css={css`
-                  position: relative;
-                  &::before {
-                    content: '';
-                    position: absolute;
-                    top: calc(${euiTheme.size.l} / 2 - 4px);
-                    left: calc(50% - 4px);
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 50%;
-                    background: ${euiTheme.colors.primary};
-                  }
-                  &::after {
-                    content: '';
-                    position: absolute;
-                    top: calc(${euiTheme.size.l} / 2 + 4px);
-                    bottom: ${isLast ? 'auto' : `-${euiTheme.size.xs}`};
-                    left: calc(50% - 0.5px);
-                    width: 1px;
-                    background: ${isLast ? 'transparent' : euiTheme.colors.borderBaseSubdued};
-                  }
-                `}
-              />
-              <EuiText
-                size="s"
-                css={css`
-                  ${cellStyles};
-                  line-height: ${euiTheme.size.l};
-                  padding-bottom: ${isLast ? 0 : euiTheme.size.s};
-                `}
-              >
-                {entry.what}
-              </EuiText>
-            </React.Fragment>
-          );
-        })}
-      </div>
-    </Section>
-  );
-};
-
 interface Tier2TableRow {
   technique_id: string;
   tactic_ids: string[];
   confidence: number;
   title: string;
   execution?: HuntResultBehaviorExecution;
+  validated_esql?: string;
+  /** Index in `tier2.behaviors`, which names the row for assistive tech. */
+  rowIndex: number;
 }
 
 /**
@@ -696,46 +607,78 @@ const BehaviorExecutionCell: React.FC<{ execution?: HuntResultBehaviorExecution 
   );
 };
 
-const HuntResultSection: React.FC<{ huntResult: HuntResult }> = ({ huntResult }) => {
-  const { euiTheme } = useEuiTheme();
-  const { tier1, tier2 } = huntResult;
-  const isSampled = tier1.counts.returned_hits < tier1.counts.total_hits;
-  const confirmingTiers = huntResult.hit_sources.map((source) => TIER_LABELS[source]);
-  const distributionStats = tier1.per_index.map((row, index) => ({
-    key: row.index,
-    count: row.hit_count,
-    label: row.index,
-    color: visColorAt(index),
-    // Only required indices can corroborate: Tier 1's hit bar is computed from them, and an
-    // optional index contributes hits that did not clear it. Unlabeled, its segment reads as
-    // part of the corroborating total.
-    required: row.required,
-  }));
-  const totalDistributedHits = tier1.per_index.reduce((sum, row) => sum + row.hit_count, 0);
+/**
+ * Opens the exact query a Tier 2 behavior ran in Discover, over the hunt window. Shown only for
+ * an execution that ran, so a proposal that never executed does not claim to continue a hunt;
+ * an executed run with no rows still qualifies, because the analyst can widen it and look.
+ */
+const ContinueInDiscoverAction: React.FC<{
+  row: Tier2TableRow;
+  timeRange: HuntResult['time_range'];
+  navigation: AttachmentNavigationDeps;
+}> = ({ row, timeRange, navigation }) => {
+  if (row.execution?.executed !== true || !row.validated_esql) {
+    return null;
+  }
 
-  // `resolved_iocs` are the concrete indicators that produced the hit counts above, so they
-  // belong on the analyst-facing card and not only in the agent representation.
-  const resolvedIocsByType = groupBy(tier1.resolved_iocs, (ioc) => ioc.type);
-  const resolvedIocRows: LabeledBadgeTableRow[] = Object.entries(resolvedIocsByType).map(
-    ([iocType, group]) => ({
-      id: iocType,
-      label: iocType,
-      values: (
-        <>
-          {group.map((ioc, index) => (
-            <IocBadge
-              key={`${ioc.type}-${ioc.value}-${index}`}
-              value={ioc.value}
-              index={index}
-              testSubj={`alertzeroSignificantSecurityEventHuntResultResolvedIoc-${iocType}-${index}`}
-            />
-          ))}
-        </>
-      ),
-    })
+  const href = buildDiscoverEsqlUrl({
+    share: navigation.share,
+    esql: row.validated_esql,
+    timeRange: { from: timeRange.from, to: timeRange.to },
+    useHash: true,
+  });
+  if (!href) {
+    return null;
+  }
+
+  return (
+    <EuiToolTip
+      content={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.continueTooltip', {
+        defaultMessage: 'Opens with the hunt window {from} to {to}',
+        values: { from: timeRange.from, to: timeRange.to },
+      })}
+    >
+      <EuiButtonEmpty
+        size="xs"
+        iconType="external"
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={i18n.translate(
+          'xpack.alertzero.agentBuilder.attachments.sse.continueInDiscoverAria',
+          {
+            defaultMessage: 'Continue in Discover: {techniqueId} (behavior {position})',
+            values: { techniqueId: row.technique_id, position: row.rowIndex + 1 },
+          }
+        )}
+        data-test-subj={`alertzeroSignificantSecurityEventContinueInDiscover-${row.rowIndex}`}
+      >
+        {i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.continueInDiscover', {
+          defaultMessage: 'Continue in Discover',
+        })}
+      </EuiButtonEmpty>
+    </EuiToolTip>
   );
+};
 
-  const tier2Columns: Array<EuiBasicTableColumn<Tier2TableRow>> = [
+const BehaviorValidation: React.FC<{
+  tier2: NonNullable<HuntResult['tier2']>;
+  timeRange: HuntResult['time_range'];
+  navigation: AttachmentNavigationDeps;
+}> = ({ tier2, timeRange, navigation }) => {
+  const { euiTheme } = useEuiTheme();
+
+  const rows: Tier2TableRow[] = tier2.behaviors.map((behavior, rowIndex) => ({
+    technique_id: behavior.technique_id,
+    tactic_ids: behavior.tactic_ids,
+    confidence: behavior.confidence,
+    title: behavior.title,
+    rowIndex,
+    ...(behavior.execution ? { execution: behavior.execution } : {}),
+    ...(behavior.validated_esql ? { validated_esql: behavior.validated_esql } : {}),
+  }));
+
+  const columns: Array<EuiBasicTableColumn<Tier2TableRow>> = [
     {
       field: 'technique_id',
       name: i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.huntResultTechnique', {
@@ -814,436 +757,561 @@ const HuntResultSection: React.FC<{ huntResult: HuntResult }> = ({ huntResult })
         </EuiFlexGroup>
       ),
     },
+    {
+      name: i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.behaviorActions', {
+        defaultMessage: 'Actions',
+      }),
+      width: '12em',
+      render: (row: Tier2TableRow) => (
+        <ContinueInDiscoverAction row={row} timeRange={timeRange} navigation={navigation} />
+      ),
+    },
   ];
 
-  const tier2Rows: Tier2TableRow[] =
-    tier2?.behaviors.map((behavior) => ({
-      technique_id: behavior.technique_id,
-      tactic_ids: behavior.tactic_ids,
-      confidence: behavior.confidence,
-      title: behavior.title,
-      ...(behavior.execution ? { execution: behavior.execution } : {}),
-    })) ?? [];
+  return (
+    <>
+      {tier2.behaviors_truncated ? (
+        <>
+          <PartialListNote
+            label={PARTIAL_LIST_LABEL}
+            testSubj="alertzeroSignificantSecurityEventHuntResultBehaviorsTruncated"
+          />
+          <EuiSpacer size="s" />
+        </>
+      ) : null}
+      <EuiInMemoryTable<Tier2TableRow>
+        tableLayout="fixed"
+        responsiveBreakpoint={false}
+        rowHeader="technique_id"
+        tableCaption={i18n.translate(
+          'xpack.alertzero.agentBuilder.attachments.sse.huntResultBehaviorsTableCaption',
+          { defaultMessage: 'Hunt result behaviors' }
+        )}
+        items={rows}
+        columns={columns}
+        pagination={
+          rows.length > 5 ? { initialPageSize: 5, pageSizeOptions: [5, 10, 25] } : undefined
+        }
+      />
+    </>
+  );
+};
+
+/** Sibling, default-collapsed section so detail never competes with the outcome summary. */
+const DetailAccordion: React.FC<{
+  id: string;
+  testSubj: string;
+  title: React.ReactNode;
+  children: React.ReactNode;
+}> = ({ id, testSubj, title, children }) => (
+  <TableFrame>
+    <EuiAccordion
+      id={id}
+      initialIsOpen={false}
+      arrowDisplay="right"
+      paddingSize="s"
+      data-test-subj={testSubj}
+      buttonProps={{ paddingSize: 's' }}
+      buttonContent={
+        <EuiTitle size="xxs">
+          <h4>{title}</h4>
+        </EuiTitle>
+      }
+    >
+      {children}
+    </EuiAccordion>
+  </TableFrame>
+);
+
+const TwoLineCaption: React.FC<{ primary: React.ReactNode; secondary?: React.ReactNode }> = ({
+  primary,
+  secondary,
+}) => (
+  <>
+    <EuiText size="xs" color="subdued">
+      {primary}
+    </EuiText>
+    {secondary ? (
+      <EuiText size="xs" color="subdued">
+        {secondary}
+      </EuiText>
+    ) : null}
+  </>
+);
+
+/**
+ * Distinct Tier 2 names across the behaviors that hit, and whether any contributing behavior
+ * capped its list. Only behaviors that actually listed names count as contributing: the fields
+ * are optional, so an absent list is unknown and never zero.
+ */
+const collectTier2Names = (
+  hitBehaviors: HuntResultBehavior[],
+  field: 'affected_hosts' | 'affected_users'
+): { count: number; truncated: boolean } => {
+  const names = new Set<string>();
+  let truncated = false;
+  for (const behavior of hitBehaviors) {
+    const list = behavior[field] ?? [];
+    if (list.length === 0) {
+      continue;
+    }
+    list.forEach((name) => names.add(name));
+    if (behavior[`${field}_truncated`] === true) {
+      truncated = true;
+    }
+  }
+  return { count: names.size, truncated };
+};
+
+const NO_VALUE = '–';
+
+const AffectedStat: React.FC<{
+  field: 'affected_hosts' | 'affected_users';
+  label: string;
+  huntResult: HuntResult;
+  hitBehaviors: HuntResultBehavior[];
+}> = ({ field, label, huntResult, hitBehaviors }) => {
+  const { tier1 } = huntResult;
+  const tier2Names = collectTier2Names(hitBehaviors, field);
+  const tier2Total = `${tier2Names.count}${tier2Names.truncated ? '+' : ''}`;
+
+  // Tier 1 reports only counts, so its number and Tier 2's names may overlap and are never
+  // added into one figure.
+  if (tier1.status === 'environment_hits_found') {
+    return (
+      <CompactStat
+        emphasis="strong"
+        title={tier1.counts[field]}
+        description={
+          <TwoLineCaption
+            primary={label}
+            secondary={
+              tier2Names.count > 0
+                ? i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.tier2AlsoReports', {
+                    defaultMessage: 'Tier 2 also reports {total}',
+                    values: { total: tier2Total },
+                  })
+                : undefined
+            }
+          />
+        }
+      />
+    );
+  }
+
+  // Unknown is not zero: only a clean Tier 1 with no Tier 2 hit is evidence of none.
+  const title =
+    hitBehaviors.length > 0
+      ? tier2Names.count > 0
+        ? tier2Total
+        : NO_VALUE
+      : tier1.status === 'no_environment_hits'
+      ? 0
+      : NO_VALUE;
+
+  return <CompactStat emphasis="strong" title={title} description={label} />;
+};
+
+const OutcomeStats: React.FC<{
+  huntResult?: HuntResult;
+  citedReferenceCount: number;
+}> = ({ huntResult, citedReferenceCount }) => {
+  const citedStat = (
+    <CompactStat
+      emphasis="strong"
+      title={citedReferenceCount}
+      description={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.citedReferences', {
+        defaultMessage: 'Cited references',
+      })}
+    />
+  );
+
+  // Without a hunt result the card cannot know hits, hosts or users, and zeros would read as a
+  // clean environment.
+  if (!huntResult) {
+    return <StatRow>{citedStat}</StatRow>;
+  }
+
+  const { tier1, tier2 } = huntResult;
+  const hitBehaviors = (tier2?.behaviors ?? []).filter(
+    (behavior) => behavior.execution?.hit === true
+  );
+  const isSampled = tier1.counts.returned_hits < tier1.counts.total_hits;
+  const didNotSearch = tier1.status === 'scope_blocked' || tier1.status === 'no_searchable_terms';
+
+  const hitsTitle = didNotSearch
+    ? NO_VALUE
+    : isSampled
+    ? i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.huntResultReturnedOfTotal', {
+        defaultMessage: '{returned} of {total}',
+        values: { returned: tier1.counts.returned_hits, total: tier1.counts.total_hits },
+      })
+    : tier1.counts.total_hits;
+  const hitsPrimary = didNotSearch
+    ? TIER1_STATUS_LABELS[tier1.status]
+    : isSampled
+    ? i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.environmentHitsSampled', {
+        defaultMessage: 'Environment hits (sampled)',
+      })
+    : i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.environmentHits', {
+        defaultMessage: 'Environment hits',
+      });
+
+  return (
+    <StatRow>
+      <CompactStat
+        emphasis="strong"
+        title={hitsTitle}
+        description={
+          <TwoLineCaption
+            primary={hitsPrimary}
+            secondary={
+              hitBehaviors.length > 0
+                ? i18n.translate(
+                    'xpack.alertzero.agentBuilder.attachments.sse.behaviorHitsCaption',
+                    {
+                      defaultMessage:
+                        '+ {count} {count, plural, one {behavior hit} other {behavior hits}}',
+                      values: { count: hitBehaviors.length },
+                    }
+                  )
+                : undefined
+            }
+          />
+        }
+      />
+      <AffectedStat
+        field="affected_hosts"
+        label={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.affectedHosts', {
+          defaultMessage: 'Affected hosts',
+        })}
+        huntResult={huntResult}
+        hitBehaviors={hitBehaviors}
+      />
+      <AffectedStat
+        field="affected_users"
+        label={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.affectedUsers', {
+          defaultMessage: 'Affected users',
+        })}
+        huntResult={huntResult}
+        hitBehaviors={hitBehaviors}
+      />
+      {citedStat}
+    </StatRow>
+  );
+};
+
+const ENTITY_CHIP_LIMIT = 10;
+
+const EntitiesSection: React.FC<{
+  entities: SignificantSecurityEventAttachment['data']['entities'];
+  navigation: AttachmentNavigationDeps;
+}> = ({ entities, navigation }) => {
+  // The schema accepts 50 entities, so the overflow has to stay reachable.
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const visibleEntities = isExpanded ? entities : entities.slice(0, ENTITY_CHIP_LIMIT);
+  const hiddenCount = Math.max(entities.length - ENTITY_CHIP_LIMIT, 0);
 
   return (
     <Section
-      testSubj="alertzeroSignificantSecurityEventHuntResult"
-      title={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.huntResultTitle', {
-        defaultMessage: 'Hunt result',
+      title={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.entities', {
+        defaultMessage: 'Entities',
       })}
       aside={
-        <EuiText size="xs" color="subdued" css={{ whiteSpace: 'nowrap' }}>
-          <DateTime value={huntResult.time_range.from} />
-          {' – '}
-          <DateTime value={huntResult.time_range.to} />
+        <EuiText size="xs" color="subdued">
+          {i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.entitiesCount', {
+            defaultMessage: '{count, plural, one {# entity} other {# entities}}',
+            values: { count: entities.length },
+          })}
         </EuiText>
       }
     >
-      <div>
-        <EuiFlexGroup
-          alignItems="center"
-          gutterSize="xs"
-          wrap
-          responsive={false}
-          data-test-subj="alertzeroSignificantSecurityEventHuntResultOutcome"
+      <BadgeRow>
+        {visibleEntities.map((entity, index) => (
+          <EntityChip
+            key={`${entity.field}:${entity.value}:${index}`}
+            entity={entity}
+            share={navigation.share}
+            getUrlForApp={navigation.getUrlForApp}
+            testSubj={`alertzeroSignificantSecurityEventEntity-${index}`}
+          />
+        ))}
+      </BadgeRow>
+      {hiddenCount > 0 && (
+        <EuiButtonEmpty
+          size="xs"
+          flush="left"
+          iconType={isExpanded ? 'arrowUp' : 'arrowDown'}
+          onClick={() => setIsExpanded((expanded) => !expanded)}
+          data-test-subj="alertzeroSignificantSecurityEventEntitiesOverflow"
         >
-          <EuiFlexItem grow={false}>
-            <EuiBadge color={huntResult.has_confirmed_hit ? 'danger' : 'hollow'}>
-              {huntResult.has_confirmed_hit
-                ? i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.huntConfirmedHit', {
-                    defaultMessage: 'Confirmed hit',
-                  })
-                : i18n.translate(
-                    'xpack.alertzero.agentBuilder.attachments.sse.huntNoConfirmedHit',
-                    { defaultMessage: 'No confirmed hit' }
-                  )}
-            </EuiBadge>
-          </EuiFlexItem>
-          {/* Which tier cleared the bar for this finding, which the tier statuses beside it do
-              not say: a report-scoped entry carries its report's Tier 1 status, so
-              "Tier 1 Environment hits found" can sit beside a finding only Tier 2 corroborated
-              and read as its confirmation. */}
-          {confirmingTiers.length > 0 && (
-            <EuiFlexItem grow={false}>
-              <EuiBadge
-                color="hollow"
-                iconType="check"
-                data-test-subj="alertzeroSignificantSecurityEventHuntResultHitSources"
-              >
-                {i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.huntConfirmedBy', {
-                  defaultMessage: 'Confirmed by {tiers}',
-                  values: { tiers: confirmingTiers.join(', ') },
-                })}
-              </EuiBadge>
-            </EuiFlexItem>
-          )}
-          <EuiFlexItem grow={false}>
-            <EuiBadge color="hollow">
-              <EuiText size="xs" color="subdued" component="span">
-                {TIER_LABELS.tier1}
-              </EuiText>{' '}
-              {TIER1_STATUS_LABELS[tier1.status]}
-            </EuiBadge>
-          </EuiFlexItem>
-          {tier2?.status && (
-            <EuiFlexItem grow={false}>
-              <EuiBadge color="hollow">
-                <EuiText size="xs" color="subdued" component="span">
-                  {TIER_LABELS.tier2}
-                </EuiText>{' '}
-                {TIER2_STATUS_LABELS[tier2.status]}
-              </EuiBadge>
-            </EuiFlexItem>
-          )}
-        </EuiFlexGroup>
-
-        <EuiSpacer size="m" />
-        <EuiPanel hasShadow={false} hasBorder paddingSize="m">
-          <StatRow>
-            <CompactStat
-              emphasis="strong"
-              title={
-                isSampled
-                  ? i18n.translate(
-                      'xpack.alertzero.agentBuilder.attachments.sse.huntResultReturnedOfTotal',
-                      {
-                        defaultMessage: '{returned} of {total}',
-                        values: {
-                          returned: tier1.counts.returned_hits,
-                          total: tier1.counts.total_hits,
-                        },
-                      }
-                    )
-                  : tier1.counts.total_hits
-              }
-              description={
-                isSampled
-                  ? i18n.translate(
-                      'xpack.alertzero.agentBuilder.attachments.sse.huntResultHitsSampled',
-                      { defaultMessage: 'Hits (sampled)' }
-                    )
-                  : i18n.translate(
-                      'xpack.alertzero.agentBuilder.attachments.sse.huntResultTotalHits',
-                      { defaultMessage: 'Total hits' }
-                    )
-              }
-            />
-            <CompactStat
-              emphasis="strong"
-              title={tier1.counts.affected_hosts}
-              description={i18n.translate(
-                'xpack.alertzero.agentBuilder.attachments.sse.huntResultAffectedHosts',
-                { defaultMessage: 'Affected hosts' }
-              )}
-            />
-            <CompactStat
-              emphasis="strong"
-              title={tier1.counts.affected_users}
-              description={i18n.translate(
-                'xpack.alertzero.agentBuilder.attachments.sse.huntResultAffectedUsers',
-                { defaultMessage: 'Affected users' }
-              )}
-            />
-            {tier2 && (
-              <CompactStat
-                emphasis="strong"
-                title={tier2.behaviors.length}
-                description={i18n.translate(
-                  'xpack.alertzero.agentBuilder.attachments.sse.huntResultBehaviors',
-                  { defaultMessage: 'Behaviors' }
-                )}
-              />
-            )}
-          </StatRow>
-
-          {distributionStats.length > 0 && (
-            <>
-              <EuiSpacer size="m" />
-              <DistributionBar
-                stats={distributionStats}
-                hideLastTooltip
-                data-test-subj="alertzeroSignificantSecurityEventHuntResultDistributionBar"
-              />
-              <EuiSpacer size="xs" />
-              <EuiFlexGroup
-                gutterSize="m"
-                wrap
-                responsive={false}
-                alignItems="center"
-                justifyContent="spaceBetween"
-              >
-                <EuiFlexItem grow={false}>
-                  <EuiFlexGroup gutterSize="m" wrap responsive={false}>
-                    {distributionStats.map((stat) => (
-                      <EuiFlexItem grow={false} key={stat.key}>
-                        <EuiHealth color={stat.color} textSize="xs">
-                          {stat.label} ({stat.count})
-                          {stat.required ? null : (
-                            <>
-                              {' '}
-                              <EuiText size="xs" color="subdued" component="span">
-                                {i18n.translate(
-                                  'xpack.alertzero.agentBuilder.attachments.sse.huntResultOptionalIndex',
-                                  { defaultMessage: 'optional' }
-                                )}
-                              </EuiText>
-                            </>
-                          )}
-                        </EuiHealth>
-                      </EuiFlexItem>
-                    ))}
-                  </EuiFlexGroup>
-                </EuiFlexItem>
-                <EuiFlexItem grow={false}>
-                  <EuiText size="xs" color="subdued">
-                    <FormattedMessage
-                      id="xpack.alertzero.agentBuilder.attachments.sse.huntResultDistributionSummary"
-                      defaultMessage="{hits, plural, one {# event} other {# events}} across {indices, plural, one {# index} other {# indices}}"
-                      values={{ hits: totalDistributedHits, indices: tier1.per_index.length }}
-                    />
-                    {tier1.per_index_truncated ? (
-                      <>
-                        {' · '}
-                        <PartialListNote
-                          label={PARTIAL_BREAKDOWN_LABEL}
-                          testSubj="alertzeroSignificantSecurityEventHuntResultPerIndexTruncated"
-                        />
-                      </>
-                    ) : null}
-                  </EuiText>
-                </EuiFlexItem>
-              </EuiFlexGroup>
-            </>
-          )}
-        </EuiPanel>
-
-        {resolvedIocRows.length > 0 && (
-          <>
-            <EuiSpacer size="m" />
-            <Section
-              title={i18n.translate(
-                'xpack.alertzero.agentBuilder.attachments.sse.huntResultResolvedIocs',
-                { defaultMessage: 'Resolved IOCs' }
-              )}
-              aside={
-                tier1.resolved_iocs_truncated ? (
-                  <PartialListNote
-                    label={PARTIAL_LIST_LABEL}
-                    testSubj="alertzeroSignificantSecurityEventHuntResultResolvedIocsTruncated"
-                  />
-                ) : undefined
-              }
-            >
-              <LabeledBadgeTable
-                rows={resolvedIocRows}
-                testSubj="alertzeroSignificantSecurityEventHuntResultResolvedIocs"
-                caption={i18n.translate(
-                  'xpack.alertzero.agentBuilder.attachments.sse.huntResultResolvedIocsTableCaption',
-                  { defaultMessage: 'Resolved IOCs for the hunt result' }
-                )}
-              />
-            </Section>
-          </>
-        )}
-
-        {tier2Rows.length > 0 && (
-          <>
-            <EuiSpacer size="m" />
-            <Section
-              title={i18n.translate(
-                'xpack.alertzero.agentBuilder.attachments.sse.huntResultBehaviorsTitle',
-                { defaultMessage: 'Validated behaviors' }
-              )}
-              aside={
-                tier2?.behaviors_truncated ? (
-                  <PartialListNote
-                    label={PARTIAL_LIST_LABEL}
-                    testSubj="alertzeroSignificantSecurityEventHuntResultBehaviorsTruncated"
-                  />
-                ) : undefined
-              }
-            >
-              <TableFrame>
-                <EuiBasicTable<Tier2TableRow>
-                  tableLayout="fixed"
-                  responsiveBreakpoint={false}
-                  rowHeader="technique_id"
-                  tableCaption={i18n.translate(
-                    'xpack.alertzero.agentBuilder.attachments.sse.huntResultBehaviorsTableCaption',
-                    { defaultMessage: 'Hunt result behaviors' }
-                  )}
-                  items={tier2Rows}
-                  columns={tier2Columns}
-                />
-              </TableFrame>
-            </Section>
-          </>
-        )}
-      </div>
+          {isExpanded
+            ? i18n.translate(
+                'xpack.alertzero.agentBuilder.attachments.sse.evidenceOverflowCollapse',
+                { defaultMessage: 'Show fewer' }
+              )
+            : i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.evidenceOverflow', {
+                defaultMessage: '+{hiddenCount} more',
+                values: { hiddenCount },
+              })}
+        </EuiButtonEmpty>
+      )}
     </Section>
   );
 };
 
-const isSeverityLevel = (value: string): value is (typeof SEVERITY_LEVELS)[number] =>
-  (SEVERITY_LEVELS as readonly string[]).includes(value);
+/** Hunt-run mechanics for the analyst who needs to audit how the finding was reached. */
+const TechnicalRunDetails: React.FC<{
+  parsed: SignificantSecurityEventAttachment['data'];
+}> = ({ parsed }) => {
+  const huntResult = parsed.hunt_result;
+  const hasEvidence = parsed.evidence_for.length > 0 || parsed.evidence_against.length > 0;
 
-const ProposalSection: React.FC<{ proposal: MapsToProposal }> = ({ proposal }) => {
-  const { euiTheme } = useEuiTheme();
-  const {
-    category,
-    impact,
-    confidence,
-    actionWorkflowId,
-    actionInput,
-    manual_remediation: manualSteps,
-  } = proposal;
+  const metaCards: Array<{ label: string; value: string; testSubj: string }> = [
+    {
+      label: i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.runId', {
+        defaultMessage: 'Run id',
+      }),
+      value: parsed.run_id,
+      testSubj: 'alertzeroSignificantSecurityEventRunId',
+    },
+    {
+      // No Discover action: a raw ES|QL lookup against the hidden `.kibana-threat-reports*`
+      // index is unreachable for a non-superuser. See elastic/security-team#19733.
+      label: i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.sourceReport', {
+        defaultMessage: 'Source report',
+      }),
+      value: parsed.report_id,
+      testSubj: 'alertzeroSignificantSecurityEventReportLink',
+    },
+    {
+      label: i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.sourceWatch', {
+        defaultMessage: 'Source watch',
+      }),
+      value: parsed.source_watch,
+      testSubj: 'alertzeroSignificantSecurityEventSourceWatch',
+    },
+    {
+      label: i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.capability', {
+        defaultMessage: 'Capability',
+      }),
+      value: parsed.capability,
+      testSubj: 'alertzeroSignificantSecurityEventCapability',
+    },
+  ];
 
-  const actionInputEntries = Object.entries(actionInput ?? {});
+  const tier1 = huntResult?.tier1;
+  const tier2 = huntResult?.tier2;
+  const confirmingTiers = huntResult?.hit_sources.map((source) => TIER_LABELS[source]) ?? [];
+  const distributionStats =
+    tier1?.per_index.map((row, index) => ({
+      key: row.index,
+      count: row.hit_count,
+      label: row.index,
+      color: visColorAt(index),
+      // Only required indices can corroborate: Tier 1's hit bar is computed from them, and an
+      // optional index contributes hits that did not clear it. Unlabeled, its segment reads as
+      // part of the corroborating total.
+      required: row.required,
+    })) ?? [];
+  const totalDistributedHits = distributionStats.reduce((sum, stat) => sum + stat.count, 0);
 
-  if (
-    !category &&
-    !impact &&
-    confidence == null &&
-    !actionWorkflowId &&
-    !actionInputEntries.length &&
-    !manualSteps?.length
-  ) {
-    return null;
-  }
-
-  const listStyles = css`
-    ul {
-      margin-bottom: 0;
-      padding-left: ${euiTheme.size.base};
-    }
-    li {
-      margin-bottom: ${euiTheme.size.xs};
-    }
-  `;
-
-  const hasHeaderRow = Boolean(category || confidence != null || impact);
+  // `resolved_iocs` are the concrete indicators that produced the hit counts, so they belong on
+  // the analyst-facing card and not only in the agent representation.
+  const resolvedIocsByType = groupBy(tier1?.resolved_iocs ?? [], (ioc) => ioc.type);
+  const resolvedIocRows: LabeledBadgeTableRow[] = Object.entries(resolvedIocsByType).map(
+    ([iocType, group]) => ({
+      id: iocType,
+      label: iocType,
+      values: (
+        <>
+          {group.map((ioc, index) => (
+            <IocBadge
+              key={`${ioc.type}-${ioc.value}-${index}`}
+              value={ioc.value}
+              index={index}
+              testSubj={`alertzeroSignificantSecurityEventHuntResultResolvedIoc-${iocType}-${index}`}
+            />
+          ))}
+        </>
+      ),
+    })
+  );
 
   return (
-    <Section
-      testSubj="alertzeroSignificantSecurityEventProposal"
-      title={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.proposal', {
-        defaultMessage: 'Proposal',
-      })}
-      aside={
-        actionWorkflowId ? (
-          <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false}>
-            <EuiFlexItem grow={false}>
-              <InlineLabel>
-                {i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.proposalWorkflow', {
-                  defaultMessage: 'Action workflow:',
-                })}
-              </InlineLabel>
+    <EuiFlexGroup direction="column" gutterSize="m" responsive={false}>
+      <EuiFlexItem grow={false}>
+        <EuiFlexGroup gutterSize="s" wrap responsive={false}>
+          {metaCards.map(({ label, value, testSubj }) => (
+            <EuiFlexItem key={testSubj} css={{ minWidth: 200 }}>
+              <MetaCard label={label}>
+                <IocBadge value={value} testSubj={testSubj} />
+              </MetaCard>
             </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <IocBadge value={actionWorkflowId} />
-            </EuiFlexItem>
-          </EuiFlexGroup>
-        ) : undefined
-      }
-    >
-      <EuiPanel hasShadow={false} hasBorder paddingSize="m">
-        {hasHeaderRow && (
-          <EuiFlexGroup gutterSize="s" wrap responsive={false} alignItems="center">
-            {category && (
+          ))}
+        </EuiFlexGroup>
+      </EuiFlexItem>
+
+      {huntResult && tier1 && (
+        <EuiFlexItem grow={false}>
+          <EuiFlexGroup
+            alignItems="center"
+            gutterSize="xs"
+            wrap
+            responsive={false}
+            data-test-subj="alertzeroSignificantSecurityEventHuntResultOutcome"
+          >
+            {/* Which tier cleared the bar for this finding, which the tier statuses beside it
+                do not say: a report-scoped entry carries its report's Tier 1 status, so
+                "Tier 1 Environment hits found" can sit beside a finding only Tier 2
+                corroborated and read as its confirmation. */}
+            {confirmingTiers.length > 0 && (
               <EuiFlexItem grow={false}>
-                <EuiBadge color="primary" css={{ textTransform: 'capitalize' }}>
-                  {category}
-                </EuiBadge>
-              </EuiFlexItem>
-            )}
-            {impact && isSeverityLevel(impact) && (
-              <EuiFlexItem grow={false}>
-                <EuiBadge color={severityBadgeColor(impact)}>
-                  {i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.proposalImpact', {
-                    defaultMessage: '{impact} impact',
-                    values: { impact },
+                <EuiBadge
+                  color="hollow"
+                  iconType="check"
+                  data-test-subj="alertzeroSignificantSecurityEventHuntResultHitSources"
+                >
+                  {i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.huntConfirmedBy', {
+                    defaultMessage: 'Confirmed by {tiers}',
+                    values: { tiers: confirmingTiers.join(', ') },
                   })}
                 </EuiBadge>
               </EuiFlexItem>
             )}
-            {confidence != null && (
+            <EuiFlexItem grow={false}>
+              <EuiBadge color="hollow">
+                <EuiText size="xs" color="subdued" component="span">
+                  {TIER_LABELS.tier1}
+                </EuiText>{' '}
+                {TIER1_STATUS_LABELS[tier1.status]}
+              </EuiBadge>
+            </EuiFlexItem>
+            {tier2?.status && (
               <EuiFlexItem grow={false}>
-                <EuiText size="xs" color="subdued">
-                  {i18n.translate(
-                    'xpack.alertzero.agentBuilder.attachments.sse.proposalConfidence',
-                    {
-                      defaultMessage: '{confidence} confidence',
-                      values: { confidence: formatPercent(confidence) },
-                    }
-                  )}
-                </EuiText>
+                <EuiBadge color="hollow">
+                  <EuiText size="xs" color="subdued" component="span">
+                    {TIER_LABELS.tier2}
+                  </EuiText>{' '}
+                  {TIER2_STATUS_LABELS[tier2.status]}
+                </EuiBadge>
               </EuiFlexItem>
             )}
           </EuiFlexGroup>
-        )}
-        {impact && !isSeverityLevel(impact) && (
-          <>
-            {hasHeaderRow && <EuiSpacer size="s" />}
-            <EuiText size="s">
-              <span css={cellStyles}>{impact}</span>
-            </EuiText>
-          </>
-        )}
-        {(actionInputEntries.length > 0 || (manualSteps && manualSteps.length > 0)) && (
-          <>
-            <EuiSpacer size="m" />
-            <EuiFlexGroup direction="column" gutterSize="m" responsive={false}>
-              {actionInputEntries.length > 0 && (
-                <EuiFlexItem grow={false}>
-                  <EuiTitle size="xxs">
-                    <h4>
-                      {i18n.translate(
-                        'xpack.alertzero.agentBuilder.attachments.sse.proposalActionInput',
-                        { defaultMessage: 'Action input' }
+        </EuiFlexItem>
+      )}
+
+      {distributionStats.length > 0 && (
+        <EuiFlexItem grow={false}>
+          <DistributionBar
+            stats={distributionStats}
+            hideLastTooltip
+            data-test-subj="alertzeroSignificantSecurityEventHuntResultDistributionBar"
+          />
+          <EuiSpacer size="xs" />
+          <EuiFlexGroup
+            gutterSize="m"
+            wrap
+            responsive={false}
+            alignItems="center"
+            justifyContent="spaceBetween"
+          >
+            <EuiFlexItem grow={false}>
+              <EuiFlexGroup gutterSize="m" wrap responsive={false}>
+                {distributionStats.map((stat) => (
+                  <EuiFlexItem grow={false} key={stat.key}>
+                    <EuiHealth color={stat.color} textSize="xs">
+                      {stat.label} ({stat.count})
+                      {stat.required ? null : (
+                        <>
+                          {' '}
+                          <EuiText size="xs" color="subdued" component="span">
+                            {i18n.translate(
+                              'xpack.alertzero.agentBuilder.attachments.sse.huntResultOptionalIndex',
+                              { defaultMessage: 'optional' }
+                            )}
+                          </EuiText>
+                        </>
                       )}
-                    </h4>
-                  </EuiTitle>
-                  <EuiSpacer size="xs" />
-                  <EuiText size="s" css={listStyles}>
-                    <ul>
-                      {actionInputEntries.map(([key, value]) => (
-                        <li key={key}>
-                          <span css={cellStyles}>
-                            {key}: {typeof value === 'string' ? value : JSON.stringify(value)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </EuiText>
-                </EuiFlexItem>
+                    </EuiHealth>
+                  </EuiFlexItem>
+                ))}
+              </EuiFlexGroup>
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <EuiText size="xs" color="subdued">
+                <FormattedMessage
+                  id="xpack.alertzero.agentBuilder.attachments.sse.huntResultDistributionSummary"
+                  defaultMessage="{hits, plural, one {# event} other {# events}} across {indices, plural, one {# index} other {# indices}}"
+                  values={{ hits: totalDistributedHits, indices: distributionStats.length }}
+                />
+                {tier1?.per_index_truncated ? (
+                  <>
+                    {' · '}
+                    <PartialListNote
+                      label={PARTIAL_BREAKDOWN_LABEL}
+                      testSubj="alertzeroSignificantSecurityEventHuntResultPerIndexTruncated"
+                    />
+                  </>
+                ) : null}
+              </EuiText>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        </EuiFlexItem>
+      )}
+
+      {resolvedIocRows.length > 0 && (
+        <EuiFlexItem grow={false}>
+          <Section
+            title={i18n.translate(
+              'xpack.alertzero.agentBuilder.attachments.sse.huntResultResolvedIocs',
+              { defaultMessage: 'Resolved IOCs' }
+            )}
+            aside={
+              tier1?.resolved_iocs_truncated ? (
+                <PartialListNote
+                  label={PARTIAL_LIST_LABEL}
+                  testSubj="alertzeroSignificantSecurityEventHuntResultResolvedIocsTruncated"
+                />
+              ) : undefined
+            }
+          >
+            <LabeledBadgeTable
+              rows={resolvedIocRows}
+              testSubj="alertzeroSignificantSecurityEventHuntResultResolvedIocs"
+              caption={i18n.translate(
+                'xpack.alertzero.agentBuilder.attachments.sse.huntResultResolvedIocsTableCaption',
+                { defaultMessage: 'Resolved IOCs for the hunt result' }
               )}
-              {manualSteps && manualSteps.length > 0 && (
-                <EuiFlexItem grow={false}>
-                  <EuiTitle size="xxs">
-                    <h4>
-                      {i18n.translate(
-                        'xpack.alertzero.agentBuilder.attachments.sse.proposalManualRemediation',
-                        { defaultMessage: 'Manual remediation' }
-                      )}
-                    </h4>
-                  </EuiTitle>
-                  <EuiSpacer size="xs" />
-                  <EuiText size="s" css={listStyles}>
-                    <ul>
-                      {manualSteps.map((step) => (
-                        <li key={step}>
-                          <span css={cellStyles}>{step}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </EuiText>
-                </EuiFlexItem>
+            />
+          </Section>
+        </EuiFlexItem>
+      )}
+
+      {hasEvidence && (
+        <EuiFlexItem grow={false}>
+          <EuiFlexGroup direction="column" gutterSize="m" responsive={false}>
+            <EvidenceColumn
+              label={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.evidenceFor', {
+                defaultMessage: 'Evidence for',
+              })}
+              iconType="check"
+              iconColor="success"
+              items={parsed.evidence_for}
+            />
+            <EvidenceColumn
+              label={i18n.translate(
+                'xpack.alertzero.agentBuilder.attachments.sse.evidenceAgainst',
+                { defaultMessage: 'Evidence against' }
               )}
-            </EuiFlexGroup>
-          </>
-        )}
-      </EuiPanel>
-    </Section>
+              iconType="cross"
+              iconColor="danger"
+              items={parsed.evidence_against}
+            />
+          </EuiFlexGroup>
+        </EuiFlexItem>
+      )}
+    </EuiFlexGroup>
   );
 };
 
@@ -1265,13 +1333,11 @@ export const SignificantSecurityEventInlineContent: React.FC<
 
   const events = parsed.events ?? [];
   const alerts = parsed.alerts ?? [];
-  const hasEvents = events.length > 0;
-  const eventIndexCount = new Set(events.map((event) => event.source_index)).size;
+  const huntResult = parsed.hunt_result;
+  const tier2 = huntResult?.tier2;
 
   const hasChromeHeader =
     buildSignificantSecurityEventActionButtons({ parsed, navigation }).length > 0;
-
-  const hasEvidence = parsed.evidence_for.length > 0 || parsed.evidence_against.length > 0;
 
   const statusRow = (
     <EuiFlexGroup
@@ -1295,6 +1361,39 @@ export const SignificantSecurityEventInlineContent: React.FC<
           })}
         </EuiText>
       </EuiFlexItem>
+      {huntResult && (
+        <>
+          <EuiFlexItem grow={false}>
+            <EuiBadge
+              color={huntResult.has_confirmed_hit ? 'danger' : 'hollow'}
+              data-test-subj="alertzeroSignificantSecurityEventConfirmedHit"
+            >
+              {huntResult.has_confirmed_hit
+                ? i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.huntConfirmedHit', {
+                    defaultMessage: 'Confirmed hit',
+                  })
+                : i18n.translate(
+                    'xpack.alertzero.agentBuilder.attachments.sse.huntNoConfirmedHit',
+                    {
+                      defaultMessage: 'No confirmed hit',
+                    }
+                  )}
+            </EuiBadge>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiText
+              size="xs"
+              color="subdued"
+              css={{ whiteSpace: 'nowrap' }}
+              data-test-subj="alertzeroSignificantSecurityEventHuntWindow"
+            >
+              <DateTime value={huntResult.time_range.from} />
+              {' – '}
+              <DateTime value={huntResult.time_range.to} />
+            </EuiText>
+          </EuiFlexItem>
+        </>
+      )}
     </EuiFlexGroup>
   );
 
@@ -1345,174 +1444,85 @@ export const SignificantSecurityEventInlineContent: React.FC<
           />
         )}
 
-        {(parsed.run_id || parsed.report_id) && (
-          <EuiFlexGroup gutterSize="s" wrap responsive={false}>
-            {parsed.run_id && (
-              <EuiFlexItem css={{ minWidth: 200 }}>
-                <MetaCard
-                  label={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.runId', {
-                    defaultMessage: 'Run id',
-                  })}
-                >
-                  <IocBadge
-                    value={parsed.run_id}
-                    testSubj="alertzeroSignificantSecurityEventRunId"
-                  />
-                </MetaCard>
-              </EuiFlexItem>
-            )}
-            {parsed.report_id && (
-              <EuiFlexItem css={{ minWidth: 200 }}>
-                <MetaCard
-                  label={i18n.translate(
-                    'xpack.alertzero.agentBuilder.attachments.sse.sourceReport',
-                    { defaultMessage: 'Source report' }
-                  )}
-                >
-                  {/* No Discover action: a raw ES|QL lookup against the hidden
-                      `.kibana-threat-reports*` index is unreachable for a non-superuser.
-                      See elastic/security-team#19733. */}
-                  <IocBadge
-                    value={parsed.report_id}
-                    testSubj="alertzeroSignificantSecurityEventReportLink"
-                  />
-                </MetaCard>
-              </EuiFlexItem>
-            )}
-          </EuiFlexGroup>
-        )}
+        <EuiPanel
+          hasShadow={false}
+          hasBorder
+          paddingSize="m"
+          data-test-subj="alertzeroSignificantSecurityEventOutcome"
+        >
+          <OutcomeStats
+            huntResult={huntResult}
+            citedReferenceCount={events.length + alerts.length}
+          />
+        </EuiPanel>
 
         {parsed.hypothesis_tested && <HypothesisSection hypothesis={parsed.hypothesis_tested} />}
-
-        {parsed.hunt_result && <HuntResultSection huntResult={parsed.hunt_result} />}
-
-        {hasEvidence && (
-          <Section
-            title={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.evidence', {
-              defaultMessage: 'Evidence',
-            })}
-          >
-            <EuiPanel hasShadow={false} hasBorder paddingSize="m">
-              <EuiFlexGroup direction="column" gutterSize="m" responsive={false}>
-                <EvidenceColumn
-                  label={i18n.translate(
-                    'xpack.alertzero.agentBuilder.attachments.sse.evidenceFor',
-                    {
-                      defaultMessage: 'Evidence for',
-                    }
-                  )}
-                  iconType="check"
-                  iconColor="success"
-                  items={parsed.evidence_for}
-                />
-                <EvidenceColumn
-                  label={i18n.translate(
-                    'xpack.alertzero.agentBuilder.attachments.sse.evidenceAgainst',
-                    { defaultMessage: 'Evidence against' }
-                  )}
-                  iconType="cross"
-                  iconColor="danger"
-                  items={parsed.evidence_against}
-                />
-              </EuiFlexGroup>
-            </EuiPanel>
-          </Section>
-        )}
-
-        {parsed.maps_to_proposal && <ProposalSection proposal={parsed.maps_to_proposal} />}
-
-        {parsed.timeline && parsed.timeline.length > 0 && (
-          <TimelineSection timeline={parsed.timeline} />
-        )}
-
-        {alerts.length > 0 && <AlertList alerts={alerts} navigation={navigation} />}
-
-        {hasEvents && (
-          <Section
-            title={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.eventsTitle', {
-              defaultMessage: 'Events',
-            })}
-            aside={
-              <EuiText size="xs" color="subdued">
-                <FormattedMessage
-                  id="xpack.alertzero.agentBuilder.attachments.sse.eventsAside"
-                  defaultMessage="{count, plural, one {# event} other {# events}} across {indices, plural, one {# index} other {# indices}}"
-                  values={{ count: events.length, indices: eventIndexCount }}
-                />
-              </EuiText>
-            }
-          >
-            <TableFrame>
-              <EuiAccordion
-                id={`alertzeroSignificantSecurityEventEvents-${attachment.id}`}
-                initialIsOpen={false}
-                arrowDisplay="right"
-                paddingSize="s"
-                data-test-subj="alertzeroSignificantSecurityEventEventsAccordion"
-                buttonProps={{ paddingSize: 's' }}
-                buttonContent={
-                  <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
-                    <EuiFlexItem grow={false}>
-                      <EuiIcon type="documents" color="subdued" size="m" aria-hidden />
-                    </EuiFlexItem>
-                    <EuiFlexItem grow={false}>
-                      <EuiTitle size="xxs">
-                        <h4>
-                          <FormattedMessage
-                            id="xpack.alertzero.agentBuilder.attachments.sse.eventsAccordionButton"
-                            defaultMessage="{count, plural, one {# event} other {# events}}"
-                            values={{ count: events.length }}
-                          />
-                        </h4>
-                      </EuiTitle>
-                    </EuiFlexItem>
-                  </EuiFlexGroup>
-                }
-                extraAction={
-                  <EuiText size="xs" color="subdued">
-                    {i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.eventsHint', {
-                      defaultMessage: 'Event ids, source indices and matched fields',
-                    })}
-                  </EuiText>
-                }
-              >
-                <EventRows events={events} navigation={navigation} />
-              </EuiAccordion>
-            </TableFrame>
-          </Section>
-        )}
 
         {parsed.security_knowledge_indicators.length > 0 && (
           <IndicatorList indicators={parsed.security_knowledge_indicators} />
         )}
 
         {parsed.entities.length > 0 && (
-          <Section
-            title={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.entities', {
-              defaultMessage: 'Entities',
-            })}
-            aside={
-              <EuiText size="xs" color="subdued">
-                {i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.entitiesCount', {
-                  defaultMessage: '{count, plural, one {# entity} other {# entities}}',
-                  values: { count: parsed.entities.length },
-                })}
-              </EuiText>
-            }
-          >
-            <BadgeRow>
-              {parsed.entities.map((entity, index) => (
-                <EntityChip
-                  key={`${entity.field}:${entity.value}:${index}`}
-                  entity={entity}
-                  share={navigation.share}
-                  getUrlForApp={navigation.getUrlForApp}
-                  testSubj={`alertzeroSignificantSecurityEventEntity-${index}`}
-                />
-              ))}
-            </BadgeRow>
-          </Section>
+          <EntitiesSection entities={parsed.entities} navigation={navigation} />
         )}
+
+        {(events.length > 0 || alerts.length > 0) && (
+          <DetailAccordion
+            id={`alertzeroSignificantSecurityEventCitedEvidence-${attachment.id}`}
+            testSubj="alertzeroSignificantSecurityEventCitedEvidence"
+            title={i18n.translate('xpack.alertzero.agentBuilder.attachments.sse.citedEvidence', {
+              defaultMessage: `{eventCount, plural,
+                =0 {{alertCount, plural, one {{alertCount, number} alert} other {{alertCount, number} alerts}}}
+                one {{alertCount, plural,
+                  =0 {{eventCount, number} event}
+                  one {{eventCount, number} event, {alertCount, number} alert}
+                  other {{eventCount, number} event, {alertCount, number} alerts}}}
+                other {{alertCount, plural,
+                  =0 {{eventCount, number} events}
+                  one {{eventCount, number} events, {alertCount, number} alert}
+                  other {{eventCount, number} events, {alertCount, number} alerts}}}
+              }`,
+              values: { eventCount: events.length, alertCount: alerts.length },
+            })}
+          >
+            {events.length > 0 && <EventRows events={events} navigation={navigation} />}
+            {events.length > 0 && alerts.length > 0 && <EuiSpacer size="m" />}
+            {alerts.length > 0 && <AlertList alerts={alerts} navigation={navigation} />}
+          </DetailAccordion>
+        )}
+
+        {huntResult && tier2 && tier2.behaviors.length > 0 && (
+          <DetailAccordion
+            id={`alertzeroSignificantSecurityEventBehaviorValidation-${attachment.id}`}
+            testSubj="alertzeroSignificantSecurityEventBehaviorValidation"
+            title={i18n.translate(
+              'xpack.alertzero.agentBuilder.attachments.sse.behaviorValidation',
+              {
+                defaultMessage: 'Behavior validation ({count})',
+                values: { count: tier2.behaviors.length },
+              }
+            )}
+          >
+            <BehaviorValidation
+              tier2={tier2}
+              timeRange={huntResult.time_range}
+              navigation={navigation}
+            />
+          </DetailAccordion>
+        )}
+
+        <DetailAccordion
+          id={`alertzeroSignificantSecurityEventTechnicalRunDetails-${attachment.id}`}
+          testSubj="alertzeroSignificantSecurityEventTechnicalRunDetails"
+          title={i18n.translate(
+            'xpack.alertzero.agentBuilder.attachments.sse.technicalRunDetails',
+            {
+              defaultMessage: 'Technical run details',
+            }
+          )}
+        >
+          <TechnicalRunDetails parsed={parsed} />
+        </DetailAccordion>
       </SectionStack>
     </EuiPanel>
   );

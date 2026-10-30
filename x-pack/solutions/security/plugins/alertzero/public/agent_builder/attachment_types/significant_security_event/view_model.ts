@@ -17,7 +17,7 @@ import type { SignificantSecurityEventAttachmentData } from '../../../../common/
 
 export const OPEN_EVENTS_LABEL = i18n.translate(
   'xpack.alertzero.agentBuilder.attachments.sse.openEventsInDiscover',
-  { defaultMessage: 'Open events in Discover' }
+  { defaultMessage: 'Open cited events' }
 );
 
 export const OPEN_ALERTS_LABEL = i18n.translate(
@@ -35,7 +35,6 @@ export type SignificantSecurityEventAttachment = Attachment<
 /** Convenience view-model aliases for the renderer, all inferred from the zod schema. */
 export type SecurityKnowledgeIndicator =
   SignificantSecurityEventAttachmentData['security_knowledge_indicators'][number];
-export type TimelineEntry = NonNullable<SignificantSecurityEventAttachmentData['timeline']>[number];
 export type SignificantSecurityEventRef = NonNullable<
   SignificantSecurityEventAttachmentData['events']
 >[number];
@@ -45,9 +44,6 @@ export type SignificantSecurityAlertRef = NonNullable<
 export type HuntResult = NonNullable<SignificantSecurityEventAttachmentData['hunt_result']>;
 export type HuntResultBehavior = NonNullable<HuntResult['tier2']>['behaviors'][number];
 export type HuntResultBehaviorExecution = NonNullable<HuntResultBehavior['execution']>;
-export type MapsToProposal = NonNullable<
-  SignificantSecurityEventAttachmentData['maps_to_proposal']
->;
 
 /**
  * Validates the raw attachment payload against the zod schema. The server already
