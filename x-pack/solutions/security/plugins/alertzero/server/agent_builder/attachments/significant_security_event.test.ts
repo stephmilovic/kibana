@@ -26,7 +26,6 @@ const validPayload = {
     { field: 'host.name' as const, value: 'srv-01' },
     { field: 'user.name' as const, value: 'jdoe' },
   ],
-  timeline: [{ at: '2026-01-01T00:00:00Z', what: 'RDP session established' }],
   hypothesis_tested: 'Adversary used stolen credentials to move laterally',
   evidence_for: ['RDP session from unusual host'],
   evidence_against: [],
@@ -62,12 +61,21 @@ describe('createSignificantSecurityEventAttachmentType', () => {
   });
 
   describe('format', () => {
-    it('returns a text representation quoting the title, severity, and timeline', async () => {
+    it('returns a text representation quoting the title and severity', async () => {
       const value = await formatToText(attachmentType, formatContext, validPayload);
 
       expect(value).toContain(validPayload.title);
       expect(value).toContain('high');
-      expect(value).toContain('RDP session established');
+    });
+
+    it('hides a legacy timeline from the agent', async () => {
+      const value = await formatToText(attachmentType, formatContext, {
+        ...validPayload,
+        timeline: [{ at: '2026-01-01T00:00:00Z', what: 'RDP session established' }],
+      });
+
+      expect(value).not.toContain('Timeline:');
+      expect(value).not.toContain('RDP session established');
     });
 
     it('includes indicators, structured entities, evidence, and the evaluation record ref', async () => {
@@ -121,7 +129,7 @@ describe('createSignificantSecurityEventAttachmentType', () => {
       );
     });
 
-    it('renders maps_to_proposal details when present', async () => {
+    it('does not render maps_to_proposal, which only packaging reads', async () => {
       const value = await formatToText(attachmentType, formatContext, {
         ...validPayload,
         maps_to_proposal: {
@@ -134,14 +142,10 @@ describe('createSignificantSecurityEventAttachmentType', () => {
         },
       });
 
-      expect(value).toContain('Maps to proposal:');
-      expect(value).toContain('Category: containment');
-      expect(value).toContain('Impact: Isolate affected hosts');
-      expect(value).toContain('Action workflow: workflow-1');
-      expect(value).toContain('Action input:');
-      expect(value).toContain('endpoint_ids: abc-123');
-      expect(value).toContain('force: true');
-      expect(value).toContain('- Rotate the compromised key');
+      expect(value).not.toContain('Maps to proposal');
+      expect(value).not.toContain('Isolate affected hosts');
+      expect(value).not.toContain('workflow-1');
+      expect(value).not.toContain('Rotate the compromised key');
     });
 
     it('surfaces the truncation note when the payload was truncated', async () => {
@@ -272,7 +276,7 @@ describe('createSignificantSecurityEventAttachmentType', () => {
       const description = attachmentType.getAgentDescription?.();
 
       expect(description).toContain('Significant Security Event');
-      expect(description).toContain('timeline');
+      expect(description).not.toContain('timeline');
       expect(description).toContain('hypothesis_tested');
       expect(description).toContain('{ field, value }');
       expect(description).toContain('NOT Discover IOCs');
@@ -302,10 +306,6 @@ describe('createSignificantSecurityEventAttachmentType', () => {
         events: Array.from({ length: 50 }, () => ({
           event_id: 'e'.repeat(512),
           source_index: 'i'.repeat(256),
-        })),
-        timeline: Array.from({ length: 50 }, () => ({
-          at: '2026-01-01T00:00:00Z',
-          what: 'w'.repeat(2000),
         })),
         evidence_for: Array.from({ length: 50 }, () => 'f'.repeat(2000)),
         evidence_against: Array.from({ length: 50 }, () => 'a'.repeat(2000)),
@@ -342,8 +342,8 @@ describe('createSignificantSecurityEventAttachmentType', () => {
             })),
           },
         },
-        // `maps_to_proposal` at its schema maximums, including the 32KB `actionInput` cap,
-        // since the formatter now emits every one of these fields.
+        // `maps_to_proposal` at its schema maximums, including the 32KB `actionInput` cap. The
+        // formatter does not emit it, so it must not count against the content limit.
         maps_to_proposal: {
           category: 'c'.repeat(256),
           impact: 'i'.repeat(2000),
@@ -368,7 +368,6 @@ describe('createSignificantSecurityEventAttachmentType', () => {
 
       // Including the sections that come last, which a single cut would take first.
       for (const section of [
-        'Timeline:',
         'Hunt result:',
         'Confirmed by: tier1, tier2',
         'Security knowledge indicators',
@@ -377,8 +376,6 @@ describe('createSignificantSecurityEventAttachmentType', () => {
         'Events:',
         'Evidence for:',
         'Evidence against:',
-        'Maps to proposal:',
-        'Manual remediation:',
         `Evaluation record: ${validPayload.evaluation_record_ref}`,
       ]) {
         expect(value).toContain(section);

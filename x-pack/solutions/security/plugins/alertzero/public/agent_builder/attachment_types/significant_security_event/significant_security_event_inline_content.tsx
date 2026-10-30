@@ -1421,7 +1421,9 @@ export const SignificantSecurityEventInlineContent: React.FC<
 
         {parsed.maps_to_proposal && <ProposalSection proposal={parsed.maps_to_proposal} />}
 
-        {parsed.timeline.length > 0 && <TimelineSection timeline={parsed.timeline} />}
+        {parsed.timeline && parsed.timeline.length > 0 && (
+          <TimelineSection timeline={parsed.timeline} />
+        )}
 
         {alerts.length > 0 && <AlertList alerts={alerts} navigation={navigation} />}
 

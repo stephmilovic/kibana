@@ -27,7 +27,6 @@ const validPayload = {
     { field: 'host.name' as const, value: 'srv-01' },
     { field: 'user.name' as const, value: 'jdoe' },
   ],
-  timeline: [{ at: '2026-01-01T00:00:00Z', what: 'RDP session established' }],
   hypothesis_tested: 'Adversary used stolen credentials to move laterally',
   evidence_for: ['RDP session from unusual host'],
   evidence_against: [],
@@ -39,6 +38,22 @@ describe('significantSecurityEventAttachmentDataSchema', () => {
     const result = significantSecurityEventAttachmentDataSchema.safeParse(validPayload);
 
     expect(result.success).toBe(true);
+  });
+
+  it('does not add a timeline when the payload omits it', () => {
+    const result = significantSecurityEventAttachmentDataSchema.safeParse(validPayload);
+
+    expect(result.success && Object.hasOwn(result.data, 'timeline')).toBe(false);
+  });
+
+  it('still parses a legacy payload that carries timeline rows', () => {
+    const timeline = [{ at: '2026-01-01T00:00:00Z', what: 'RDP session established' }];
+    const result = significantSecurityEventAttachmentDataSchema.safeParse({
+      ...validPayload,
+      timeline,
+    });
+
+    expect(result.success && result.data.timeline).toEqual(timeline);
   });
 
   it('rejects bare entity identifiers and legacy strings', () => {

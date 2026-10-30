@@ -94,15 +94,7 @@ const formatSignificantSecurityEventForAgent = (
     `Threat report: ${data.report_id}`,
     '',
     `Hypothesis tested: ${data.hypothesis_tested}`,
-    '',
-    'Timeline:',
   ];
-
-  if (data.timeline.length === 0) {
-    lines.push('  no timeline entries recorded');
-  } else {
-    pushBoundedSection(lines, data.timeline, (entry) => `  ${entry.at} — ${entry.what}`);
-  }
 
   if (data.hunt_result) {
     const { tier1, tier2, hit_sources: hitSources } = data.hunt_result;
@@ -213,39 +205,6 @@ const formatSignificantSecurityEventForAgent = (
     pushBoundedSection(lines, data.evidence_against, (item) => `  - ${item}`);
   }
 
-  if (data.maps_to_proposal) {
-    const proposal = data.maps_to_proposal;
-    lines.push('', 'Maps to proposal:');
-    if (proposal.category) {
-      lines.push(`  Category: ${proposal.category}`);
-    }
-    if (proposal.impact) {
-      lines.push(`  Impact: ${proposal.impact}`);
-    }
-    if (proposal.confidence != null) {
-      lines.push(`  Confidence: ${proposal.confidence}`);
-    }
-    if (proposal.actionWorkflowId) {
-      lines.push(`  Action workflow: ${proposal.actionWorkflowId}`);
-    }
-    if (proposal.actionInput) {
-      const inputEntries = Object.entries(proposal.actionInput);
-      if (inputEntries.length > 0) {
-        lines.push('  Action input:');
-        pushBoundedSection(
-          lines,
-          inputEntries,
-          ([key, value]) =>
-            `    ${key}: ${typeof value === 'string' ? value : JSON.stringify(value)}`
-        );
-      }
-    }
-    if (proposal.manual_remediation && proposal.manual_remediation.length > 0) {
-      lines.push('  Manual remediation:');
-      pushBoundedSection(lines, proposal.manual_remediation, (step) => `    - ${step}`);
-    }
-  }
-
   lines.push('', `Evaluation record: ${data.evaluation_record_ref}`);
 
   if (data.truncated) {
@@ -270,14 +229,10 @@ The payload contains:
 - entities: ECS \`{ field, value }\` refs (allowlisted entity fields only)
 - alerts: \`{ alert_id, index, timestamp? }\` — always include the concrete alerts index
 - events: \`{ event_id, source_index, timestamp?, matched? }\` — matched names the IOC or technique that produced the hit; source_index must be the hit's concrete _index (the .ds-... backing name for a data stream), never the data stream or alias searched
-- timeline: an ordered sequence of (at, what) entries describing what happened
 - hunt_result: structured Tier 1 / Tier 2 findings (status, counts, per-index hit detail, resolved IOCs, Tier 2 behaviors). Prefer these numbers over evidence_for/evidence_against when both are present.
   "Confirmed by" names the tier(s) that corroborated this finding; the tier statuses are report-scoped, so attribute the hit to that line and not to a tier status. A Tier 2 behavior with "no verdict" learned nothing and is not evidence of a clean environment.
 - hypothesis_tested, evidence_for, evidence_against: the hunt's working hypothesis and its analyst narrative on top of hunt_result
-- maps_to_proposal, evaluation_record_ref: optional links into the proposal/evaluation subsystem
-
-Quote the \`what\` field of timeline entries verbatim rather than re-classifying or summarizing
-them into different categories.`;
+- evaluation_record_ref: link into the evaluation subsystem`;
 
 export const createSignificantSecurityEventAttachmentType = (): AttachmentTypeDefinition =>
   createReadonlyAttachmentType({

@@ -1259,7 +1259,7 @@ describe('buildSseData holds coordinator output to the SSE schema bounds', () =>
     expect(byId.get('evt-epoch')).toBe('2026-07-30T13:05:00.000Z');
     expect(byId.get('evt-garbage')).toBeUndefined();
     expect(byId.get('evt-datemath')).toBeUndefined();
-    expect(entry.data.timeline).toHaveLength(2);
+    expect(Object.hasOwn(entry.data, 'timeline')).toBe(false);
   });
 
   it('keeps a remote event ref and drops a remote alert ref, which no local exit ramp can open', () => {

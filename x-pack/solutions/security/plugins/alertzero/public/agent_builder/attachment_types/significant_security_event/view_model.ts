@@ -35,7 +35,7 @@ export type SignificantSecurityEventAttachment = Attachment<
 /** Convenience view-model aliases for the renderer, all inferred from the zod schema. */
 export type SecurityKnowledgeIndicator =
   SignificantSecurityEventAttachmentData['security_knowledge_indicators'][number];
-export type TimelineEntry = SignificantSecurityEventAttachmentData['timeline'][number];
+export type TimelineEntry = NonNullable<SignificantSecurityEventAttachmentData['timeline']>[number];
 export type SignificantSecurityEventRef = NonNullable<
   SignificantSecurityEventAttachmentData['events']
 >[number];

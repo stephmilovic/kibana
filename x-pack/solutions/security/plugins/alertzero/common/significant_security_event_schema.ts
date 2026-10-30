@@ -186,7 +186,9 @@ export const significantSecurityEventAttachmentDataSchema = lazySchema(() =>
     entities: z.array(entityRefSchema).max(50),
     alerts: z.array(alertRefSchema).max(50).optional(),
     events: z.array(eventRefSchema).max(50).optional(),
-    timeline: z.array(timelineEntrySchema).max(50),
+    // Legacy: new payloads omit it (event and alert refs carry the same evidence). Optional
+    // without a default so validation never writes an empty array back.
+    timeline: z.array(timelineEntrySchema).max(50).optional(),
     hypothesis_tested: z.string().min(1).max(4000),
     hunt_result: huntResultSchema.optional(),
     evidence_for: z.array(evidenceItemSchema).max(50),

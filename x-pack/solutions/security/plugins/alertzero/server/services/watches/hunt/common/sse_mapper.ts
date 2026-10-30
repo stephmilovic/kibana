@@ -59,7 +59,6 @@ const CAPABILITY_ID = 'continuous_threat_hunt';
 const MAX_ENTITIES = 50;
 const MAX_HIT_REFS = 50;
 const MAX_EVIDENCE = 50;
-const MAX_TIMELINE = 50;
 /**
  * Schema caps the mapper must hold the coordinator's output to. Tier 1 aggregates
  * up to 500 `per_index` buckets and echoes up to 100 request IOCs; the SSE schema
@@ -656,16 +655,12 @@ const buildChrome = ({
   runId,
   huntResult,
   behavior,
-  events,
-  alerts,
   tier1RefCount,
 }: {
   reportId: string;
   runId: string;
   huntResult: SseHuntResult;
   behavior?: CoordinatorBehavior;
-  events: SseEventRef[];
-  alerts: SseAlertRef[];
   /** Tier 1 refs this entry carries, which is not the report's Tier 1 total. */
   tier1RefCount: number;
 }): Pick<
@@ -674,7 +669,6 @@ const buildChrome = ({
   | 'severity'
   | 'confidence'
   | 'status'
-  | 'timeline'
   | 'hypothesis_tested'
   | 'evidence_for'
   | 'evidence_against'
@@ -746,24 +740,6 @@ const buildChrome = ({
         .join(', ')}.`.slice(0, 2000)
     );
   }
-  const timeline: SseAttachmentData['timeline'] = [];
-  for (const event of events) {
-    if (timeline.length >= MAX_TIMELINE) break;
-    if (!event.timestamp) continue;
-    timeline.push({
-      at: event.timestamp,
-      what: `Event ${event.event_id} in ${event.source_index}`.slice(0, 2000),
-    });
-  }
-  for (const alert of alerts) {
-    if (timeline.length >= MAX_TIMELINE) break;
-    if (!alert.timestamp) continue;
-    timeline.push({
-      at: alert.timestamp,
-      what: `Alert ${alert.alert_id} in ${alert.index}`.slice(0, 2000),
-    });
-  }
-
   const evalRef = `eval:hunt:${reportId}:${runId}`.slice(0, 512);
 
   return {
@@ -771,7 +747,6 @@ const buildChrome = ({
     severity,
     confidence,
     status: 'open',
-    timeline,
     hypothesis_tested: hypothesisTested,
     evidence_for: evidenceFor.slice(0, MAX_EVIDENCE),
     evidence_against: evidenceAgainst.slice(0, MAX_EVIDENCE),
@@ -846,8 +821,6 @@ const buildEntry = ({
     runId: result.run_id,
     huntResult,
     behavior,
-    events,
-    alerts,
     tier1RefCount,
   });
 
